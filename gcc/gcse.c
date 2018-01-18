@@ -2153,8 +2153,16 @@ pre_edge_insert (struct edge_list *edge_list, struct gcse_expr **index_map)
 			   handling this situation.  This one is easiest for
 			   now.  */
 
-			if (eg->flags & EDGE_ABNORMAL)
-			  insert_insn_end_basic_block (index_map[j], bb);
+			/* if (eg->flags & EDGE_ABNORMAL) */
+                        /* EF: Feb 2016.
+                            In case we have a back edge edge insert is at risk of splitting the edge, something we
+                            don't want since it block HW loop mapping.
+                            TODO: Add a target hook to check the FDS_BACK and possibly try to figure out the level of the loop
+                            in order to let gcse proceed in case the loop is very unlikely mappeable on a hw loop.
+                            Target option should also be checked.
+                        */
+                        if ((eg->flags & EDGE_ABNORMAL) || (eg->flags & EDGE_DFS_BACK))
+                          insert_insn_end_basic_block (index_map[j], bb);
 			else
 			  {
 			    insn = process_insert_insn (index_map[j]);

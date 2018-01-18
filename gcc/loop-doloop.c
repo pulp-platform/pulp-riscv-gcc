@@ -273,7 +273,8 @@ doloop_valid_p (struct loop *loop, struct niter_desc *desc)
   /* Check for loops that may not terminate under special conditions.  */
   if (!desc->simple_p
       || desc->assumptions
-      || desc->infinite)
+//      || desc->infinite
+)
     {
       /* There are some cases that would require a special attention.
 	 For example if the comparison is LEU and the comparison value

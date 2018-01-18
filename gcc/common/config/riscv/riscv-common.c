@@ -17,6 +17,8 @@ You should have received a copy of the GNU General Public License
 along with GCC; see the file COPYING3.  If not see
 <http://www.gnu.org/licenses/>.  */
 
+#define _WITH_PULP_CHIP_INFO_FUNCT_
+
 #include "config.h"
 #include "system.h"
 #include "coretypes.h"
@@ -32,19 +34,30 @@ along with GCC; see the file COPYING3.  If not see
 static void
 riscv_parse_arch_string (const char *isa, int *flags, location_t loc)
 {
-  const char *p = isa;
+//   const char *p = isa;
+  char *p = xstrdup (isa);
+  char *HeadStr = p;
 
-  if (strncmp (p, "rv32", 4) == 0)
+  for (int i = 0; p[i]; i++) {
+	if (p[i]>='a'&& p[i]<='z') {
+		p[i] = 'A'+ (p[i]-'a');
+	}
+  }
+
+
+  if (Pulp_DP_Format == PULP_DP_FORMAT32) *flags |= MASK_MAP_DOUBLE_TO_FLOAT;
+
+  if (strncmp (p, "RV32", 4) == 0)
     *flags &= ~MASK_64BIT, p += 4;
-  else if (strncmp (p, "rv64", 4) == 0)
+  else if (strncmp (p, "RV64", 4) == 0)
     *flags |= MASK_64BIT, p += 4;
-  else
+  else if (*p!='I')
     {
       error_at (loc, "-march=%s: ISA string must begin with rv32 or rv64", isa);
       return;
     }
 
-  if (*p == 'g')
+  if (*p == 'G')
     {
       p++;
 
@@ -53,24 +66,24 @@ riscv_parse_arch_string (const char *isa, int *flags, location_t loc)
       *flags |= MASK_HARD_FLOAT;
       *flags |= MASK_DOUBLE_FLOAT;
     }
-  else if (*p == 'i')
+  else if (*p == 'I')
     {
       p++;
 
       *flags &= ~MASK_MUL;
-      if (*p == 'm')
+      if (*p == 'M')
 	*flags |= MASK_MUL, p++;
 
       *flags &= ~MASK_ATOMIC;
-      if (*p == 'a')
+      if (*p == 'A')
 	*flags |= MASK_ATOMIC, p++;
 
       *flags &= ~(MASK_HARD_FLOAT | MASK_DOUBLE_FLOAT);
-      if (*p == 'f')
+      if (*p == 'F')
 	{
 	  *flags |= MASK_HARD_FLOAT, p++;
 
-	  if (*p == 'd')
+	  if (*p == 'D')
 	    {
 	      *flags |= MASK_DOUBLE_FLOAT;
 	      p++;
@@ -84,14 +97,86 @@ riscv_parse_arch_string (const char *isa, int *flags, location_t loc)
     }
 
   *flags &= ~MASK_RVC;
-  if (*p == 'c')
+  if (*p == 'C')
     *flags |= MASK_RVC, p++;
 
+  if (*p == 'X') {
+        int Len;
+
+        switch (PulpDecodeCpu(p+1, &Len)) {
+                case PULP_NONE:
+                        if (Len==0) {
+                                error ("-march=%s: unsupported ISA substring %s", isa, p);
+                                return;
+                        }
+                        break;
+                case PULP_RISCV:
+                        *flags &= ~MASK_64BIT; *flags |= MASK_MUL; *flags &= ~MASK_ATOMIC;
+			riscv_abi = ABI_ILP32;
+                        break;
+                case PULP_V0:
+                        *flags &= ~MASK_64BIT; *flags &= ~MASK_MUL; *flags &= ~MASK_ATOMIC;
+			riscv_abi = ABI_ILP32;
+                        if (Pulp_Cpu == PULP_NONE || Pulp_Cpu == PULP_V0) Pulp_Cpu = PULP_V0;
+                        else error("-Xpulpv0: pulp architecture is already defined as %s", PulpProcessorImage(Pulp_Cpu));
+                        break;
+                case PULP_V1:
+                        *flags &= ~MASK_64BIT; *flags &= ~MASK_MUL; *flags &= ~MASK_ATOMIC;
+			riscv_abi = ABI_ILP32;
+                        if (Pulp_Cpu == PULP_NONE || Pulp_Cpu == PULP_V1) Pulp_Cpu = PULP_V1;
+                        else error("-Xpulpv1: pulp architecture is already defined as %s", PulpProcessorImage(Pulp_Cpu));
+                        break;
+                case PULP_V2:
+                        *flags &= ~MASK_64BIT; *flags &= ~MASK_MUL; *flags &= ~MASK_ATOMIC;
+                        if (Pulp_DP_Format != PULP_DP_FORMAT32) riscv_abi = ABI_ILP32;
+                        if (Pulp_Cpu == PULP_NONE || Pulp_Cpu == PULP_V2) Pulp_Cpu = PULP_V2;
+                        else error("-Xpulpv2: pulp architecture is already defined as %s", PulpProcessorImage(Pulp_Cpu));
+                        break;
+                case PULP_V3:
+                        *flags &= ~MASK_64BIT; *flags |= MASK_MUL; *flags &= ~MASK_ATOMIC;
+                        if (Pulp_DP_Format != PULP_DP_FORMAT32) riscv_abi = ABI_ILP32;
+                        if (Pulp_Cpu == PULP_NONE || Pulp_Cpu == PULP_V3) Pulp_Cpu = PULP_V3;
+                        else error("-Xpulpv3: pulp architecture is already defined as %s", PulpProcessorImage(Pulp_Cpu));
+                        break;
+/* __GAP8 Start */
+                case PULP_GAP8:
+                        *flags &= ~MASK_64BIT; *flags |= MASK_MUL; *flags &= ~MASK_ATOMIC;
+			riscv_abi = ABI_ILP32;
+                        if (Pulp_Cpu == PULP_NONE || Pulp_Cpu == PULP_GAP8) Pulp_Cpu = PULP_GAP8;
+                        else error("-Xgap8: pulp architecture is already defined as %s", PulpProcessorImage(Pulp_Cpu));
+                        break;
+/* __GAP8 Stop */
+                case PULP_SLIM:
+                        *flags &= ~MASK_64BIT; *flags &= ~MASK_ATOMIC;
+			riscv_abi = ABI_ILP32;
+                        if (Pulp_Cpu == PULP_NONE || Pulp_Cpu == PULP_SLIM) Pulp_Cpu = PULP_SLIM;
+                        else error("-Xpulpslim: pulp architecture is already defined as %s", PulpProcessorImage(Pulp_Cpu));
+                        break;
+                default:
+                        break;
+        }
+        p+=(Len+1);
+  } else {
+        if (Pulp_Cpu != PULP_NONE) {
+                *flags &= ~MASK_64BIT; *flags &= ~MASK_ATOMIC;
+		riscv_abi = ABI_ILP32;
+                *flags &= ~MASK_ATOMIC;
+                if (Pulp_Cpu >= PULP_V3)  {
+                        *flags |= MASK_MUL;
+                } else {
+                        *flags &= ~MASK_MUL;
+                }
+        }
+  }
+
+                                                           
   if (*p)
     {
       error_at (loc, "-march=%s: unsupported ISA substring %qs", isa, p);
       return;
     }
+  free (HeadStr);
+
 }
 
 /* Implement TARGET_HANDLE_OPTION.  */
@@ -102,11 +187,43 @@ riscv_handle_option (struct gcc_options *opts,
 		     const struct cl_decoded_option *decoded,
 		     location_t loc)
 {
+  int Defined;
   switch (decoded->opt_index)
     {
     case OPT_march_:
       riscv_parse_arch_string (decoded->arg, &opts->x_target_flags, loc);
       return true;
+
+    case OPT_mchip_:
+        Defined=0;
+        switch (decoded->value) {
+                case PULP_CHIP_NONE:
+                        break;
+                case PULP_CHIP_HONEY:
+                        riscv_parse_arch_string ("IXpulpv0",  &opts->x_target_flags, loc); Defined=1;
+                        break;
+                case PULP_CHIP_PULPINO:
+                        riscv_parse_arch_string ("IXpulpv1",  &opts->x_target_flags, loc); Defined=1;
+                        break;
+/* __GAP8 Start */
+                case PULP_CHIP_GAP8:
+                        riscv_parse_arch_string ("IXgap8",  &opts->x_target_flags, loc); Defined=1;
+                        break;
+/* __GAP8 Stop */
+                default:
+                        break;
+        }
+        if (Defined) {
+                _Pulp_FC = Pulp_Defined_Chips[decoded->value].Pulp_FC;
+                _Pulp_PE = Pulp_Defined_Chips[decoded->value].Pulp_PE;
+                _Pulp_L2_Size = Pulp_Defined_Chips[decoded->value].Pulp_L2_Size;
+                _Pulp_L1_Cluster_Size = Pulp_Defined_Chips[decoded->value].Pulp_L1_Cluster_Size;
+                _Pulp_L1_FC_Size = Pulp_Defined_Chips[decoded->value].Pulp_L1_FC_Size;
+        }
+      return true;
+    case OPT_mcpu_:
+        error("Use -march to pass pulp cpu info and not -mcpu");
+        return true;
 
     default:
       return true;
