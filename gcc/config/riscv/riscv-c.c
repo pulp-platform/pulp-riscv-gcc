@@ -33,6 +33,9 @@ void
 riscv_cpu_cpp_builtins (cpp_reader *pfile)
 {
   builtin_define ("__riscv");
+  builtin_define ("__riscv__");
+  builtin_define ("__riscv");
+  builtin_define ("_riscv");
   
   if (TARGET_RVC)
     builtin_define ("__riscv_compressed");

@@ -1518,6 +1518,11 @@ riscv_legitimize_move (enum machine_mode mode, rtx dest, rtx src)
      pattern for optimize access PIC local symbol and it's make GCC generate
      unrecognizable instruction during optmizing.  */
 
+  /* EF: As soon as reload is in progress or done force address will crash
+     since no tempora reg can be allocated, skip when !can_create_pseudo_p()
+  */
+  if (!can_create_pseudo_p()) return false;
+
   if (MEM_P (dest) && !riscv_legitimate_address_p (mode, XEXP (dest, 0),
 						   reload_completed))
     {
