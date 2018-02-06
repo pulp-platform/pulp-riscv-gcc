@@ -93,6 +93,9 @@ extern void riscv_expand_prologue (void);
 extern void riscv_expand_epilogue (bool);
 extern bool riscv_can_use_return_insn (void);
 extern rtx riscv_function_value (const_tree, const_tree, enum machine_mode);
+extern enum reg_class riscv_secondary_reload_class (enum reg_class,
+                                                   enum machine_mode,
+                                                   rtx, bool);
 extern unsigned int riscv_hard_regno_nregs (int, enum machine_mode);
 
 extern void riscv_expand_vector_init (rtx, rtx);

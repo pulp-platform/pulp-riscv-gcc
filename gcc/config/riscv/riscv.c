@@ -996,8 +996,14 @@ riscv_const_insns (rtx x)
       if (offset != 0)
 	{
 	  int n = riscv_const_insns (x);
-	  if (n != 0)
-	    return n + riscv_integer_cost (INTVAL (offset));
+	  if (n != 0) {
+	    // return n + riscv_integer_cost (INTVAL (offset));
+              if (SMALL_OPERAND (INTVAL (offset)))
+                return n + 1;
+              else if (!targetm.cannot_force_const_mem (GET_MODE (x), x))
+                return n + 1 + riscv_integer_cost (INTVAL (offset));
+
+	  }
 	}
       return 0;
 
@@ -1040,14 +1046,17 @@ riscv_load_store_insns (rtx mem, rtx_insn *insn)
 
   /* Try to prove that INSN does not need to be split.  */
   might_split_p = true;
+/*
   if (GET_MODE_BITSIZE (mode) <= 32)
     might_split_p = false;
-  else if (GET_MODE_BITSIZE (mode) == 64)
+  else
+*/
+  if (GET_MODE_BITSIZE (mode) == 64)
     {
       set = single_set (insn);
       if (set && !riscv_split_64bit_move_p (SET_DEST (set), SET_SRC (set)))
 	might_split_p = false;
-    }
+    } else might_split_p = false;
 
   return riscv_address_insns (XEXP (mem, 0), mode, might_split_p);
 }
@@ -4129,12 +4138,56 @@ riscv_for_each_saved_reg (HOST_WIDE_INT sp_offset, riscv_save_restore_fn fn)
 
 /* Save register REG to MEM.  Make the instruction frame-related.  */
 
+#ifdef ORIG
 static void
 riscv_save_reg (rtx reg, rtx mem)
 {
   riscv_emit_move (mem, reg);
   riscv_set_frame_expr (riscv_frame_set (mem, reg));
 }
+#else
+static void
+riscv_emit_save_slot_move (rtx dest, rtx src, rtx temp)
+{
+  unsigned int regno;
+  rtx mem;
+  enum reg_class rclass;
+
+  if (REG_P (src))
+    {
+      regno = REGNO (src);
+      mem = dest;
+    }
+  else
+    {
+      regno = REGNO (dest);
+      mem = src;
+    }
+
+  rclass = riscv_secondary_reload_class (REGNO_REG_CLASS (regno),
+                                         GET_MODE (mem), mem, mem == src);
+
+  if (rclass == NO_REGS)
+    riscv_emit_move (dest, src);
+  else
+    {
+      gcc_assert (!reg_overlap_mentioned_p (dest, temp));
+      riscv_emit_move (temp, src);
+      riscv_emit_move (dest, temp);
+    }
+  if (MEM_P (dest))
+    riscv_set_frame_expr (riscv_frame_set (dest, src));
+}
+
+/* Save register REG to MEM.  Make the instruction frame-related.  */
+
+static void
+riscv_save_reg (rtx reg, rtx mem)
+{
+  riscv_emit_save_slot_move (mem, reg, RISCV_PROLOGUE_TEMP (GET_MODE (reg)));
+}
+
+#endif
 
 /* Restore register REG from MEM.  */
 
@@ -4664,6 +4717,7 @@ riscv_hard_regno_mode_ok_p (unsigned int regno, enum machine_mode mode)
     {
       if (size <= UNITS_PER_WORD)
         return true;
+      else return false;
     }
   else if (VIT_REG_P (regno)) return true;
   else
@@ -4710,6 +4764,48 @@ riscv_memory_move_cost (enum machine_mode mode, reg_class_t rclass, bool in)
 {
   return (tune_info->memory_cost
 	  + memory_move_secondary_cost (mode, rclass, in));
+}
+
+/* Return the register class required for a secondary register when
+   copying between one of the registers in RCLASS and value X, which
+   has mode MODE.  X is the source of the move if IN_P, otherwise it
+   is the destination.  Return NO_REGS if no secondary register is
+   needed.  */
+
+enum reg_class
+riscv_secondary_reload_class (enum reg_class rclass,
+                             enum machine_mode mode, rtx x,
+                             bool in_p ATTRIBUTE_UNUSED)
+{
+  int regno;
+
+  regno = true_regnum (x);
+
+  if (reg_class_subset_p (rclass, FP_REGS))
+    {
+      if (MEM_P (x) && (GET_MODE_SIZE (mode) == 4 || GET_MODE_SIZE (mode) == 8))
+        /* We can use flw/fld/fsw/fsd. */
+        return NO_REGS;
+
+      if (GP_REG_P (regno) || x == CONST0_RTX (mode))
+        /* We can use fmv or go through memory when mode > Pmode. */
+        return NO_REGS;
+
+      if (CONSTANT_P (x) && !targetm.cannot_force_const_mem (mode, x))
+        /* We can force the constant to memory and use flw/fld. */
+        return NO_REGS;
+
+      if (FP_REG_P (regno))
+        /* We can use fmv.fmt. */
+        return NO_REGS;
+
+      /* Otherwise, we need to reload through an integer register.  */
+      return GR_REGS;
+    }
+  if (FP_REG_P (regno))
+    return reg_class_subset_p (rclass, GR_REGS) ? NO_REGS : GR_REGS;
+
+  return NO_REGS;
 }
 
 /* Return the number of instructions that can be issued per cycle.  */

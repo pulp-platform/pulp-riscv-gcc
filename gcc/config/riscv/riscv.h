@@ -538,6 +538,11 @@ enum reg_class
   (((VALUE) | ((1UL<<31) - IMM_REACH)) == ((1UL<<31) - IMM_REACH)	\
    || ((VALUE) | ((1UL<<31) - IMM_REACH)) + IMM_REACH == 0)
 
+#define SECONDARY_INPUT_RELOAD_CLASS(CLASS, MODE, X)                    \
+  riscv_secondary_reload_class (CLASS, MODE, X, true)
+#define SECONDARY_OUTPUT_RELOAD_CLASS(CLASS, MODE, X)                   \
+  riscv_secondary_reload_class (CLASS, MODE, X, false)
+
 #define CANNOT_CHANGE_MODE_CLASS(FROM, TO, CLASS) \
   reg_classes_intersect_p (FP_REGS, CLASS)
 

@@ -83,6 +83,8 @@
   UNSPEC_ITS
   UNSPEC_ITH
   UNSPEC_ITM
+
+  UNSPEC_READSI_NONVOL
 ])
 
 (define_c_enum "unspecv" [
@@ -3044,7 +3046,7 @@
 (define_insn "writesivol"
   [(unspec_volatile [(match_operand:SI 0 "register_operand" "rJ,rJ")
 		     (match_operand:SI 1 "register_operand" "r,r")
-		     (match_operand:SI 2 "nonmemory_operand" "r,i")] UNSPECV_WRITESI_VOL)]
+		     (match_operand:SI 2 "nonmemory_operand" "r,I")] UNSPECV_WRITESI_VOL)]
  "(Pulp_Cpu>=PULP_V2)"
   "@
    p.sw \t%z0,%2(%1)\t# Write volatile
@@ -3056,7 +3058,7 @@
 (define_insn "writesi"
   [(unspec [(match_operand:SI 0 "register_operand" "rJ,rJ")
 	    (match_operand:SI 1 "register_operand" "r,r")
-	    (match_operand:SI 2 "nonmemory_operand" "r,i")] UNSPEC_WRITESI)]
+	    (match_operand:SI 2 "nonmemory_operand" "r,I")] UNSPEC_WRITESI)]
  "(Pulp_Cpu>=PULP_V2)"
   "@
    p.sw \t%z0,%2(%1)\t# Write non volatile
@@ -3113,7 +3115,7 @@
 
 (define_insn "OffsetedRead"
   [(set (match_operand:SI 0 "register_operand" "=r,r")
-        (unspec_volatile:SI [(match_operand:SI 1 "register_operand" "r,r") (match_operand:SI 2 "nonmemory_operand" "r,i")] UNSPECV_OFFSETED_READ)
+        (unspec_volatile:SI [(match_operand:SI 1 "register_operand" "r,r") (match_operand:SI 2 "nonmemory_operand" "r,I")] UNSPECV_OFFSETED_READ)
    )
   ]
   "(Pulp_Cpu>=PULP_V2)"
@@ -3124,7 +3126,7 @@
 
 (define_insn "OffsetedReadHalf"
   [(set (match_operand:SI 0 "register_operand" "=r,r")
-        (unspec_volatile:SI [(match_operand:SI 1 "register_operand" "r,r") (match_operand:SI 2 "nonmemory_operand" "r,i")] UNSPECV_OFFSETED_READ_HALF)
+        (unspec_volatile:SI [(match_operand:SI 1 "register_operand" "r,r") (match_operand:SI 2 "nonmemory_operand" "r,I")] UNSPECV_OFFSETED_READ_HALF)
    )
   ]
   "(Pulp_Cpu>=PULP_V2)"
@@ -3135,7 +3137,7 @@
 
 (define_insn "OffsetedReadByte"
   [(set (match_operand:SI 0 "register_operand" "=r,r")
-        (unspec_volatile:SI [(match_operand:SI 1 "register_operand" "r,r") (match_operand:SI 2 "nonmemory_operand" "r,i")] UNSPECV_OFFSETED_READ_BYTE)
+        (unspec_volatile:SI [(match_operand:SI 1 "register_operand" "r,r") (match_operand:SI 2 "nonmemory_operand" "r,I")] UNSPECV_OFFSETED_READ_BYTE)
    )
   ]
   "(Pulp_Cpu>=PULP_V2)"
@@ -3147,7 +3149,7 @@
 (define_insn "OffsetedWrite"
   [(unspec_volatile [(match_operand:SI 0 "reg_or_0_operand" "rJ,rJ")
 		     (match_operand:SI 1 "register_operand" "r,r")
-		     (match_operand:SI 2 "nonmemory_operand" "r,i")] UNSPECV_OFFSETED_WRITE)]
+		     (match_operand:SI 2 "nonmemory_operand" "r,I")] UNSPECV_OFFSETED_WRITE)]
  "(Pulp_Cpu>=PULP_V2)"
   "@
    p.sw \t%z0,%2(%1)\t# Offseted Write volatile
@@ -3159,7 +3161,7 @@
 (define_insn "OffsetedWriteHalf"
   [(unspec_volatile [(match_operand:SI 0 "reg_or_0_operand" "rJ,rJ")
 		     (match_operand:SI 1 "register_operand" "r,r")
-		     (match_operand:SI 2 "nonmemory_operand" "r,i")] UNSPECV_OFFSETED_WRITE_HALF)]
+		     (match_operand:SI 2 "nonmemory_operand" "r,I")] UNSPECV_OFFSETED_WRITE_HALF)]
  "(Pulp_Cpu>=PULP_V2)"
   "@
    p.sh \t%z0,%2(%1)\t# Offseted Write Half volatile
@@ -3171,7 +3173,7 @@
 (define_insn "OffsetedWriteByte"
   [(unspec_volatile [(match_operand:SI 0 "reg_or_0_operand" "rJ,rJ")
 		     (match_operand:SI 1 "register_operand" "r,r")
-		     (match_operand:SI 2 "nonmemory_operand" "r,i")] UNSPECV_OFFSETED_WRITE_BYTE)]
+		     (match_operand:SI 2 "nonmemory_operand" "r,I")] UNSPECV_OFFSETED_WRITE_BYTE)]
  "(Pulp_Cpu>=PULP_V2)"
   "@
    p.sb \t%z0,%2(%1)\t# Offseted Write Byte volatile
@@ -3191,10 +3193,13 @@
 
 (define_insn "OffsetedReadNonVol"
   [(set (match_operand:SI 0 "register_operand" "=r")
-	;; (mem:SI (plus:SI (match_operand:SI 1 "register_operand" "r") (match_operand:SI 2 "immediate_operand" "i")))
-	(mem:SI (plus:SI (match_operand:SI 1 "register_operand" "r") (match_operand:SI 2 "const_arith_operand" "i")))
+        (unspec:SI [(match_operand:SI 1 "register_operand" "r") (match_operand:SI 2 "immediate_operand" "i")] UNSPEC_READSI_NONVOL)
    )
   ]
+;;  [(set (match_operand:SI 0 "register_operand" "=r")
+;;	(mem:SI (plus:SI (match_operand:SI 1 "register_operand" "r") (match_operand:SI 2 "const_arith_operand" "I")))
+;;   )
+;;  ]
   "(Pulp_Cpu>=PULP_V2)"
   "p.lw \t%0,%2(%1)\t# Non volatile Load offseted"
 )
