@@ -3830,6 +3830,7 @@ static int scan_reg_definitions(int regno)
 static bool
 riscv_save_reg_p (unsigned int regno, unsigned int is_it)
 {
+#ifdef OLD
   bool call_saved = !global_regs[regno] && !call_used_regs[regno];
   bool might_clobber = crtl->saves_all_registers
 		       || df_regs_ever_live_p (regno);
@@ -3849,6 +3850,27 @@ riscv_save_reg_p (unsigned int regno, unsigned int is_it)
     return true;
 
   return false;
+#else
+  bool call_saved = !global_regs[regno] && !call_really_used_regs[regno];
+  bool might_clobber = crtl->saves_all_registers
+                       || df_regs_ever_live_p (regno)
+                       || (regno == HARD_FRAME_POINTER_REGNUM
+                           && frame_pointer_needed);
+  bool it_rel = is_it && df_regs_ever_live_p(regno) && scan_reg_definitions(regno);
+  /*
+  if ((call_saved && might_clobber)
+         || (regno == RETURN_ADDR_REGNUM && crtl->calls_eh_return)
+         || it_rel)
+	fprintf(stderr, "Function: %s, reg: %d, Must be saved: %s, is_it: %d, global_regs: %d, call_used_regs: %d, might_clobber: %d, it_rel: %d\n",
+		current_function_name(), regno, ((call_saved && might_clobber) || (regno == RETURN_ADDR_REGNUM && crtl->calls_eh_return) || it_rel)?"Yes":"No", is_it,
+		global_regs[regno], call_really_used_regs[regno], might_clobber, it_rel );
+  */
+
+  return (call_saved && might_clobber)
+         || (regno == RETURN_ADDR_REGNUM && crtl->calls_eh_return)
+         || it_rel;
+
+#endif
 }
 
 /* Determine whether to call GPR save/restore routines.  */
@@ -4412,16 +4434,35 @@ riscv_set_current_function (tree decl)
 
 {
         tree attrs;
-        static bool Reg_Init = false;
+	static bool Trace = false;
+        static bool CurFunIsIt = false;
         static char saved_call_used_regs[FIRST_PSEUDO_REGISTER];
+        static char saved_call_fixed_regs[FIRST_PSEUDO_REGISTER];
         int i;
 
+	if (Trace) {
+		fprintf(stderr, "\nSet Current Fun: %25s:         Call_Used_Regs[] = ", current_function_name());
+        	for (i=1; i<32; i++) if (call_used_regs[i]) fprintf(stderr, " %d", i);
+		fprintf(stderr, " Init: %d\n", caller_save_initialized_p);
+	}
 
-        if (Reg_Init) {
-                        for (i=1; i<32; i++) call_used_regs[i] = saved_call_used_regs[i];
-        }
         if (decl == NULL_TREE || current_function_decl == NULL_TREE ||
-            current_function_decl == error_mark_node || ! cfun->machine) return;
+            current_function_decl == error_mark_node || ! cfun->machine) {
+		if (Trace) {
+			fprintf(stderr, "Set Current Fun: %25s: Updated Call_Used_Regs[] = ", current_function_name());
+        		for (i=1; i<32; i++) if (call_used_regs[i]) fprintf(stderr, " %d", i);
+			fprintf(stderr, " ClearingIt: %d\n", CurFunIsIt);
+		}
+		if (CurFunIsIt) {
+			caller_save_initialized_p = false;
+			CurFunIsIt = false;
+                        for (i=1; i<32; i++) {
+				call_used_regs[i] = saved_call_used_regs[i];
+                        	if (saved_call_fixed_regs[i])  SET_HARD_REG_BIT (call_fixed_reg_set, i); else  CLEAR_HARD_REG_BIT (call_fixed_reg_set, i);
+			}
+		}
+		return;
+	}
 
         cfun->machine->is_interrupt = 0;
         if (decl) {
@@ -4456,17 +4497,21 @@ riscv_set_current_function (tree decl)
 				if (lookup_attribute ("Hinterrupt", attrs)) cfun->machine->is_interrupt |= 0x8;
 				if (lookup_attribute ("Minterrupt", attrs)) cfun->machine->is_interrupt |= 0x10;
 			}
+			CurFunIsIt = true;
+                        for (i=1; i<32; i++) {
+				saved_call_used_regs[i] = call_used_regs[i];
+				saved_call_fixed_regs[i] = TEST_HARD_REG_BIT(call_fixed_reg_set, i);
+                		call_used_regs[i] = 0;
+			}
 		}
-        } else return;
-
-        if (cfun->machine->is_interrupt) {
-                if (!Reg_Init) {
-                        for (i=1; i<32; i++) saved_call_used_regs[i] = call_used_regs[i];
-                        Reg_Init = true;
-                }
-                for (i=1; i<32; i++) call_used_regs[i] = 0;
         }
 
+	if (Trace) {
+		fprintf(stderr, "Set Current Fun: %25s: Updated Call_Used_Regs[] = ", current_function_name());
+        	for (i=1; i<32; i++) if (call_used_regs[i]) fprintf(stderr, " %d", i);
+		fprintf(stderr, "\n");
+	}
+	
 }
 
 
@@ -4724,9 +4769,10 @@ riscv_hard_regno_mode_ok_p (unsigned int regno, enum machine_mode mode)
     return false;
 
   /* Require same callee-savedness for all registers.  */
-  for (unsigned i = 1; i < nregs; i++)
-    if (call_used_regs[regno] != call_used_regs[regno + i])
-      return false;
+  if (!cfun || !cfun->machine->is_interrupt)
+    for (unsigned i = 1; i < nregs; i++)
+      if (call_used_regs[regno] != call_used_regs[regno + i])
+        return false;
 
   return true;
 }
