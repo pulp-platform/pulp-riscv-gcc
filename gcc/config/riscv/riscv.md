@@ -2685,7 +2685,8 @@
 	(fix:GPR
 	    (match_operand:ANYF 1 "register_operand" " f")))]
   "TARGET_HARD_FLOAT"
-  { return TARGET_MAP_DOUBLE_TO_FLOAT?"fcvt.w.s %0,%1,rtz":"fcvt.w.d %0,%1,rtz"; }
+  "fcvt.<GPR:ifmt>.<ANYF:fmt> %0,%1,rtz"
+  ;; { return TARGET_MAP_DOUBLE_TO_FLOAT?"fcvt.w.s %0,%1,rtz":"fcvt.w.d %0,%1,rtz"; }
   [(set_attr "type" "fcvt")
    (set_attr "mode" "<ANYF:MODE>")])
 
