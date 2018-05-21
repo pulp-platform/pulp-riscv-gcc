@@ -3509,7 +3509,7 @@ riscv_memmodel_needs_amo_acquire (enum memmodel model)
       case MEMMODEL_ACQUIRE:
       case MEMMODEL_CONSUME:
       case MEMMODEL_SYNC_ACQUIRE:
-	return true;
+	if (Pulp_Cpu==PULP_GAP8) return false; else return true;
 
       case MEMMODEL_RELEASE:
       case MEMMODEL_SYNC_RELEASE:
@@ -3534,7 +3534,7 @@ riscv_memmodel_needs_release_fence (enum memmodel model)
       case MEMMODEL_SYNC_SEQ_CST:
       case MEMMODEL_RELEASE:
       case MEMMODEL_SYNC_RELEASE:
-	return true;
+	if (Pulp_Cpu==PULP_GAP8) return false; else return true;
 
       case MEMMODEL_ACQUIRE:
       case MEMMODEL_CONSUME:
@@ -5933,6 +5933,67 @@ riscv_reorg_loops (void)
   df_analyze ();
 }
 
+
+static void riscv_patch_generated_code()
+
+{
+	/* Look for pattern
+				1) set RegW = Mem()
+				2) JumpCond	
+		FallThrough:	3) Call RegR
+
+		With RegR = RegW, if found insert a nop after  1)
+	*/
+	basic_block bb;
+
+	FOR_EACH_BB_FN (bb, cfun) {
+		basic_block TargetBB;
+      		rtx_insn *end, *head = BB_HEAD (bb);
+      		rtx_insn *insn, *prev_insn;
+		rtx jump_insn, call_insn;
+		rtx RegW, RegR;
+      		edge e;
+      		edge_iterator ei;
+
+      		for (insn = BB_END (bb); ; insn = PREV_INSN (insn)) {
+			if (NONDEBUG_INSN_P (insn) || (insn == head)) break;
+		}
+		if (!JUMP_P(insn)) continue;
+		jump_insn = PATTERN(insn);
+		if (!(GET_CODE (jump_insn) == SET && GET_CODE (SET_SRC(jump_insn)) == IF_THEN_ELSE)) continue;
+		prev_insn = prev_nonnote_nondebug_insn(insn);
+		if (prev_insn == NULL_RTX || !INSN_P(prev_insn)) continue;
+		RegW = SET_DEST(PATTERN(prev_insn));
+		if (!REG_P(RegW) || !MEM_P(SET_SRC(PATTERN(prev_insn)))) continue;
+
+		TargetBB = 0;
+		FOR_EACH_EDGE (e, ei, bb->succs) {
+			if (e->flags & EDGE_FALLTHRU) {
+				TargetBB = e->dest; break;
+			}
+		}
+		if (!TargetBB) continue;
+		
+		end = BB_END(TargetBB);
+      		for (insn = BB_HEAD(TargetBB); ; insn = NEXT_INSN (insn)) {
+			if ((!DEBUG_INSN_P (insn)&&!NOTE_P(insn)) || (insn == end)) break;
+		}
+		if (insn == NULL_RTX || !CALL_P(insn)) continue;
+		if (GET_CODE(PATTERN(insn)) == PARALLEL) call_insn = XVECEXP (insn, 0, 0); else call_insn = PATTERN(insn);
+		if (GET_CODE(call_insn) != CALL) continue;
+		RegR = XEXP(call_insn, 0);
+		if (GET_CODE(RegR) != MEM) continue;
+		RegR = XEXP(RegR, 0);
+		if (!REG_P(RegR)) continue;
+		if (REGNO(RegW) != REGNO(RegR)) continue;
+
+		prev_insn = emit_insn_after (gen_forced_nop (), prev_insn);
+		
+		
+	}
+
+}
+
 static void
 riscv_reorg (void)
 {
@@ -5944,6 +6005,8 @@ riscv_reorg (void)
 
   /* Doloop optimization */
   if (cfun->machine->has_hardware_loops) riscv_reorg_loops ();
+
+  if (Pulp_Cpu==PULP_GAP8) riscv_patch_generated_code();
 
   df_finish_pass (false);
 }

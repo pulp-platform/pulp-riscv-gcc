@@ -3573,12 +3573,18 @@
 (define_insn "fence"
   [(unspec_volatile [(const_int 0)] UNSPECV_FENCE)]
   ""
-  "%|fence%-")
+  {
+    return ((Pulp_Cpu==PULP_GAP8)?"":"%|fence%-");
+  }
+)
 
 (define_insn "fence_i"
   [(unspec_volatile [(const_int 0)] UNSPECV_FENCE_I)]
   ""
-  "fence.i")
+  {
+    return ((Pulp_Cpu==PULP_GAP8)?"": "fence.i");
+  }
+)
 
 (define_expand "movmemsi"
   [(parallel [(set (match_operand:BLK 0 "general_operand")
