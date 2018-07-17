@@ -2038,6 +2038,11 @@ riscv*-*-elf*)
 	xyes) tmake_file="${tmake_file} riscv/t-elf-multilib" ;;
 	*) echo "Unknown value for enable_multilib"; exit 1
 	esac
+	if test x$enable_as_accelerator = xyes; then
+          extra_programs="${extra_programs} mkoffload\$(exeext)"
+          tm_file="${tm_file} riscv/hero-offload.h"
+          tmake_file="${tmake_file} riscv/t-hero"
+	fi
 	tmake_file="${tmake_file} riscv/t-riscv"
 	gnu_ld=yes
 	gas=yes

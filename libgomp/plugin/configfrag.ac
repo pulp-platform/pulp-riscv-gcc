@@ -133,6 +133,13 @@ AC_SUBST(PLUGIN_HSA_CPPFLAGS)
 AC_SUBST(PLUGIN_HSA_LDFLAGS)
 AC_SUBST(PLUGIN_HSA_LIBS)
 
+PLUGIN_PULP_HERO=0
+PLUGIN_PULP_HERO_CPPFLAGS=
+PLUGIN_PULP_HERO_LDFLAGS=
+AC_SUBST(PLUGIN_PULP_HERO)
+AC_SUBST(PLUGIN_PULP_HERO_CPPFLAGS)
+AC_SUBST(PLUGIN_PULP_HERO_LDFLAGS)
+
 # Get offload targets and path to install tree of offloading compiler.
 offload_additional_options=
 offload_additional_lib_paths=
@@ -222,6 +229,18 @@ if test x"$enable_offload_targets" != x; then
             ;;
         esac
         ;;
+	riscv*)
+		PLUGIN_PULP_HERO=1
+		PLUGIN_PULP_HERO_CPPFLAGS=${LIBGOMP_PLUGIN_PULP_HERO_CPPFLAGS}
+		PLUGIN_PULP_HERO_LDFLAGS=${LIBGOMP_PLUGIN_PULP_HERO_LDFLAGS}
+		if test "x$PLUGIN_PULP_HERO_CPPFLAGS" = x; then
+			AC_MSG_ERROR([PULP_HERO evironment is not set! LIBGOMP_PLUGIN_PULP_HERO_CPPFLAGS are missing!])
+		fi
+		if test "x$PLUGIN_PULP_HERO_LDFLAGS" = x; then
+			AC_MSG_ERROR([PULP_HERO evironment is not set! LIBGOMP_PLUGIN_PULP_HERO_LDFLAGS are missing! ])
+		fi			
+		tgt_name=pulp-hero
+		;;
       *)
 	AC_MSG_ERROR([unknown offload target specified])
 	;;
@@ -264,3 +283,8 @@ fi
 
 AC_DEFINE_UNQUOTED([HSA_RUNTIME_LIB], ["$HSA_RUNTIME_LIB"],
   [Define path to HSA runtime.])
+
+AM_CONDITIONAL([PLUGIN_PULP_HERO], [test $PLUGIN_PULP_HERO = 1])
+AC_DEFINE_UNQUOTED([PLUGIN_PULP_HERO], [$PLUGIN_PULP_HERO],
+  [Define to 1 if the PULP HERO plugin is built, 0 if not.])
+

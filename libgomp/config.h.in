@@ -159,6 +159,9 @@
    be linked against it. */
 #undef PLUGIN_NVPTX_DYNAMIC
 
+/* Define to 1 if the PULP HERO plugin is built, 0 if not. */
+#undef PLUGIN_PULP_HERO
+
 /* Define if all infrastructure, needed for plugins, is supported. */
 #undef PLUGIN_SUPPORT
 

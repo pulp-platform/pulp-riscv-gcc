@@ -118,6 +118,8 @@ if test "x$GCC" = "xyes"; then
   XCFLAGS="$XCFLAGS -Wall -Werror"
 fi
 
+AC_PROG_CXX
+
 # Find other programs we need.
 AC_CHECK_TOOL(AR, ar)
 AC_CHECK_TOOL(RANLIB, ranlib, ranlib-not-found-in-path-error)
@@ -386,3 +388,44 @@ AC_CONFIG_FILES(omp.h omp_lib.h omp_lib.f90 libgomp_f.h)
 AC_CONFIG_FILES(Makefile testsuite/Makefile libgomp.spec)
 AC_CONFIG_FILES([testsuite/libgomp-test-support.pt.exp:testsuite/libgomp-test-support.exp.in])
 AC_OUTPUT
+
+if test "$enable_vtable_verify" = yes; then
+  predep_objects_CXX="${predep_objects_CXX} ${glibcxx_builddir}/../libgcc/vtv_start.o"
+  postdep_objects_CXX="${postdep_objects_CXX} ${glibcxx_builddir}/../libgcc/vtv_end.o"
+fi
+
+
+# libtool variables for C++ shared and position-independent compiles.
+#
+# Use glibcxx_lt_pic_flag to designate the automake variable
+# used to encapsulate the default libtool approach to creating objects
+# with position-independent code. Default: -prefer-pic.
+#
+# Use glibcxx_compiler_shared_flag to designate a compile-time flags for
+# creating shared objects. Default: -D_GLIBCXX_SHARED.
+#
+# Use glibcxx_compiler_pic_flag to designate a compile-time flags for
+# creating position-independent objects. This varies with the target
+# hardware and operating system, but is often: -DPIC -fPIC.
+if test "$enable_shared" = yes; then
+  glibcxx_lt_pic_flag="-prefer-pic"
+  glibcxx_compiler_pic_flag="$lt_prog_compiler_pic_CXX"
+  glibcxx_compiler_shared_flag="-D_GLIBCXX_SHARED"
+
+else
+  glibcxx_lt_pic_flag=
+  glibcxx_compiler_pic_flag=
+  glibcxx_compiler_shared_flag=
+fi
+AC_SUBST(glibcxx_lt_pic_flag)
+AC_SUBST(glibcxx_compiler_pic_flag)
+AC_SUBST(glibcxx_compiler_shared_flag)
+
+# Override the libtool's pic_flag and pic_mode.
+# Do this step after AM_PROG_LIBTOOL, but before AC_OUTPUT.
+# NB: this impacts --with-pic and --without-pic.
+lt_prog_compiler_pic_CXX="$glibcxx_compiler_pic_flag $glibcxx_compiler_shared_flag"
+pic_mode='default'
+
+# Eliminate -lstdc++ addition to postdeps for cross compiles.
+postdeps_CXX=`echo " $postdeps_CXX " | sed 's, -lstdc++ ,,g'`

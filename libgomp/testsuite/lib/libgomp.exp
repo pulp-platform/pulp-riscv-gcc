@@ -53,6 +53,9 @@ foreach offload_target_openacc $offload_targets_s {
 	hsa {
 	    continue
 	}
+	riscv {
+	    continue
+	}
     }
     lappend offload_targets_s_openacc "$offload_target_openacc"
 }
