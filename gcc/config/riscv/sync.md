@@ -53,7 +53,10 @@
 	(unspec:BLK [(match_dup 0)] UNSPEC_MEMORY_BARRIER))
    (match_operand:SI 1 "const_int_operand" "")] ;; model
   ""
-  "fence\tiorw,iorw")
+  {
+	if (Pulp_Cpu==PULP_GAP8) return ""; else return "fence\tiorw,iorw";
+  }
+)
 
 ;; Atomic memory operations.
 
