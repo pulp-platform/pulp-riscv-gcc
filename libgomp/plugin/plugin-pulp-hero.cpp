@@ -65,7 +65,7 @@ extern "C"
   #define PULP_HERO_DEFAULT_RAB_LEVEL     (0x0U)
   #define PULP_HERO_DEFAULT_RAB_LOG_EN    (0x0U)
   #define PULP_HERO_DEFAULT_ACP_EN        (0x0U)
-  #define PULP_HERO_DEFAULT_TIMEOUT       ( 10U)
+  #define PULP_HERO_DEFAULT_TIMEOUT       ( 20U)
 }
 
 /* Start/end addresses of functions and global variables on a device.  */
@@ -172,8 +172,13 @@ extern "C" bool
 GOMP_OFFLOAD_fini_device (int n __attribute__ ((unused)))
 {
   TRACE("");
-  num_devices = 0;
-  return 0;
+  pulp_mbox_write(pulp, PULP_START);
+  pulp_mbox_write(pulp, 0xdeadbeef);
+  pulp_mbox_write(pulp, NULL);
+
+  TRACE("waiting EOC");
+  pulp_exe_wait(pulp,PULP_HERO_DEFAULT_TIMEOUT); 
+  return 0x1;
 }
 
 /* Return the libgomp version number we're compatible with.  There is
@@ -316,9 +321,8 @@ GOMP_OFFLOAD_unload_image (int n __attribute__ ((unused)),
                            unsigned int version __attribute__ ((unused)),
                            const void *i __attribute__ ((unused)))
 {
-  //FIXME implement it!
   TRACE("");
-  return 0;  
+  return 0x1;  
 }
 
 void *base_address;
@@ -377,7 +381,7 @@ GOMP_OFFLOAD_host2dev (int n __attribute__ ((unused)),
   TRACE ("(tgt_ptr = %p, host_ptr = %p, size = %d)", tgt_ptr, host_ptr, size);
   TRACE ("memcpy(vir_ptr = %p, host_ptr = %p, size = %d)", vir_ptr, host_ptr, size);
   memcpy((void *) vir_ptr, host_ptr, size);
-  return 0;
+  return 0x1;
 }
 
 extern "C" bool
@@ -392,7 +396,7 @@ GOMP_OFFLOAD_dev2host (int n __attribute__ ((unused)),
   TRACE ("(host_ptr = %p, tgt_ptr = %p, size = %d)", host_ptr, tgt_ptr, size);
   TRACE ("memcpy(host_ptr = %p, vir_ptr = %p, size = %d)", host_ptr, vir_ptr, size);
   memcpy(host_ptr, (void *) vir_ptr, size);
-  return 0;  
+  return 0x1;  
 }
 
 extern "C" bool
@@ -408,13 +412,19 @@ GOMP_OFFLOAD_dev2dev (int n __attribute__ ((unused)),
 extern "C" void
 GOMP_OFFLOAD_run (int n __attribute__ ((unused)), void *tgt_fn, void *tgt_vars, void **args __attribute__ ((unused)))
 {
-  TRACE ("(tgt_fn = %p, tgt_vars = %p (%p))", tgt_fn,
+  uint32_t ret;
+
+  TRACE ("*(tgt_fn = %p, tgt_vars = %p (%p))", tgt_fn,
          tgt_vars);
   pulp_mbox_write(pulp, PULP_START);
   pulp_mbox_write(pulp, (uint32_t) tgt_fn);
   pulp_mbox_write(pulp, (uint32_t) tgt_vars);
-  
-  pulp_exe_wait(pulp,PULP_HERO_DEFAULT_TIMEOUT);
+  usleep(10);
+  pulp_mbox_read(pulp, (unsigned int * ) &ret, 1);
+  if(ret == PULP_DONE)
+      TRACE ("execution done");
+  else
+      TRACE ("returned %d", ret);
 }
 
 void

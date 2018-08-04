@@ -52,19 +52,24 @@ tool_cleanup (bool from_signal ATTRIBUTE_UNUSED)
 }
 
 static void
-mkoffload_atexit (void)
+mkoffload_cleanup (void)
 {
-  // tool_cleanup (false);
+  tool_cleanup (false);
 }
 
-/* Unlink FILE unless we are debugging.  */
+/* Unlink FILE unless requested otherwise.  */
+
 void
 maybe_unlink (const char *file)
 {
-  if (debug)
-    notice ("[Leaving %s]\n", file);
-  else
-    unlink_if_ordinary (file);
+  if (!save_temps)
+    {
+      if (unlink_if_ordinary (file)
+	  && errno != ENOENT)
+	fatal_error (input_location, "deleting file %s: %m", file);
+    }
+  else if (verbose)
+    fprintf (stderr, "[Leaving %s]\n", file);
 }
 
 /* Add or change the value of an environment variable, outputting the
@@ -108,7 +113,7 @@ parse_env_var (const char *str, char ***pvalues)
       curval = nextval + 1;
       nextval = strchr (curval, ':');
       if (nextval == NULL)
-  nextval = strchr (curval, '\0');
+	nextval = strchr (curval, '\0');
     }
   *pvalues = values;
   return num;
@@ -126,7 +131,7 @@ free_array_of_ptrs (void **ptr, unsigned n)
   for (i = 0; i < n; i++)
     {
       if (!ptr[i])
-  break;
+	break;
       free (ptr[i]);
     }
   free (ptr);
@@ -143,7 +148,7 @@ access_check (const char *name, int mode)
       struct stat st;
 
       if (stat (name, &st) < 0 || S_ISDIR (st.st_mode))
-  return -1;
+	return -1;
     }
 
   return access (name, mode);
@@ -164,7 +169,7 @@ find_target_compiler (const char *name)
   if (strcmp (gcc_exec, collect_gcc) == 0)
     {
       /* collect_gcc has no path, so it was found in PATH.  Make sure we also
-   find accel-gcc in PATH.  */
+	 find accel-gcc in PATH.  */
       target_compiler = XDUPVEC (char, name, strlen (name) + 1);
       found = true;
       goto out;
@@ -184,10 +189,10 @@ find_target_compiler (const char *name)
       target_compiler = XRESIZEVEC (char, target_compiler, len);
       sprintf (target_compiler, "%s/%s", paths[i], name);
       if (access_check (target_compiler, X_OK) == 0)
-  {
-    found = true;
-    break;
-  }
+	{
+	  found = true;
+	  break;
+	}
     }
 
 out:
@@ -244,43 +249,43 @@ generate_target_descr_file (const char *target_compiler)
     fatal_error (input_location, "cannot open '%s'", src_filename);
 
   fprintf (src_file,
-     "extern void *__offload_funcs_end[];\n"
-     "extern void *__offload_vars_end[];\n\n"
+	   "extern const void *const __offload_funcs_end[];\n"
+	   "extern const void *const __offload_vars_end[];\n\n"
 
-     "void *__offload_func_table[0]\n"
-     "__attribute__ ((__used__, visibility (\"hidden\"),\n"
-     "section (\".gnu.offload_funcs\"))) = { };\n\n"
+	   "const void *const __offload_func_table[0]\n"
+	   "__attribute__ ((__used__, visibility (\"hidden\"),\n"
+	   "section (\".gnu.offload_funcs\"))) = { };\n\n"
 
-     "void *__offload_var_table[0]\n"
-     "__attribute__ ((__used__, visibility (\"hidden\"),\n"
-     "section (\".gnu.offload_vars\"))) = { };\n\n"
+	   "const void *const __offload_var_table[0]\n"
+	   "__attribute__ ((__used__, visibility (\"hidden\"),\n"
+	   "section (\".gnu.offload_vars\"))) = { };\n\n"
 
-     "void *__OFFLOAD_TARGET_TABLE__[]\n"
-     "__attribute__ ((__used__, visibility (\"hidden\"))) = {\n"
-     "  &__offload_func_table, &__offload_funcs_end,\n"
-     "  &__offload_var_table, &__offload_vars_end\n"
-     "};\n\n");
+	   "const void *const __OFFLOAD_TARGET_TABLE__[]\n"
+	   "__attribute__ ((__used__, visibility (\"hidden\"))) = {\n"
+	   "  &__offload_func_table, &__offload_funcs_end,\n"
+	   "  &__offload_var_table, &__offload_vars_end\n"
+	   "};\n\n");
 
   fprintf (src_file,
-     "#ifdef __cplusplus\n"
-     "extern \"C\"\n"
-     "#endif\n"
-     "void target_register_lib (const void *);\n\n"
+	   "#ifdef __cplusplus\n"
+	   "extern \"C\"\n"
+	   "#endif\n"
+	   "void target_register_lib (const void *);\n\n"
 
-     "__attribute__((constructor))\n"
-     "static void\n"
-     "init (void)\n"
-     "{\n"
-     "  target_register_lib (__OFFLOAD_TARGET_TABLE__);\n"
-     "}\n");
+	   "__attribute__((constructor))\n"
+	   "static void\n"
+	   "init (void)\n"
+	   "{\n"
+	   "  target_register_lib (__OFFLOAD_TARGET_TABLE__);\n"
+	   "}\n");
   fclose (src_file);
 
   struct obstack argv_obstack;
   obstack_init (&argv_obstack);
   obstack_ptr_grow (&argv_obstack, target_compiler);
   obstack_ptr_grow (&argv_obstack, "-c");
+  obstack_ptr_grow (&argv_obstack, "-shared");
   obstack_ptr_grow (&argv_obstack, "-fPIC");
-  obstack_ptr_grow (&argv_obstack, "-shared");  
   obstack_ptr_grow (&argv_obstack, src_filename);
   obstack_ptr_grow (&argv_obstack, "-o");
   obstack_ptr_grow (&argv_obstack, obj_filename);
@@ -304,21 +309,21 @@ generate_target_offloadend_file (const char *target_compiler)
     fatal_error (input_location, "cannot open '%s'", src_filename);
 
   fprintf (src_file,
-     "void *__offload_funcs_end[0]\n"
-     "__attribute__ ((__used__, visibility (\"hidden\"),\n"
-     "section (\".gnu.offload_funcs\"))) = { };\n\n"
+	   "const void *const __offload_funcs_end[0]\n"
+	   "__attribute__ ((__used__, visibility (\"hidden\"),\n"
+	   "section (\".gnu.offload_funcs\"))) = { };\n\n"
 
-     "void *__offload_vars_end[0]\n"
-     "__attribute__ ((__used__, visibility (\"hidden\"),\n"
-     "section (\".gnu.offload_vars\"))) = { };\n");
+	   "const void *const __offload_vars_end[0]\n"
+	   "__attribute__ ((__used__, visibility (\"hidden\"),\n"
+	   "section (\".gnu.offload_vars\"))) = { };\n");
   fclose (src_file);
 
   struct obstack argv_obstack;
   obstack_init (&argv_obstack);
   obstack_ptr_grow (&argv_obstack, target_compiler);
   obstack_ptr_grow (&argv_obstack, "-c");
-  obstack_ptr_grow (&argv_obstack, "-fPIC");
   obstack_ptr_grow (&argv_obstack, "-shared");
+  obstack_ptr_grow (&argv_obstack, "-fPIC");
   obstack_ptr_grow (&argv_obstack, src_filename);
   obstack_ptr_grow (&argv_obstack, "-o");
   obstack_ptr_grow (&argv_obstack, obj_filename);
@@ -341,23 +346,23 @@ generate_host_descr_file (const char *host_compiler)
     fatal_error (input_location, "cannot open '%s'", src_filename);
 
   fprintf (src_file,
-     "extern void *__OFFLOAD_TABLE__;\n"
-     "extern void *__offload_image_pulp_start;\n"
-     "extern void *__offload_image_pulp_end;\n\n"
+     "extern const void *const __OFFLOAD_TABLE__;\n"
+     "extern const void *const __offload_image_pulp_start;\n"
+     "extern const void *const __offload_image_pulp_end;\n\n"
 
-     "static const void *__offload_target_data[] = {\n"
+     "static const void *const __offload_target_data[] = {\n"
      "  &__offload_image_pulp_start, &__offload_image_pulp_end\n"
      "};\n\n");
 
   fprintf (src_file,
-     "#ifdef __cplusplus\n"
-     "extern \"C\"\n"
-     "#endif\n"
-     "void GOMP_offload_register (void *, int, void *);\n"
-     "#ifdef __cplusplus\n"
-     "extern \"C\"\n"
-     "#endif\n"
-     "void GOMP_offload_unregister (void *, int, void *);\n\n"
+	   "#ifdef __cplusplus\n"
+	   "extern \"C\"\n"
+	   "#endif\n"
+	   "void GOMP_offload_register (const void *, int, const void *);\n"
+	   "#ifdef __cplusplus\n"
+	   "extern \"C\"\n"
+	   "#endif\n"
+	   "void GOMP_offload_unregister (const void *, int, const void *);\n\n"
 
      "__attribute__((constructor))\n"
      "static void\n"
@@ -445,7 +450,7 @@ prepare_target_image (const char *target_compiler, int argc, char **argv)
   for(int i = 0; i < countargv(hero_cflags); i++)
     obstack_ptr_grow (&argv_obstack, hero_cflags[i]);
   obstack_ptr_grow (&argv_obstack, "-flto");
-
+  obstack_ptr_grow (&argv_obstack, opt1);
   /* Here we remove from args the *.o input files */
   /* beacuse we have already compiled them previously */
   for (int i = 1; i < argc; i++)
@@ -458,14 +463,13 @@ prepare_target_image (const char *target_compiler, int argc, char **argv)
         obstack_ptr_grow (&argv_obstack, argv[i]);
   }
   obstack_ptr_grow (&argv_obstack, target_o_filename);
-  obstack_ptr_grow (&argv_obstack, opt1);
   obstack_ptr_grow (&argv_obstack, opt2);
-
   for(int i = 0; i < countargv(hero_ldflags); i++)
     obstack_ptr_grow (&argv_obstack, hero_ldflags[i]);
   obstack_ptr_grow (&argv_obstack, "-o");
   obstack_ptr_grow (&argv_obstack, target_so_filename);
   compile_for_target (&argv_obstack);
+
   obstack_init (&argv_obstack);
   obstack_ptr_grow (&argv_obstack, "cp");
   obstack_ptr_grow (&argv_obstack, target_so_filename);
@@ -525,28 +529,29 @@ prepare_target_image (const char *target_compiler, int argc, char **argv)
   obstack_free (&argv_obstack, NULL);
 
   /* Objcopy has created symbols, containing the input file name with
-     special characters replaced with '_'.  We are going to rename these
-     new symbols.  */
+     non-alphanumeric characters replaced by underscores.
+     We are going to rename these new symbols.  */
   size_t symbol_name_len = strlen (target_so_filename);
   char *symbol_name = XALLOCAVEC (char, symbol_name_len + 1);
-  for (size_t i = 0; i <= symbol_name_len; i++)
+  for (size_t i = 0; i < symbol_name_len; i++)
     {
       char c = target_so_filename[i];
-      if ((c == '/') || (c == '.'))
-  c = '_';
+      if (!ISALNUM (c))
+	c = '_';
       symbol_name[i] = c;
     }
+  symbol_name[symbol_name_len] = '\0';
 
   char *opt_for_objcopy[3];
   opt_for_objcopy[0] = XALLOCAVEC (char, sizeof ("_binary__start=")
-           + symbol_name_len
-           + strlen (symbols[0]));
+					 + symbol_name_len
+					 + strlen (symbols[0]));
   opt_for_objcopy[1] = XALLOCAVEC (char, sizeof ("_binary__end=")
-           + symbol_name_len
-           + strlen (symbols[1]));
+					 + symbol_name_len
+					 + strlen (symbols[1]));
   opt_for_objcopy[2] = XALLOCAVEC (char, sizeof ("_binary__size=")
-           + symbol_name_len
-           + strlen (symbols[2]));
+					 + symbol_name_len
+					 + strlen (symbols[2]));
   sprintf (opt_for_objcopy[0], "_binary_%s_start=%s", symbol_name, symbols[0]);
   sprintf (opt_for_objcopy[1], "_binary_%s_end=%s", symbol_name, symbols[1]);
   sprintf (opt_for_objcopy[2], "_binary_%s_size=%s", symbol_name, symbols[2]);
@@ -566,7 +571,7 @@ prepare_target_image (const char *target_compiler, int argc, char **argv)
   fork_execute (objargs[0], objargs, false);
   obstack_free (&argv_obstack, NULL);
 
-return target_so_filename;
+  return target_so_filename;
 }
 
 int
@@ -580,7 +585,7 @@ main (int argc, char **argv)
   inform(input_location, "PULP HERO mkoffload start...\n");
   /* Diagnostic -- End */
 
-  if (atexit (mkoffload_atexit) != 0)
+  if (atexit (mkoffload_cleanup) != 0)
     fatal_error (input_location, "atexit failed");
 
   const char *host_compiler = getenv ("COLLECT_GCC");
@@ -591,8 +596,8 @@ main (int argc, char **argv)
   char *target_compiler = find_target_compiler (target_driver_name);
   if (target_compiler == NULL)
     fatal_error (input_location, "offload compiler %s not found",
-     target_driver_name);
-  
+		 target_driver_name);
+
   /* We may be called with all the arguments stored in some file and
      passed with @file.  Expand them into argv before processing.  */
   expandargv (&argc, &argv);

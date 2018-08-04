@@ -499,7 +499,7 @@ libgomp_la_SOURCES = alloc.c atomic.c barrier.c critical.c env.c \
 @PLUGIN_PULP_HERO_TRUE@libgomp_plugin_pulp-hero_version_info = -version-info $(libtool_VERSION)
 @PLUGIN_PULP_HERO_TRUE@libgomp_plugin_pulp-hero_la_SOURCES = plugin/plugin-pulp-hero.cpp
 @PLUGIN_PULP_HERO_TRUE@libgomp_plugin_pulp-hero_la_CPPFLAGS = $(AM_CPPFLAGS) $(PLUGIN_PULP_HERO_CPPFLAGS)
-@PLUGIN_PULP_HERO_TRUE@libgomp_plugin_pulp-hero_la_LDFLAGS = $(libgomp_plugin_pulp-hero_version_info) $(PLUGIN_PULP_HERO_LDFLAGS) -lstdc++ \
+@PLUGIN_PULP_HERO_TRUE@libgomp_plugin_pulp-hero_la_LDFLAGS = $(libgomp_plugin_pulp-hero_version_info) $(PLUGIN_PULP_HERO_LDFLAGS) \
 @PLUGIN_PULP_HERO_TRUE@	$(lt_host_flags)
 
 @PLUGIN_PULP_HERO_TRUE@libgomp_plugin_pulp-hero_la_LIBADD = libgomp.la 

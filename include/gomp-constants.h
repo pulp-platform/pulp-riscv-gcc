@@ -202,6 +202,7 @@ enum gomp_map_kind
    to the plugin interface defined in libgomp/libgomp.h.  */
 #define GOMP_VERSION	1
 #define GOMP_VERSION_NVIDIA_PTX 1
+#define GOMP_VERSION_PULP_HERO 0
 #define GOMP_VERSION_INTEL_MIC 0
 #define GOMP_VERSION_HSA 0
 
