@@ -108,9 +108,7 @@ extern "C" unsigned int
 GOMP_OFFLOAD_get_caps (void)
 {
   TRACE("");
-  unsigned int caps = GOMP_OFFLOAD_CAP_OPENMP_400;
-
- return caps;
+  return GOMP_OFFLOAD_CAP_SHARED_MEM | GOMP_OFFLOAD_CAP_OPENMP_400;
 }
 
 extern "C" int
