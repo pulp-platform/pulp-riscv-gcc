@@ -101,21 +101,21 @@ static PulpDev *pulp;
 extern "C" const char *
 GOMP_OFFLOAD_get_name (void)
 {
-  return "pulp-hero";
+  return "pulp-hero-memcpy";
 }
 
 extern "C" unsigned int
 GOMP_OFFLOAD_get_caps (void)
 {
   TRACE("");
-  return GOMP_OFFLOAD_CAP_SHARED_MEM | GOMP_OFFLOAD_CAP_OPENMP_400;
+  return GOMP_OFFLOAD_CAP_OPENMP_400;
 }
 
 extern "C" int
 GOMP_OFFLOAD_get_type (void)
 {
   TRACE("");
-  return OFFLOAD_TARGET_TYPE_PULP_HERO;
+  return OFFLOAD_TARGET_TYPE_PULP_HERO_MEMCPY;
 }
 
 extern "C" int

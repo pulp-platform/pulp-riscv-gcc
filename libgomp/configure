@@ -2739,6 +2739,9 @@ ac_link='$CC -o conftest$ac_exeext $CFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $
 ac_compiler_gnu=$ac_cv_c_compiler_gnu
 
 
+
+
+
 ac_config_headers="$ac_config_headers config.h"
 
 
@@ -11682,7 +11685,7 @@ else
   lt_dlunknown=0; lt_dlno_uscore=1; lt_dlneed_uscore=2
   lt_status=$lt_dlunknown
   cat > conftest.$ac_ext <<_LT_EOF
-#line 11685 "configure"
+#line 11688 "configure"
 #include "confdefs.h"
 
 #if HAVE_DLFCN_H
@@ -11788,7 +11791,7 @@ else
   lt_dlunknown=0; lt_dlno_uscore=1; lt_dlneed_uscore=2
   lt_status=$lt_dlunknown
   cat > conftest.$ac_ext <<_LT_EOF
-#line 11791 "configure"
+#line 11794 "configure"
 #include "confdefs.h"
 
 #if HAVE_DLFCN_H
@@ -18668,6 +18671,9 @@ fi
 #
 # Contributed by Mentor Embedded.
 #
+# Contributed by Alessandro Capotondi, UNIBO, (alessandro.capotondi@unibo.it).
+# Contributed by ETH Zurich and University of Bologna
+#
 # This file is part of the GNU Offloading and Multi Processing Library
 # (libgomp).
 #
@@ -18745,7 +18751,7 @@ if test x"$plugin_support" = xyes; then
 $as_echo "#define PLUGIN_SUPPORT 1" >>confdefs.h
 
 elif test "x${enable_offload_targets-no}" != xno; then
-  as_fn_error "Can't support offloading without support for plugins" "$LINENO" 5
+	as_fn_error "Can't support offloading without support for plugins" "$LINENO" 5
 fi
 
 
@@ -18825,22 +18831,22 @@ if test "${with_cuda_driver_lib+set}" = set; then :
 fi
 
 case "x$with_cuda_driver" in
-  x | xno) ;;
-  *) CUDA_DRIVER_INCLUDE=$with_cuda_driver/include
-     CUDA_DRIVER_LIB=$with_cuda_driver/lib
-     ;;
+	x | xno) ;;
+	*) CUDA_DRIVER_INCLUDE=$with_cuda_driver/include
+		 CUDA_DRIVER_LIB=$with_cuda_driver/lib
+		 ;;
 esac
 if test "x$with_cuda_driver_include" != x; then
-  CUDA_DRIVER_INCLUDE=$with_cuda_driver_include
+	CUDA_DRIVER_INCLUDE=$with_cuda_driver_include
 fi
 if test "x$with_cuda_driver_lib" != x; then
-  CUDA_DRIVER_LIB=$with_cuda_driver_lib
+	CUDA_DRIVER_LIB=$with_cuda_driver_lib
 fi
 if test "x$CUDA_DRIVER_INCLUDE" != x; then
-  CUDA_DRIVER_CPPFLAGS=-I$CUDA_DRIVER_INCLUDE
+	CUDA_DRIVER_CPPFLAGS=-I$CUDA_DRIVER_INCLUDE
 fi
 if test "x$CUDA_DRIVER_LIB" != x; then
-  CUDA_DRIVER_LDFLAGS=-L$CUDA_DRIVER_LIB
+	CUDA_DRIVER_LDFLAGS=-L$CUDA_DRIVER_LIB
 fi
 
 PLUGIN_NVPTX=0
@@ -18881,20 +18887,20 @@ if test "${with_hsa_runtime_lib+set}" = set; then :
 fi
 
 if test "x$with_hsa_runtime" != x; then
-  HSA_RUNTIME_INCLUDE=$with_hsa_runtime/include
-  HSA_RUNTIME_LIB=$with_hsa_runtime/lib
+	HSA_RUNTIME_INCLUDE=$with_hsa_runtime/include
+	HSA_RUNTIME_LIB=$with_hsa_runtime/lib
 fi
 if test "x$with_hsa_runtime_include" != x; then
-  HSA_RUNTIME_INCLUDE=$with_hsa_runtime_include
+	HSA_RUNTIME_INCLUDE=$with_hsa_runtime_include
 fi
 if test "x$with_hsa_runtime_lib" != x; then
-  HSA_RUNTIME_LIB=$with_hsa_runtime_lib
+	HSA_RUNTIME_LIB=$with_hsa_runtime_lib
 fi
 if test "x$HSA_RUNTIME_INCLUDE" != x; then
-  HSA_RUNTIME_CPPFLAGS=-I$HSA_RUNTIME_INCLUDE
+	HSA_RUNTIME_CPPFLAGS=-I$HSA_RUNTIME_INCLUDE
 fi
 if test "x$HSA_RUNTIME_LIB" != x; then
-  HSA_RUNTIME_LDFLAGS=-L$HSA_RUNTIME_LIB
+	HSA_RUNTIME_LDFLAGS=-L$HSA_RUNTIME_LIB
 fi
 
 PLUGIN_HSA=0
@@ -18919,28 +18925,29 @@ offload_additional_lib_paths=
 
 
 if test x"$enable_offload_targets" != x; then
-  for tgt in `echo $enable_offload_targets | sed -e 's#,# #g'`; do
-    tgt_dir=`echo $tgt | grep '=' | sed 's/.*=//'`
-    tgt=`echo $tgt | sed 's/=.*//'`
-    tgt_name=
-    case $tgt in
-      *-intelmic-* | *-intelmicemul-*)
-	tgt_name=intelmic
-	;;
-      nvptx*)
-        tgt_name=nvptx
-	PLUGIN_NVPTX=$tgt
-	PLUGIN_NVPTX_CPPFLAGS=$CUDA_DRIVER_CPPFLAGS
-	PLUGIN_NVPTX_LDFLAGS=$CUDA_DRIVER_LDFLAGS
-	PLUGIN_NVPTX_LIBS='-lcuda'
+	for tgt in `echo $enable_offload_targets | sed -e 's#,# #g'`; do
+		tgt_dir=`echo $tgt | grep '=' | sed 's/.*=//'`
+		tgt=`echo $tgt | sed 's/=.*//'`
+		tgt_name=
+		case $tgt in
+			*-intelmic-* | *-intelmicemul-*)
+				tgt_name=intelmic
+				;;
 
-	PLUGIN_NVPTX_save_CPPFLAGS=$CPPFLAGS
-	CPPFLAGS="$PLUGIN_NVPTX_CPPFLAGS $CPPFLAGS"
-	PLUGIN_NVPTX_save_LDFLAGS=$LDFLAGS
-	LDFLAGS="$PLUGIN_NVPTX_LDFLAGS $LDFLAGS"
-	PLUGIN_NVPTX_save_LIBS=$LIBS
-	LIBS="$PLUGIN_NVPTX_LIBS $LIBS"
-	cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+			nvptx*)
+				tgt_name=nvptx
+				PLUGIN_NVPTX=$tgt
+				PLUGIN_NVPTX_CPPFLAGS=$CUDA_DRIVER_CPPFLAGS
+				PLUGIN_NVPTX_LDFLAGS=$CUDA_DRIVER_LDFLAGS
+				PLUGIN_NVPTX_LIBS='-lcuda'
+
+				PLUGIN_NVPTX_save_CPPFLAGS=$CPPFLAGS
+				CPPFLAGS="$PLUGIN_NVPTX_CPPFLAGS $CPPFLAGS"
+				PLUGIN_NVPTX_save_LDFLAGS=$LDFLAGS
+				LDFLAGS="$PLUGIN_NVPTX_LDFLAGS $LDFLAGS"
+				PLUGIN_NVPTX_save_LIBS=$LIBS
+				LIBS="$PLUGIN_NVPTX_LIBS $LIBS"
+				cat confdefs.h - <<_ACEOF >conftest.$ac_ext
 /* end confdefs.h.  */
 #include "cuda.h"
 int
@@ -18956,99 +18963,99 @@ if ac_fn_c_try_link "$LINENO"; then :
 fi
 rm -f core conftest.err conftest.$ac_objext \
     conftest$ac_exeext conftest.$ac_ext
-	CPPFLAGS=$PLUGIN_NVPTX_save_CPPFLAGS
-	LDFLAGS=$PLUGIN_NVPTX_save_LDFLAGS
-	LIBS=$PLUGIN_NVPTX_save_LIBS
-	case $PLUGIN_NVPTX in
-	  nvptx*)
-	    if test "x$CUDA_DRIVER_INCLUDE" = x \
-	       && test "x$CUDA_DRIVER_LIB" = x; then
-	      PLUGIN_NVPTX=1
-	      PLUGIN_NVPTX_CPPFLAGS='-I$(srcdir)/plugin/cuda'
-	      PLUGIN_NVPTX_LIBS='-ldl'
-	      PLUGIN_NVPTX_DYNAMIC=1
-	    else
-	      PLUGIN_NVPTX=0
-	      as_fn_error "CUDA driver package required for nvptx support" "$LINENO" 5
-	    fi
-	  ;;
-	esac
-	;;
-      hsa*)
-	case "${target}" in
-	  x86_64-*-*)
-	    case " ${CC} ${CFLAGS} " in
-	      *" -m32 "*)
-	        PLUGIN_HSA=0
-		;;
-	      *)
-	        tgt_name=hsa
-	        PLUGIN_HSA=$tgt
-	        PLUGIN_HSA_CPPFLAGS=$HSA_RUNTIME_CPPFLAGS
-	        PLUGIN_HSA_LDFLAGS="$HSA_RUNTIME_LDFLAGS"
-	        PLUGIN_HSA_LIBS="-ldl"
+				CPPFLAGS=$PLUGIN_NVPTX_save_CPPFLAGS
+				LDFLAGS=$PLUGIN_NVPTX_save_LDFLAGS
+				LIBS=$PLUGIN_NVPTX_save_LIBS
+				case $PLUGIN_NVPTX in
+					nvptx*)
+					if test "x$CUDA_DRIVER_INCLUDE" = x \
+						&& test "x$CUDA_DRIVER_LIB" = x; then
+						PLUGIN_NVPTX=1
+						PLUGIN_NVPTX_CPPFLAGS='-I$(srcdir)/plugin/cuda'
+						PLUGIN_NVPTX_LIBS='-ldl'
+						PLUGIN_NVPTX_DYNAMIC=1
+					else
+						PLUGIN_NVPTX=0
+						as_fn_error "CUDA driver package required for nvptx support" "$LINENO" 5
+					fi
+					;;
+				esac
+				;;
+			hsa*)
+				case "${target}" in
+					x86_64-*-*)
+						case " ${CC} ${CFLAGS} " in
+							*" -m32 "*)
+								PLUGIN_HSA=0
+								;;
+							*)
+								tgt_name=hsa
+								PLUGIN_HSA=$tgt
+								PLUGIN_HSA_CPPFLAGS=$HSA_RUNTIME_CPPFLAGS
+								PLUGIN_HSA_LDFLAGS="$HSA_RUNTIME_LDFLAGS"
+								PLUGIN_HSA_LIBS="-ldl"
 
-	        PLUGIN_HSA_save_CPPFLAGS=$CPPFLAGS
-	        CPPFLAGS="$PLUGIN_HSA_CPPFLAGS $CPPFLAGS"
-	        PLUGIN_HSA_save_LDFLAGS=$LDFLAGS
-	        LDFLAGS="$PLUGIN_HSA_LDFLAGS $LDFLAGS"
-	        PLUGIN_HSA_save_LIBS=$LIBS
-	        LIBS="$PLUGIN_HSA_LIBS $LIBS"
+								PLUGIN_HSA_save_CPPFLAGS=$CPPFLAGS
+								CPPFLAGS="$PLUGIN_HSA_CPPFLAGS $CPPFLAGS"
+								PLUGIN_HSA_save_LDFLAGS=$LDFLAGS
+								LDFLAGS="$PLUGIN_HSA_LDFLAGS $LDFLAGS"
+								PLUGIN_HSA_save_LIBS=$LIBS
+								LIBS="$PLUGIN_HSA_LIBS $LIBS"
 
-	        PLUGIN_HSA=1
-	        CPPFLAGS=$PLUGIN_HSA_save_CPPFLAGS
-	        LDFLAGS=$PLUGIN_HSA_save_LDFLAGS
-	        LIBS=$PLUGIN_HSA_save_LIBS
-	        case $PLUGIN_HSA in
-	          hsa*)
-	            HSA_PLUGIN=0
-	            as_fn_error "HSA run-time package required for HSA support" "$LINENO" 5
-	            ;;
-	        esac
-		;;
-	      esac
-    	    ;;
-	  *-*-*)
-	    PLUGIN_HSA=0
-            ;;
-        esac
-        ;;
-	riscv*)
-		PLUGIN_PULP_HERO=1
-		PLUGIN_PULP_HERO_CPPFLAGS=${LIBGOMP_PLUGIN_PULP_HERO_CPPFLAGS}
-		PLUGIN_PULP_HERO_LDFLAGS=${LIBGOMP_PLUGIN_PULP_HERO_LDFLAGS}
-		if test "x$PLUGIN_PULP_HERO_CPPFLAGS" = x; then
-			as_fn_error "PULP_HERO evironment is not set! LIBGOMP_PLUGIN_PULP_HERO_CPPFLAGS are missing!" "$LINENO" 5
+								PLUGIN_HSA=1
+								CPPFLAGS=$PLUGIN_HSA_save_CPPFLAGS
+								LDFLAGS=$PLUGIN_HSA_save_LDFLAGS
+								LIBS=$PLUGIN_HSA_save_LIBS
+								case $PLUGIN_HSA in
+									hsa*)
+										HSA_PLUGIN=0
+										as_fn_error "HSA run-time package required for HSA support" "$LINENO" 5
+									;;
+								esac
+								;;
+						esac
+						;;
+					*-*-*)
+						PLUGIN_HSA=0
+						;;
+				esac
+				;;
+			riscv*)
+				PLUGIN_PULP_HERO=1
+				PLUGIN_PULP_HERO_CPPFLAGS=${LIBGOMP_PLUGIN_PULP_HERO_CPPFLAGS}
+				PLUGIN_PULP_HERO_LDFLAGS=${LIBGOMP_PLUGIN_PULP_HERO_LDFLAGS}
+				if test "x$PLUGIN_PULP_HERO_CPPFLAGS" = x; then
+					as_fn_error "PULP_HERO evironment is not set! LIBGOMP_PLUGIN_PULP_HERO_CPPFLAGS are missing!" "$LINENO" 5
+				fi
+				if test "x$PLUGIN_PULP_HERO_LDFLAGS" = x; then
+					as_fn_error "PULP_HERO evironment is not set! LIBGOMP_PLUGIN_PULP_HERO_LDFLAGS are missing! " "$LINENO" 5
+				fi
+				tgt_name=pulp-hero,pulp-hero-memcpy
+				;;
+			*)
+				as_fn_error "unknown offload target specified" "$LINENO" 5
+				;;
+		esac
+		if test x"$tgt_name" = x; then
+			# Don't configure libgomp for this offloading target if we don't build
+			# the corresponding plugin.
+			continue
+		elif test x"$offload_targets" = x; then
+			offload_targets=$tgt_name
+		else
+			offload_targets=$offload_targets,$tgt_name
 		fi
-		if test "x$PLUGIN_PULP_HERO_LDFLAGS" = x; then
-			as_fn_error "PULP_HERO evironment is not set! LIBGOMP_PLUGIN_PULP_HERO_LDFLAGS are missing! " "$LINENO" 5
+		if test "$tgt_name" = hsa; then
+			# Offloading compilation is all handled by the target compiler.
+			:
+		elif test x"$tgt_dir" != x; then
+			offload_additional_options="$offload_additional_options -B$tgt_dir/libexec/gcc/\$(target_alias)/\$(gcc_version) -B$tgt_dir/bin"
+			offload_additional_lib_paths="$offload_additional_lib_paths:$tgt_dir/lib64:$tgt_dir/lib:$tgt_dir/lib32"
+		else
+			offload_additional_options="$offload_additional_options -B\$(libexecdir)/gcc/\$(target_alias)/\$(gcc_version) -B\$(bindir)"
+			offload_additional_lib_paths="$offload_additional_lib_paths:$toolexeclibdir"
 		fi
-		tgt_name=pulp-hero
-		;;
-      *)
-	as_fn_error "unknown offload target specified" "$LINENO" 5
-	;;
-    esac
-    if test x"$tgt_name" = x; then
-      # Don't configure libgomp for this offloading target if we don't build
-      # the corresponding plugin.
-      continue
-    elif test x"$offload_targets" = x; then
-      offload_targets=$tgt_name
-    else
-      offload_targets=$offload_targets,$tgt_name
-    fi
-    if test "$tgt_name" = hsa; then
-      # Offloading compilation is all handled by the target compiler.
-      :
-    elif test x"$tgt_dir" != x; then
-      offload_additional_options="$offload_additional_options -B$tgt_dir/libexec/gcc/\$(target_alias)/\$(gcc_version) -B$tgt_dir/bin"
-      offload_additional_lib_paths="$offload_additional_lib_paths:$tgt_dir/lib64:$tgt_dir/lib:$tgt_dir/lib32"
-    else
-      offload_additional_options="$offload_additional_options -B\$(libexecdir)/gcc/\$(target_alias)/\$(gcc_version) -B\$(bindir)"
-      offload_additional_lib_paths="$offload_additional_lib_paths:$toolexeclibdir"
-    fi
-  done
+	done
 fi
 
 cat >>confdefs.h <<_ACEOF
@@ -19088,7 +19095,7 @@ _ACEOF
 
 
 if test "$HSA_RUNTIME_LIB" != ""; then
-  HSA_RUNTIME_LIB="$HSA_RUNTIME_LIB/"
+	HSA_RUNTIME_LIB="$HSA_RUNTIME_LIB/"
 fi
 
 

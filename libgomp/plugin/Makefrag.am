@@ -4,6 +4,9 @@
 #
 # Contributed by Mentor Embedded.
 #
+# Contributed by Alessandro Capotondi, UNIBO, (alessandro.capotondi@unibo.it).
+# Contributed by ETH Zurich and University of Bologna
+#
 # This file is part of the GNU Offloading and Multi Processing Library
 # (libgomp).
 #
@@ -63,4 +66,13 @@ libgomp_plugin_pulp-hero_la_LDFLAGS = $(libgomp_plugin_pulp-hero_version_info) $
 	$(lt_host_flags)
 libgomp_plugin_pulp-hero_la_LIBADD = libgomp.la 
 libgomp_plugin_pulp-hero_la_LIBTOOLFLAGS = --tag=disable-static
+
+libgomp_plugin_pulp-hero-memcpy_version_info = -version-info $(libtool_VERSION)
+toolexeclib_LTLIBRARIES += libgomp-plugin-pulp-hero-memcpy.la
+libgomp_plugin_pulp-hero-memcpy_la_SOURCES = plugin/plugin-pulp-hero-memcpy.cpp
+libgomp_plugin_pulp-hero-memcpy_la_CPPFLAGS = $(AM_CPPFLAGS) $(PLUGIN_PULP_HERO_CPPFLAGS)
+libgomp_plugin_pulp-hero-memcpy_la_LDFLAGS = $(libgomp_plugin_pulp-hero-memcpy_version_info) $(PLUGIN_PULP_HERO_LDFLAGS) \
+	$(lt_host_flags)
+libgomp_plugin_pulp-hero-memcpy_la_LIBADD = libgomp.la 
+libgomp_plugin_pulp-hero-memcpy_la_LIBTOOLFLAGS = --tag=disable-static
 endif

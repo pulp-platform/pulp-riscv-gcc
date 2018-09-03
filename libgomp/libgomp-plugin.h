@@ -51,7 +51,8 @@ enum offload_target_type
   OFFLOAD_TARGET_TYPE_NVIDIA_PTX = 5,
   OFFLOAD_TARGET_TYPE_INTEL_MIC = 6,
   OFFLOAD_TARGET_TYPE_HSA = 7,
-  OFFLOAD_TARGET_TYPE_PULP_HERO = 42
+  OFFLOAD_TARGET_TYPE_PULP_HERO = 42,
+  OFFLOAD_TARGET_TYPE_PULP_HERO_MEMCPY = 43,
 };
 
 /* Auxiliary struct, used for transferring pairs of addresses from plugin
