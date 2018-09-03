@@ -115,7 +115,7 @@ extern "C" int
 GOMP_OFFLOAD_get_type (void)
 {
   TRACE("");
-  return OFFLOAD_TARGET_TYPE_PULP_HERO_MEMCPY;
+  return OFFLOAD_TARGET_TYPE_PULP_HERO;
 }
 
 extern "C" int
