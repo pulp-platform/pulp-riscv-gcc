@@ -436,7 +436,7 @@ GOMP_OFFLOAD_run (int n __attribute__ ((unused)),
   if (PULP_DONE == ret[0])
     TRACE ("Execution done");
   else
-    TRACE ("Returned %#x", ret);
+    TRACE ("Returned %#x", (unsigned)ret);
 
   printf("Execution time, kernel only [PULP cycles] = %d\n", (int)ret[1]);
 }
