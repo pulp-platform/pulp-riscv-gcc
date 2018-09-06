@@ -418,18 +418,20 @@ GOMP_OFFLOAD_run (int n __attribute__ ((unused)),
 {
   TRACE_FUNCTION();
 
-  uint32_t ret;
+  uint32_t ret[2];
 
   TRACE ("tgt_fn @ %p, tgt_vars @ %p", tgt_fn, tgt_vars);
   pulp_mbox_write(pulp, PULP_START);
   pulp_mbox_write(pulp, (uint32_t) tgt_fn);
   pulp_mbox_write(pulp, (uint32_t) tgt_vars);
 
-  pulp_mbox_read(pulp, (unsigned int * ) &ret, 1);
-  if(ret == PULP_DONE)
+  pulp_mbox_read(pulp, (unsigned int * ) &ret, 2);
+  if (PULP_DONE == ret[0])
     TRACE ("Execution done");
   else
     TRACE ("Returned %#x", ret);
+
+  printf("Execution time, kernel only [PULP cycles] = %d\n", (int)ret[1]);
 }
 
 void
