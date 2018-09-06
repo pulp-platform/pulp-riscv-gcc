@@ -138,6 +138,10 @@ init_hero_device()
   // initialization of PULP, static RAB rules (mbox, L2, ...)
   pulp_init(pulp);
 
+  // set up RAB for miss-handling thread
+  if (GOMP_OFFLOAD_get_caps() & GOMP_OFFLOAD_CAP_SHARED_MEM)
+    pulp_rab_soc_mh_enable(pulp, 0);
+
   address_table = new ImgDevAddrMap;
   address_map = new AddrVectMap;
   num_devices = 1;
@@ -163,6 +167,9 @@ GOMP_OFFLOAD_fini_device (int n __attribute__ ((unused)))
 
   TRACE("Waiting for EOC...");
   pulp_exe_wait(pulp,PULP_HERO_DEFAULT_TIMEOUT);
+
+  if (GOMP_OFFLOAD_get_caps() & GOMP_OFFLOAD_CAP_SHARED_MEM)
+    pulp_rab_soc_mh_disable(pulp);
 
   return 1;
 }
