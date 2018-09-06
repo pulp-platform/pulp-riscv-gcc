@@ -159,9 +159,7 @@ GOMP_OFFLOAD_fini_device (int n __attribute__ ((unused)))
 {
   TRACE_FUNCTION();
 
-  pulp_mbox_write(pulp, PULP_START);
-  pulp_mbox_write(pulp, 0xdeadbeef);
-  pulp_mbox_write(pulp, 0x0);
+  pulp_mbox_write(pulp, PULP_STOP);
 
   TRACE("Waiting for EOC...");
   pulp_exe_wait(pulp,PULP_HERO_DEFAULT_TIMEOUT);
