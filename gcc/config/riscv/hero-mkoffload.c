@@ -216,14 +216,16 @@ compile_for_target (struct obstack *argv_obstack)
   unsetenv ("LIBRARY_PATH");
   unsetenv ("LD_RUN_PATH");
 
-  char cmd[1024*4] = "";
-  int i = 0;
-  while(argv[i] != NULL){
-    strcat(cmd, argv[i]);
-    strcat(cmd, " ");
-    i++;
-  }
-  inform(input_location, "%s\n", cmd);
+  /* Diagnostic -- Start */
+  // char cmd[1024*4] = "";
+  // int i = 0;
+  // while(argv[i] != NULL){
+  //   strcat(cmd, argv[i]);
+  //   strcat(cmd, " ");
+  //   i++;
+  // }
+  // inform(input_location, "%s\n", cmd);
+  /* Diagnostic -- End */
 
   fork_execute (argv[0], argv, false);
   obstack_free (argv_obstack, NULL);
@@ -442,6 +444,16 @@ prepare_target_image (const char *target_compiler, int argc, char **argv)
   obstack_ptr_grow (&argv_obstack, "-o");
   obstack_ptr_grow (&argv_obstack, target_o_filename);
   compile_for_target (&argv_obstack);
+  
+  /* Diagnostic -- Start */
+  //obstack_init (&argv_obstack);
+  //obstack_ptr_grow (&argv_obstack, "cp");
+  //obstack_ptr_grow (&argv_obstack, target_o_filename);
+  //obstack_ptr_grow (&argv_obstack, "target.so");
+  //obstack_ptr_grow (&argv_obstack, NULL);
+  //char **objargs2 = XOBFINISH (&argv_obstack, char **);
+  //fork_execute (objargs2[0], objargs2, false);
+  /* Diagnostic -- End */
 
   /* Now we link all togheter with the PULP                *
    * runtime libraries. We genereates "target_so_filename" */
@@ -470,13 +482,17 @@ prepare_target_image (const char *target_compiler, int argc, char **argv)
   obstack_ptr_grow (&argv_obstack, target_so_filename);
   compile_for_target (&argv_obstack);
 
-  obstack_init (&argv_obstack);
-  obstack_ptr_grow (&argv_obstack, "cp");
-  obstack_ptr_grow (&argv_obstack, target_so_filename);
-  obstack_ptr_grow (&argv_obstack, "offload.so");
-  obstack_ptr_grow (&argv_obstack, NULL);
-  char **objargs2 = XOBFINISH (&argv_obstack, char **);
-  fork_execute (objargs2[0], objargs2, false);
+  /* Diagnostic -- Start */
+  // obstack_init (&argv_obstack);
+  // obstack_ptr_grow (&argv_obstack, "cp");
+  // obstack_ptr_grow (&argv_obstack, target_so_filename);
+  // obstack_ptr_grow (&argv_obstack, "offload.so");
+  // obstack_ptr_grow (&argv_obstack, NULL);
+  // char **objargs2 = XOBFINISH (&argv_obstack, char **);
+  // fork_execute (objargs2[0], objargs2, false);
+  /* Diagnostic -- End */
+
+
   freeargv(hero_cflags);
   freeargv(hero_ldflags);
 
@@ -498,13 +514,15 @@ prepare_target_image (const char *target_compiler, int argc, char **argv)
   obstack_ptr_grow (&argv_obstack, target_so_filename);
   compile_for_target (&argv_obstack);
 
-  obstack_init (&argv_obstack);
-  obstack_ptr_grow (&argv_obstack, "cp");
-  obstack_ptr_grow (&argv_obstack, target_so_filename);
-  obstack_ptr_grow (&argv_obstack, "offload.bin");
-  obstack_ptr_grow (&argv_obstack, NULL);
-  objargs2 = XOBFINISH (&argv_obstack, char **);
-  fork_execute (objargs2[0], objargs2, false);
+  /* Diagnostic -- Start */
+  // obstack_init (&argv_obstack);
+  // obstack_ptr_grow (&argv_obstack, "cp");
+  // obstack_ptr_grow (&argv_obstack, target_so_filename);
+  // obstack_ptr_grow (&argv_obstack, "offload.bin");
+  // obstack_ptr_grow (&argv_obstack, NULL);
+  // objargs2 = XOBFINISH (&argv_obstack, char **);
+  // fork_execute (objargs2[0], objargs2, false);
+  /* Diagnostic -- End */
 
   /* Run objcopy.  */
   char *rename_section_opt
@@ -580,10 +598,10 @@ main (int argc, char **argv)
   progname = "hero-mkoffload";
   gcc_init_libintl ();
 
-  /* Diagnostic -- Start */
-  diagnostic_initialize (global_dc, 0);
-  inform(input_location, "PULP HERO mkoffload start...\n");
-  /* Diagnostic -- End */
+  // /* Diagnostic -- Start */
+  // diagnostic_initialize (global_dc, 0);
+  // inform(input_location, "PULP HERO mkoffload start...\n");
+  // /* Diagnostic -- End */
 
   if (atexit (mkoffload_cleanup) != 0)
     fatal_error (input_location, "atexit failed");
@@ -603,14 +621,14 @@ main (int argc, char **argv)
   expandargv (&argc, &argv);
 
   /* Diagnostic -- Start */
-  char cmd[1024*4] = "";
-  int i = 0;
-  while(argv[i] != NULL){
-    strcat(cmd, argv[i]);
-    strcat(cmd, " ");
-    i++;
-  }
-  inform(input_location, "%s\n", cmd);
+  // char cmd[1024*4] = "";
+  // int i = 0;
+  // while(argv[i] != NULL){
+  //   strcat(cmd, argv[i]);
+  //   strcat(cmd, " ");
+  //   i++;
+  // }
+  // inform(input_location, "%s\n", cmd);
   /* Diagnostic -- End*/
 
   const char *target_so_filename
@@ -632,14 +650,16 @@ main (int argc, char **argv)
   obstack_ptr_grow (&argv_obstack, NULL);
 
   char **new_argv = XOBFINISH (&argv_obstack, char **);
-  memset(cmd,0,strlen(cmd));
-  i = 0;
-  while(new_argv[i] != NULL){
-    strcat(cmd, new_argv[i]);
-    strcat(cmd, " ");
-    i++;
-  }
-  inform(input_location, "%s\n", cmd);   
+  /* Diagnostic -- Start */
+  // memset(cmd,0,strlen(cmd));
+  // i = 0;
+  // while(new_argv[i] != NULL){
+  //   strcat(cmd, new_argv[i]);
+  //   strcat(cmd, " ");
+  //   i++;
+  // }
+  // inform(input_location, "%s\n", cmd);
+  /* Diagnostic -- End*/
   fork_execute (new_argv[0], CONST_CAST (char **, new_argv), false);
   obstack_free (&argv_obstack, NULL);
 
@@ -660,6 +680,8 @@ main (int argc, char **argv)
   fork_execute (new_argv[0], CONST_CAST (char **, new_argv), false);
   obstack_free (&argv_obstack, NULL);
 
-  inform(input_location, "PULP HERO mkoffload end.\n");
+  /* Diagnostic -- Start */
+  // inform(input_location, "PULP HERO mkoffload end.\n");
+  /* Diagnostic -- End */
   return 0;
 }
