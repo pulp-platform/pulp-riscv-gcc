@@ -29,6 +29,7 @@
 
 #ifndef PLUGIN_PULP_HERO_H__
 
+#define PRINT_CYCLES_PLUGIN_PULP_HERO 0
 #define DEBUG_LEVEL_PLUGIN_PULP_HERO 0
 
 #define TRACE_FUNCTION() do { \
@@ -438,7 +439,8 @@ GOMP_OFFLOAD_run (int n __attribute__ ((unused)),
   else
     TRACE ("Returned %#x", (unsigned)ret);
 
-  printf("Execution time, kernel only [PULP cycles] = %d\n", (int)ret[1]);
+  if (PRINT_CYCLES_PLUGIN_PULP_HERO == 1)
+    printf("Execution time, kernel only [PULP cycles] = %d\n", (int)ret[1]);
 }
 
 void
