@@ -56,13 +56,14 @@
 extern "C"
 {
   #include "pulp.h"
-  #define PULP_HERO_DEFAULT_CLUSTER_ID    (0x1U)
-  #define PULP_HERO_DEFAULT_FREQ          (PULP_DEFAULT_FREQ_MHZ)
-  #define PULP_HERO_DEFAULT_MEM_MODE      (copy)
-  #define PULP_HERO_DEFAULT_RAB_LEVEL     (0x0U)
-  #define PULP_HERO_DEFAULT_RAB_LOG_EN    (0x0U)
-  #define PULP_HERO_DEFAULT_ACP_EN        (0x0U)
-  #define PULP_HERO_DEFAULT_TIMEOUT       ( 20U)
+  #define PULP_HERO_DEFAULT_CLUSTER_ID        (0x1U)
+  #define PULP_HERO_DEFAULT_FREQ              (PULP_DEFAULT_FREQ_MHZ)
+  #define PULP_HERO_DEFAULT_MEM_MODE          (copy)
+  #define PULP_HERO_DEFAULT_RAB_LEVEL         (0x2U)
+  #define PULP_HERO_DEFAULT_RAB_LOG_EN        (0x0U)
+  #define PULP_HERO_DEFAULT_INTR_RAB_MISS_DIS (0x1U)
+  #define PULP_HERO_DEFAULT_ACP_EN            (0x0U)
+  #define PULP_HERO_DEFAULT_TIMEOUT           ( 20U)
 }
 
 /* Start/end addresses of functions and global variables on a device.  */
@@ -139,6 +140,9 @@ init_hero_device()
   // initialization of PULP, static RAB rules (mbox, L2, ...)
   pulp_init(pulp);
 
+  // make sure to disable RAB miss interrupts, RAB misses are handled by PULP
+  pulp->intr_rab_miss_dis = PULP_HERO_DEFAULT_INTR_RAB_MISS_DIS;
+
   // set up RAB for miss-handling thread
   if (GOMP_OFFLOAD_get_caps() & GOMP_OFFLOAD_CAP_SHARED_MEM)
     pulp_rab_soc_mh_enable(pulp, 0);
@@ -169,8 +173,15 @@ GOMP_OFFLOAD_fini_device (int n __attribute__ ((unused)))
   TRACE("Waiting for EOC...");
   pulp_exe_wait(pulp,PULP_HERO_DEFAULT_TIMEOUT);
 
+  pulp_exe_stop(pulp);
+
   if (GOMP_OFFLOAD_get_caps() & GOMP_OFFLOAD_CAP_SHARED_MEM)
     pulp_rab_soc_mh_disable(pulp);
+
+  pulp_rab_free(pulp,0);
+  pulp_free_v_addr(pulp);
+  sleep(1);
+  pulp_munmap(pulp);
 
   return 1;
 }
