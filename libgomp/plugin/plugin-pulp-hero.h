@@ -96,6 +96,7 @@ static PulpDev *pulp;
 #define GOMP(X) GOMP_PLUGIN_##X
 #define SELF "pulp: "
 
+extern "C" int GOMP_OFFLOAD_hero_get_nb_rab_miss_handlers(void);
 
 extern "C" int
 GOMP_OFFLOAD_get_type (void)
@@ -439,10 +440,11 @@ GOMP_OFFLOAD_run (int n __attribute__ ((unused)),
 
   uint32_t ret[2];
 
-  TRACE ("tgt_fn @ %p, tgt_vars @ %p", tgt_fn, tgt_vars);
+  TRACE ("tgt_fn @ %p, tgt_vars @ %p, nb_rab_miss_handlers %d", tgt_fn, tgt_vars, GOMP_OFFLOAD_hero_get_nb_rab_miss_handlers());
   pulp_mbox_write(pulp, PULP_START);
   pulp_mbox_write(pulp, (uint32_t) tgt_fn);
   pulp_mbox_write(pulp, (uint32_t) tgt_vars);
+  pulp_mbox_write(pulp, (uint32_t) GOMP_OFFLOAD_hero_get_nb_rab_miss_handlers());
 
   pulp_mbox_read(pulp, (unsigned int * ) &ret, 2);
   if (PULP_DONE == ret[0])

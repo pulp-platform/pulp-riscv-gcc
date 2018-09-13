@@ -61,3 +61,11 @@ GOMP_OFFLOAD_get_caps (void)
 
   return GOMP_OFFLOAD_CAP_SHARED_MEM | GOMP_OFFLOAD_CAP_OPENMP_400;
 }
+
+extern "C" int
+GOMP_OFFLOAD_hero_get_nb_rab_miss_handlers(void)
+{
+  TRACE_FUNCTION();
+
+  return 0x1;
+}
