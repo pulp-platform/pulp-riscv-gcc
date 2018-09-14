@@ -6711,45 +6711,45 @@ expand_omp_atomic (struct omp_region *region)
   /* Make sure the type is one of the supported sizes.  */
   index = tree_to_uhwi (TYPE_SIZE_UNIT (type));
   index = exact_log2 (index);
-  if (index >= 0 && index <= 4)
-    {
-      unsigned int align = TYPE_ALIGN_UNIT (type);
+ //  if (index >= 0 && index <= 4)
+ //    {
+ //      unsigned int align = TYPE_ALIGN_UNIT (type);
 
-      /* __sync builtins require strict data alignment.  */
-      if (exact_log2 (align) >= index)
-	{
-	  /* Atomic load.  */
-	  if (loaded_val == stored_val
-	      && (GET_MODE_CLASS (TYPE_MODE (type)) == MODE_INT
-		  || GET_MODE_CLASS (TYPE_MODE (type)) == MODE_FLOAT)
-	      && GET_MODE_BITSIZE (TYPE_MODE (type)) <= BITS_PER_WORD
-	      && expand_omp_atomic_load (load_bb, addr, loaded_val, index))
-	    return;
+ //      /* __sync builtins require strict data alignment.  */
+ //      if (exact_log2 (align) >= index)
+	// {
+	//   /* Atomic load.  */
+	//   if (loaded_val == stored_val
+	//       && (GET_MODE_CLASS (TYPE_MODE (type)) == MODE_INT
+	// 	  || GET_MODE_CLASS (TYPE_MODE (type)) == MODE_FLOAT)
+	//       && GET_MODE_BITSIZE (TYPE_MODE (type)) <= BITS_PER_WORD
+	//       && expand_omp_atomic_load (load_bb, addr, loaded_val, index))
+	//     return;
 
-	  /* Atomic store.  */
-	  if ((GET_MODE_CLASS (TYPE_MODE (type)) == MODE_INT
-	       || GET_MODE_CLASS (TYPE_MODE (type)) == MODE_FLOAT)
-	      && GET_MODE_BITSIZE (TYPE_MODE (type)) <= BITS_PER_WORD
-	      && store_bb == single_succ (load_bb)
-	      && first_stmt (store_bb) == store
-	      && expand_omp_atomic_store (load_bb, addr, loaded_val,
-					  stored_val, index))
-	    return;
+	//   /* Atomic store.  */
+	//   if ((GET_MODE_CLASS (TYPE_MODE (type)) == MODE_INT
+	//        || GET_MODE_CLASS (TYPE_MODE (type)) == MODE_FLOAT)
+	//       && GET_MODE_BITSIZE (TYPE_MODE (type)) <= BITS_PER_WORD
+	//       && store_bb == single_succ (load_bb)
+	//       && first_stmt (store_bb) == store
+	//       && expand_omp_atomic_store (load_bb, addr, loaded_val,
+	// 				  stored_val, index))
+	//     return;
 
-	  /* When possible, use specialized atomic update functions.  */
-	  if ((INTEGRAL_TYPE_P (type) || POINTER_TYPE_P (type))
-	      && store_bb == single_succ (load_bb)
-	      && expand_omp_atomic_fetch_op (load_bb, addr,
-					     loaded_val, stored_val, index))
-	    return;
+	//   /* When possible, use specialized atomic update functions.  */
+	//   if ((INTEGRAL_TYPE_P (type) || POINTER_TYPE_P (type))
+	//       && store_bb == single_succ (load_bb)
+	//       && expand_omp_atomic_fetch_op (load_bb, addr,
+	// 				     loaded_val, stored_val, index))
+	//     return;
 
-	  /* If we don't have specialized __sync builtins, try and implement
-	     as a compare and swap loop.  */
-	  if (expand_omp_atomic_pipeline (load_bb, store_bb, addr,
-					  loaded_val, stored_val, index))
-	    return;
-	}
-    }
+	//   /* If we don't have specialized __sync builtins, try and implement
+	//      as a compare and swap loop.  */
+	//   if (expand_omp_atomic_pipeline (load_bb, store_bb, addr,
+	// 				  loaded_val, stored_val, index))
+	//     return;
+	// }
+ //    }
 
   /* The ultimate fallback is wrapping the operation in a mutex.  */
   expand_omp_atomic_mutex (load_bb, store_bb, addr, loaded_val, stored_val);
