@@ -5979,7 +5979,8 @@ static void riscv_patch_generated_code()
 			if ((!DEBUG_INSN_P (insn)&&!NOTE_P(insn)) || (insn == end)) break;
 		}
 		if (insn == NULL_RTX || !CALL_P(insn)) continue;
-		if (GET_CODE(PATTERN(insn)) == PARALLEL) call_insn = XVECEXP (insn, 0, 0); else call_insn = PATTERN(insn);
+
+		if (GET_CODE(PATTERN(insn)) == PARALLEL) call_insn = XVECEXP (PATTERN(insn), 0, 0); else call_insn = PATTERN(insn);
 		if (GET_CODE(call_insn) != CALL) continue;
 		RegR = XEXP(call_insn, 0);
 		if (GET_CODE(RegR) != MEM) continue;
