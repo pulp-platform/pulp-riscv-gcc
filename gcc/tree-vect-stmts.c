@@ -9015,7 +9015,11 @@ get_vectype_for_scalar_type_and_size (tree scalar_type, unsigned size)
   else
     simd_mode = mode_for_vector (inner_mode, size / nbytes);
   nunits = GET_MODE_SIZE (simd_mode) / nbytes;
-  if (nunits <= 1)
+  if (nunits <= 1
+      /* OPRECOMP GIPSY Fix to support vectorial cast and pack operations using SF operands */
+      && TYPE_MODE (scalar_type) != SFmode
+      /*  */
+     )
     return NULL_TREE;
 
   vectype = build_vector_type (scalar_type, nunits);

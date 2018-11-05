@@ -987,6 +987,10 @@ expand_binop_directly (machine_mode mode, optab binoptab,
   machine_mode from_mode = widened_mode (mode, op0, op1);
   enum insn_code icode = find_widening_optab_handler (binoptab, mode,
 						      from_mode, 1);
+  /* OPRECOMP GIPSY Fix to support cast and pack to float16alt (2 SF -> V2OHF) */
+  // if(icode == CODE_FOR_vec_pack_trunc_v1sf && unsignedp) icode = CODE_FOR_vec_pack_trunc_v1sf_alt;
+  /* */
+
   machine_mode xmode0 = insn_data[(int) icode].operand[1].mode;
   machine_mode xmode1 = insn_data[(int) icode].operand[2].mode;
   machine_mode mode0, mode1, tmp_mode;

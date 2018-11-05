@@ -3963,7 +3963,11 @@ verify_gimple_assign_binary (gassign *stmt)
       return verify_gimple_comparison (lhs_type, rhs1, rhs2, rhs_code);
 
     case WIDEN_MULT_EXPR:
-      if (TREE_CODE (lhs_type) != INTEGER_TYPE)
+      if (TREE_CODE (lhs_type) != INTEGER_TYPE
+         /* OPRECOMP GIPSY Adding REAL_TYPE to enable the expanding scalar multiplication for smallFloat types  */
+          && TREE_CODE (lhs_type) != REAL_TYPE
+         /* */
+      )
 	return true;
       return ((2 * TYPE_PRECISION (rhs1_type) > TYPE_PRECISION (lhs_type))
 	      || (TYPE_PRECISION (rhs1_type) != TYPE_PRECISION (rhs2_type)));
@@ -4053,7 +4057,11 @@ verify_gimple_assign_ternary (gassign *stmt)
     case WIDEN_MULT_PLUS_EXPR:
     case WIDEN_MULT_MINUS_EXPR:
       if ((!INTEGRAL_TYPE_P (rhs1_type)
-	   && !FIXED_POINT_TYPE_P (rhs1_type))
+	   && !FIXED_POINT_TYPE_P (rhs1_type)
+  /* OPRECOMP GIPSY Adding REAL_TYPE to enable the expanding scalar multiply-accumulation for smallFloat types  */
+           && !SCALAR_FLOAT_TYPE_P (rhs1_type)
+  /* */
+         )
 	  || !useless_type_conversion_p (rhs1_type, rhs2_type)
 	  || !useless_type_conversion_p (lhs_type, rhs3_type)
 	  || 2 * TYPE_PRECISION (rhs1_type) > TYPE_PRECISION (lhs_type)

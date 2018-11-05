@@ -27,6 +27,7 @@ along with GCC; see the file COPYING3.  If not see
 #include "tm.h"
 #include "rtl.h"
 #include "tree.h"
+#include "print-tree.h"
 #include "gimple-expr.h"
 #include "memmodel.h"
 #include "expmed.h"
@@ -114,8 +115,12 @@ struct riscv_builtin_description {
 AVAIL (hard_float, TARGET_HARD_FLOAT)
 
 /* for builtin pulpv2, we model vectors as opaque entities. Opaque helps to make the call style mode versatile */
+
+static tree floatOHF_type_node;
+
 static tree opaque_V4QI_type_node;
 static tree opaque_V2HI_type_node;
+static tree opaque_V2OHF_type_node;
 
 static unsigned int
 riscv_builtin_avail_riscv (void)
@@ -250,6 +255,15 @@ static int CheckBuiltin(int Code, int BuiltinIndex, struct ExtraBuiltinImmArg *E
 
 	switch ((enum Pulp_Builtin_Id) BuiltinIndex) {
 		case PULP_BUILTIN_CoreCount:
+			ExtraImmArg->Count = 2;
+			ExtraImmArg->Pos[0] = 1; ExtraImmArg->Pos[1] = 2;
+			ExtraImmArg->IsReg[0] = 1; ExtraImmArg->IsReg[1] = 0;
+			// Gap8: (APB_SOC_CTRL_ADDR + 0x12) = SOC_PERIPHERALS_BASE_ADDR + 0x0300 + 0x12
+			// 0x1A100000 + 0x3000 + 0x12
+			ExtraImmArg->Value[0] = 0x1A103000;
+			ExtraImmArg->Value[1] = 0x12;
+			break;
+		case PULP_BUILTIN_CoreCount_m1:
 			ExtraImmArg->Count = 2;
 			ExtraImmArg->Pos[0] = 1; ExtraImmArg->Pos[1] = 2;
 			ExtraImmArg->IsReg[0] = 1; ExtraImmArg->IsReg[1] = 0;
@@ -508,8 +522,10 @@ static GTY(()) int riscv_builtin_decl_index[NUM_INSN_CODES];
 #define RISCV_ATYPE_UDI unsigned_intDI_type_node
 #define RISCV_ATYPE_SF float_type_node
 #define RISCV_ATYPE_DF double_type_node
+#define RISCV_ATYPE_OHF floatOHF_type_node
 
 #define RISCV_ATYPE_V2HI opaque_V2HI_type_node
+#define RISCV_ATYPE_V2OHF opaque_V2OHF_type_node
 #define RISCV_ATYPE_V4QI opaque_V4QI_type_node
 
 /* RISCV_FTYPE_ATYPESN takes N RISCV_FTYPES-like type codes and lists
@@ -616,6 +632,19 @@ riscv_init_builtins (void)
   opaque_V4QI_type_node    = build_opaque_vector_type (intQI_type_node, 4);
   opaque_V2HI_type_node    = build_opaque_vector_type (intHI_type_node, 2);
 
+  /* Initialize the OHFmode scalar and vector type.  */
+  floatOHF_type_node = make_node (REAL_TYPE);
+  TYPE_PRECISION (floatOHF_type_node) = GET_MODE_PRECISION (OHFmode);
+  layout_type (floatOHF_type_node);
+  /* LAYOUT_TYPE relies on MODE_FOR_SIZE to determine
+   * the mode for this new decl. Since this is the same as HF
+   * we need to override this here.
+   */
+  SET_TYPE_MODE (floatOHF_type_node, OHFmode);
+  (*lang_hooks.types.register_builtin_type) (floatOHF_type_node, "float16alt");
+  opaque_V2OHF_type_node    = build_opaque_vector_type (floatOHF_type_node, 2);
+
+
   /* Iterate through all of the bdesc arrays, initializing all of the
      builtin functions.  */
   for (size_t i = 0; i < ARRAY_SIZE (riscv_builtins); i++)
@@ -667,6 +696,11 @@ riscv_fold_builtin (tree fndecl, int n_args ATTRIBUTE_UNUSED, tree *arg ATTRIBUT
                 case PULP_BUILTIN_CoreCount:
                         if (_Pulp_PE>0) {
                                  return build_int_cst (integer_type_node, _Pulp_PE);
+                        } else return NULL_TREE;
+                        break;
+                case PULP_BUILTIN_CoreCount_m1:
+                        if (_Pulp_PE>1) {
+                                 return build_int_cst (integer_type_node, _Pulp_PE-1);
                         } else return NULL_TREE;
                         break;
                 case PULP_BUILTIN_HasFc:

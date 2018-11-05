@@ -41,7 +41,7 @@
 (define_register_constraint "k" "LC_REGS"
   "LC0 or LC1.")
 
-(define_register_constraint "f" "TARGET_HARD_FLOAT ? FP_REGS : NO_REGS"
+(define_register_constraint "f" "TARGET_HARD_FLOAT ? (TARGET_FPREGS_ON_GRREGS? GR_REGS:FP_REGS) : NO_REGS"
   "A floating-point register (if available).")
 
 ;; (define_register_constraint "b" "ALL_REGS" "@internal") DO WE NEED IT ????
@@ -51,6 +51,9 @@
 
 (define_register_constraint "l" "JALR_REGS"
   "@internal")
+
+(define_register_constraint "xf" "TARGET_HARD_FLOAT ? (TARGET_FPREGS_ON_GRREGS? GR_REGS:FP_REGS) : NO_REGS"
+  "Register set used for smallfloat")
 
 ;; Integer constraints
 
@@ -147,5 +150,10 @@
   "A constant vector with identical elements in [0..63]"
    (and (match_code "const_vector")
         (match_test "riscv_replicated_const_vector(op, 0, 63)")))
+
+(define_constraint "vIzzz"
+  "A constant vector with Floating-point zero elements."
+  (and (match_code "const_vector")
+       (match_test "op == CONST0_RTX (mode)")))
 
 
