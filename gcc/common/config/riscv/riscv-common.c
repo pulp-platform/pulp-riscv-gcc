@@ -146,6 +146,12 @@ riscv_parse_arch_string (const char *isa, int *flags, location_t loc)
                         else error("-Xgap8: pulp architecture is already defined as %s", PulpProcessorImage(Pulp_Cpu));
                         break;
 /* __GAP8 Stop */
+                case PULP_GAP9:
+                        *flags &= ~MASK_64BIT; *flags |= MASK_MUL; *flags |= MASK_DIV; *flags &= ~MASK_ATOMIC; *flags |= MASK_HARD_FLOAT; *flags |= MASK_FPREGS_ON_GRREGS; *flags |= MASK_FDIV;
+			riscv_abi = ABI_ILP32; Has_F16ALT = 1; Has_FAUX = 1;
+                        if (Pulp_Cpu == PULP_NONE || Pulp_Cpu == PULP_GAP9) Pulp_Cpu = PULP_GAP9;
+                        else error("-Xgap9: pulp architecture is already defined as %s", PulpProcessorImage(Pulp_Cpu));
+                        break;
                 case PULP_SLIM:
                         *flags &= ~MASK_64BIT; *flags &= ~MASK_ATOMIC;
 			riscv_abi = ABI_ILP32;
@@ -187,11 +193,11 @@ riscv_handle_option (struct gcc_options *opts,
 		     const struct cl_decoded_option *decoded,
 		     location_t loc)
 {
-  int Defined;
+  static int Defined = 0;
   switch (decoded->opt_index)
     {
     case OPT_march_:
-      riscv_parse_arch_string (decoded->arg, &opts->x_target_flags, loc);
+	if (!Defined) riscv_parse_arch_string (decoded->arg, &opts->x_target_flags, loc);
       return true;
 
     case OPT_mchip_:
@@ -210,6 +216,9 @@ riscv_handle_option (struct gcc_options *opts,
                         riscv_parse_arch_string ("IXgap8",  &opts->x_target_flags, loc); Defined=1;
                         break;
 /* __GAP8 Stop */
+                case PULP_CHIP_GAP9:
+                        riscv_parse_arch_string ("RV32IMFCXgap9",  &opts->x_target_flags, loc); Defined=1;
+                        break;
                 default:
                         break;
         }

@@ -72,6 +72,10 @@
   UNSPEC_SPR_BIT_SET
   UNSPEC_SPR_BIT_CLR
 
+  ;; Read write FCSR
+  UNSPEC_FCSR_READ
+  UNSPEC_FCSR_WRITE
+
   ;; Nop
   UNSPEC_NOP
 
@@ -176,7 +180,7 @@
   (const_string "unknown"))
 
 ;; Main data type used by the insn
-(define_attr "mode" "unknown,none,QI,HI,SI,DI,TI,SF,DF,TF,V2HI,V4QI"
+(define_attr "mode" "unknown,none,QI,HI,SI,DI,TI,OHF,SF,DF,TF,V2HI,V4QI,V2OHF"
   (const_string "unknown"))
 
 ;; True if the main data type is twice the size of a word.
@@ -323,7 +327,7 @@
 ;; 32-bit moves for which we provide move patterns.
 (define_mode_iterator MOVE32 [SI])
 
-(define_mode_iterator MODE_PULP [V4QI V2HI SF SI])
+(define_mode_iterator MODE_PULP [V4QI V2HI (V2OHF "Has_F16ALT") (OHF "Has_F16ALT") SF SI])
 
 ;; 64-bit modes for which we provide move patterns.
 (define_mode_iterator MOVE64 [DI DF])
@@ -331,7 +335,7 @@
 ;; Iterator for sub-32-bit integer modes.
 (define_mode_iterator SHORT [QI HI])
 
-(define_mode_iterator SUBDISF [QI HI SI (SF "!TARGET_HARD_FLOAT") V2HI V4QI])
+(define_mode_iterator SUBDISF [QI HI (OHF "(Has_F16ALT)") SI (SF "(!TARGET_HARD_FLOAT || TARGET_FPREGS_ON_GRREGS)") V2HI (V2OHF "(Has_F16ALT)") V4QI])
 (define_mode_iterator SUBDI [QI HI SI])
 
 ;; Iterator for HImode constant generation.
@@ -351,37 +355,51 @@
 
 ;; Iterator for hardware-supported floating-point modes.
 (define_mode_iterator ANYF [(SF "TARGET_HARD_FLOAT")
-			    (DF "TARGET_DOUBLE_FLOAT")])
+			    (DF "TARGET_DOUBLE_FLOAT")
+                            (OHF "Has_F16ALT")])
 
-(define_mode_attr size_mem   [(V4QI "4") (V2HI "4") (SF "4") (SI "4") (HI "2") (QI "1")])
-(define_mode_attr size_load_store [(V4QI "w") (V2HI "w") (SF "w") (SI "w") (QI "b") (HI "h")])
+;; Iterator for hardware-supported floating-point modes.
+(define_mode_iterator ANYFULLF [(SF "TARGET_HARD_FLOAT")
+			        (DF "TARGET_DOUBLE_FLOAT")])
+;; Like ANYF, but only applies to scalar modes.
+(define_mode_iterator SCALARF [(SF "TARGET_HARD_FLOAT")
+                               (DF "TARGET_DOUBLE_FLOAT")
+                               (OHF "(TARGET_HARD_FLOAT&&Has_F16ALT)")])
+
+;; Iterator for hardware-supported small floating-point modes.
+(define_mode_iterator SMALLF [(V1SF "TARGET_HARD_FLOAT")
+                              (OHF "Has_F16ALT")])
+
+
+(define_mode_attr size_mem   [(V4QI "4") (V2HI "4") (V2OHF "4") (SF "4") (SI "4") (HI "2") (OHF "2") (QI "1")])
+(define_mode_attr size_load_store [(V4QI "w") (V2HI "w") (V2OHF "w") (SF "w") (SI "w") (QI "b") (HI "h") (OHF "h")])
 
 ;; This attribute gives the length suffix for a sign- or zero-extension
 ;; instruction.
 (define_mode_attr size [(QI "b") (HI "h")])
 
 ;; Mode attributes for loads.
-(define_mode_attr load [(QI "lb") (HI "lh") (SI "lw") (DI "ld") (SF "flw") (DF "fld")])
+(define_mode_attr load [(QI "lb") (HI "lh") (OHF "lh") (SI "lw") (DI "ld") (SF "flw") (DF "fld")])
 
 ;; Instruction names for stores.
-(define_mode_attr store [(QI "sb") (HI "sh") (SI "sw") (DI "sd") (SF "fsw") (DF "fsd")])
+(define_mode_attr store [(QI "sb") (HI "sh") (OHF "sh") (SI "sw") (DI "sd") (SF "fsw") (DF "fsd")])
 
 ;; This attribute gives the best constraint to use for registers of
 ;; a given mode.
 (define_mode_attr reg [(SI "d") (DI "d") (CC "d")])
 
 ;; This attribute gives the format suffix for floating-point operations.
-(define_mode_attr fmt [(SF "s") (DF "d")])
+(define_mode_attr fmt [(V1SF "s") (SF "s") (DF "d") (OHF "ah")])
 
 ;; This attribute gives the integer suffix for floating-point conversions.
-(define_mode_attr ifmt [(SI "w") (DI "l")])
+(define_mode_attr ifmt [(SI "w") (DI "l") (V1SF "w") (V2OHF "x") ])
 
 ;; This attribute gives the format suffix for atomic memory operations.
 (define_mode_attr amo [(SI "w") (DI "d")])
 
 ;; This attribute gives the upper-case mode name for one unit of a
 ;; floating-point mode.
-(define_mode_attr UNITMODE [(SF "SF") (DF "DF")])
+(define_mode_attr UNITMODE [(V1SF "V1SF") (OHF "OHF") (SF "SF") (DF "DF")])
 
 ;; This attribute gives the integer mode that has half the size of
 ;; the controlling mode.
@@ -389,7 +407,7 @@
 
 (define_mode_attr LDSTMODE [(SI "SI") (HI "HI") (QI "QI")])
 
-(define_mode_attr LDSTINDMODE [(V4QI "V4QI") (V2HI "V2HI") (SF "SF") (SI "SI") (HI "HI") (QI "QI")])
+(define_mode_attr LDSTINDMODE [(V4QI "V4QI") (V2HI "V2HI") (V2OHF "V2OHF") (SF "SF") (SI "SI") (HI "HI") (OHF "OHF") (QI "QI")])
 
 ;; Iterator and attributes for floating-point rounding instructions.
 (define_int_iterator RINT [UNSPEC_LRINT UNSPEC_LROUND])
@@ -959,6 +977,48 @@
   { return (Pulp_DP_Format==PULP_DP_FORMAT32) ? "fnmsub.s\t%0,%1,%2,%3" : "fnmsub.<fmt>\t%0,%1,%2,%3"; }
   [(set_attr "type" "fmadd")
    (set_attr "mode" "<UNITMODE>")])
+
+
+;; f32 = smallfloat*smallfloat
+(define_insn "mul<SMALLF:mode>sf3"
+  [(set (match_operand:SF     0 "register_operand" "=f")
+        (mult:SF
+          (float_extend:SF (match_operand:SMALLF 1 "register_operand" "xf"))
+          (float_extend:SF (match_operand:SMALLF 2 "register_operand" "xf"))
+        )
+  )]
+  "TARGET_HARD_FLOAT && Has_FAUX && (<MODE>mode == OHFmode && Has_F16ALT)"
+  "fmulex.s.<fmt>\t%0,%1,%2"
+  [(set_attr "type" "fmadd")
+   (set_attr "mode" "SF")])
+
+
+;; f32 += smallfloat*smallfloat
+(define_insn "madd<SMALLF:mode>sf3_internal"
+  [(set (match_operand:SF  0 "register_operand" "+f")
+        (fma:SF (match_operand:SMALLF 1 "register_operand" "xf")
+                (match_operand:SMALLF 2 "register_operand" "xf")
+                (match_dup 0))
+  )]
+  "TARGET_HARD_FLOAT && Has_FAUX && (<MODE>mode == OHFmode && Has_F16ALT)"
+  "fmacex.s.<fmt>\t%0,%1,%2"
+  [(set_attr "type" "fmadd")
+   (set_attr "mode" "SF")])
+
+;; f32 = smallfloat*smallfloat + f32
+(define_expand "madd<SMALLF:mode>sf4"
+  [(set (match_operand:SF  0 "register_operand" " ")
+        (fma:SF (match_operand:SMALLF 1 "register_operand" " ")
+                (match_operand:SMALLF 2 "register_operand" " ")
+                (match_operand:SF     3 "register_operand" " "))
+  )]
+  "TARGET_HARD_FLOAT && Has_FAUX && (<MODE>mode == OHFmode && Has_F16ALT)"
+  {
+    emit_insn(gen_movsf(operands[0], operands[3]));
+    emit_insn(gen_madd<SMALLF:mode>sf3_internal(operands[0], operands[1], operands[2]));
+    DONE;
+  }
+)
 
 ;;
 ;;  ....................
@@ -2533,6 +2593,22 @@
   [(set_attr "type" "fcvt")
    (set_attr "mode" "SF")])
 
+(define_insn "truncdfohf2"
+  [(set (match_operand:OHF 0 "register_operand" "=xf")
+  (float_truncate:OHF (match_operand:DF 1 "register_operand" "f")))]
+  "TARGET_DOUBLE_FLOAT && Has_F16ALT"
+  { return TARGET_MAP_DOUBLE_TO_FLOAT? "fcvt.ah.s\t%0,%1": "fcvt.ah.d\t%0,%1"; }
+  [(set_attr "type" "fcvt")
+   (set_attr "mode" "OHF")])
+
+(define_insn "truncsfohf2"
+  [(set (match_operand:OHF 0 "register_operand" "=xf")
+  (float_truncate:OHF (match_operand:SF 1 "register_operand" "f")))]
+  "TARGET_HARD_FLOAT && Has_F16ALT"
+  "fcvt.ah.s\t%0,%1"
+  [(set_attr "type" "fcvt")
+   (set_attr "mode" "OHF")])
+
 ;;
 ;;  ....................
 ;;
@@ -2673,6 +2749,14 @@
   [(set_attr "type" "fcvt")
    (set_attr "mode" "DF")])
 
+(define_insn "extendohfsf2"
+  [(set (match_operand:SF 0 "register_operand" "=f")
+  (float_extend:SF (match_operand:OHF 1 "register_operand" "xf")))]
+  "TARGET_HARD_FLOAT && Has_F16ALT"
+  "fcvt.s.ah\t%0,%1"
+  [(set_attr "type" "fcvt")
+   (set_attr "mode" "SF")])
+
 ;;
 ;;  ....................
 ;;
@@ -2680,24 +2764,23 @@
 ;;
 ;;  ....................
 
-(define_insn "fix_trunc<ANYF:mode><GPR:mode>2"
+(define_insn "fix_trunc<ANYFULLF:mode><GPR:mode>2"
   [(set (match_operand:GPR      0 "register_operand" "=r")
 	(fix:GPR
-	    (match_operand:ANYF 1 "register_operand" " f")))]
+	    (match_operand:ANYFULLF 1 "register_operand" " f")))]
   "TARGET_HARD_FLOAT"
-  "fcvt.<GPR:ifmt>.<ANYF:fmt> %0,%1,rtz"
-  ;; { return TARGET_MAP_DOUBLE_TO_FLOAT?"fcvt.w.s %0,%1,rtz":"fcvt.w.d %0,%1,rtz"; }
+  "fcvt.<GPR:ifmt>.<ANYFULLF:fmt> %0,%1,rtz"
   [(set_attr "type" "fcvt")
-   (set_attr "mode" "<ANYF:MODE>")])
+   (set_attr "mode" "<ANYFULLF:MODE>")])
 
-(define_insn "fixuns_trunc<ANYF:mode><GPR:mode>2"
+(define_insn "fixuns_trunc<ANYFULLF:mode><GPR:mode>2"
   [(set (match_operand:GPR      0 "register_operand" "=r")
 	(unsigned_fix:GPR
-	    (match_operand:ANYF 1 "register_operand" " f")))]
+	    (match_operand:ANYFULLF 1 "register_operand" " f")))]
   "TARGET_HARD_FLOAT"
-  "fcvt.<GPR:ifmt>u.<ANYF:fmt> %0,%1,rtz"
+  "fcvt.<GPR:ifmt>u.<ANYFULLF:fmt> %0,%1,rtz"
   [(set_attr "type" "fcvt")
-   (set_attr "mode" "<ANYF:MODE>")])
+   (set_attr "mode" "<ANYFULLF:MODE>")])
 
 (define_insn "float<GPR:mode><ANYF:mode>2"
   [(set (match_operand:ANYF    0 "register_operand" "= f")
@@ -2726,6 +2809,82 @@
   "fcvt.<GPR:ifmt>.<ANYF:fmt> %0,%1,<rint_rm>"
   [(set_attr "type" "fcvt")
    (set_attr "mode" "<ANYF:MODE>")])
+
+
+;;
+;; Use straight mapping, we assume rounding is whatever comes from fcsr, for f16_alt this is acceptable
+;;
+(define_insn "fix_truncohf<GPR:mode>2"
+  [(set (match_operand:GPR 0 "register_operand" "=r")
+        (fix:GPR (match_operand:OHF 1 "register_operand" "xf")))]
+  "TARGET_HARD_FLOAT && Has_F16ALT"
+   "fcvt.<GPR:ifmt>.ah\t%0,%1"
+  [(set_attr "type" "fcvt")
+   (set_attr "mode" "OHF")]
+)
+
+;; (define_insn "fix_truncohf<GPR:mode>2_internal"
+;;    [(set (match_operand:GPR 0 "register_operand" "=r")
+;;          (fix:GPR (match_operand:OHF 1 "register_operand" "xf")))]
+;;    "TARGET_HARD_FLOAT && Has_F16ALT"
+;;    "fcvt.<GPR:ifmt>.ah\t%0,%1"
+;;   [(set_attr "type" "fcvt")
+;;    (set_attr "mode" "OHF")]
+;; )
+
+;; (define_expand "fix_truncohf<GPR:mode>2"
+;;   [(set (match_operand:GPR 0 "register_operand" "=r")
+;;         (fix:GPR (match_operand:OHF 1 "register_operand" "xf")))]
+;;   "TARGET_HARD_FLOAT && Has_F16ALT"
+;;   {
+;;     rtx RegMODE = gen_reg_rtx (<GPR:MODE>mode);
+;;     rtx RegOLD = gen_reg_rtx (<GPR:MODE>mode);
+;;     emit_insn(gen_movsi(RegMODE, gen_rtx_CONST_INT(<GPR:MODE>mode, 0x0001)));
+;;     emit_insn(gen_read_fcsr(RegOLD));
+;;     emit_insn(gen_write_fcsr(RegMODE));
+;;     emit_insn(gen_fix_truncohf<GPR:mode>2_internal(operands[0], operands[1]));
+;;     emit_insn(gen_write_fcsr(RegOLD));
+;;     DONE;
+;;   }
+;; )
+
+
+;;
+;; Use straight mapping, we assume rounding is whatever comes from fcsr, for f16_alt this is acceptable
+;;
+(define_insn "fixuns_truncohf<GPR:mode>2"
+ [(set (match_operand:GPR 0 "register_operand" "=r")
+       (unsigned_fix:GPR (match_operand:OHF 1 "register_operand" "xf")))]
+ "TARGET_HARD_FLOAT && Has_F16ALT"
+  "fcvt.<GPR:ifmt>u.ah\t%0,%1"
+  [(set_attr "type" "fcvt")
+   (set_attr "mode" "OHF")]
+)
+
+;; (define_insn "fixuns_truncohf<GPR:mode>2_internal"
+;;   [(set (match_operand:GPR 0 "register_operand" "=r")
+;;         (unsigned_fix:GPR (match_operand:OHF 1 "register_operand" "xf")))]
+;;   "TARGET_HARD_FLOAT && Has_F16ALT"
+;;   "fcvt.<GPR:ifmt>u.ah\t%0,%1"
+;;   [(set_attr "type" "fcvt")
+;;    (set_attr "mode" "OHF")]
+;; )
+
+;; (define_expand "fixuns_truncohf<GPR:mode>2"
+;;  [(set (match_operand:GPR 0 "register_operand" "=r")
+;;        (unsigned_fix:GPR (match_operand:OHF 1 "register_operand" "xf")))]
+;;  "TARGET_HARD_FLOAT && Has_F16ALT"
+;;  {
+;;    rtx RegMODE = gen_reg_rtx (<GPR:MODE>mode);
+;;    rtx RegOLD = gen_reg_rtx (<GPR:MODE>mode);
+;;    emit_insn(gen_movsi(RegMODE, gen_rtx_CONST_INT(<GPR:MODE>mode, 0x0001)));
+;;    emit_insn(gen_read_fcsr(RegOLD));
+;;    emit_insn(gen_write_fcsr(RegMODE));
+;;    emit_insn(gen_fixuns_truncohf<GPR:mode>2_internal(operands[0], operands[1]));
+;;    emit_insn(gen_write_fcsr(RegOLD));
+;;    DONE;
+;;  }
+;; )
 
 ;;
 ;;  ....................
@@ -3000,6 +3159,22 @@
   csrrci \t%0,%1,%2\t# Read then SPR bit clr uimm5"
 )
 
+(define_insn "read_fcsr"
+  [(set (match_operand:SI 0 "register_operand" "=r") (unspec:SI [(const_int 0)]  UNSPEC_FCSR_READ))]
+  "TARGET_HARD_FLOAT"
+  "frcsr\t%0"
+  [(set_attr "type" "load")
+   (set_attr "mode" "SI")]
+)
+
+(define_insn "write_fcsr"
+  [(unspec_volatile [(match_operand:SI 0 "register_operand" "r")] UNSPEC_FCSR_WRITE)]
+ "TARGET_HARD_FLOAT"
+  "fscsr\t%0"
+  [(set_attr "type" "store")
+   (set_attr "mode" "SI")]
+)
+
 
 ;; Open MP support
 
@@ -3203,6 +3378,19 @@
 ;;  ]
   "(Pulp_Cpu>=PULP_V2)"
   "p.lw \t%0,%2(%1)\t# Non volatile Load offseted"
+)
+
+(define_expand "OffsetedReadNonVol_m1"
+  [(set (match_operand:SI 0 "register_operand" "=r")
+        (unspec:SI [(match_operand:SI 1 "register_operand" "r") (match_operand:SI 2 "immediate_operand" "i")] UNSPEC_READSI_NONVOL)
+   )
+  ]
+ "(Pulp_Cpu>=PULP_V2 || (Pulp_Cpu==PULP_SLIM))"
+"{
+	emit_insn (gen_OffsetedReadNonVol(operands[0], operands[1], operands[2]));
+	emit_insn (gen_addsi3 (operands[0], operands[0], constm1_rtx));
+	DONE;
+}"
 )
 
 ;; Post modified load and store
@@ -3465,6 +3653,27 @@
   { return riscv_output_move (operands[0], operands[1]); }
   [(set_attr "move_type" "move,const,load,store,mtc,mfc")
    (set_attr "mode" "QI")])
+
+;; 16-bit floating point moves
+(define_expand "movohf"
+  [(set (match_operand:OHF 0 "")
+        (match_operand:OHF 1 ""))]
+  ""
+{
+  if (riscv_legitimize_move (OHFmode, operands[0], operands[1]))
+    DONE;
+})
+
+(define_insn "*movohf_hardfloat_x"
+  [(set (match_operand:OHF 0 "nonimmediate_operand" "=xf,xf,xf,m,m")
+        (match_operand:OHF 1 "move_operand" "xf,G,m,xf,G"))]
+  "Has_F16ALT
+   && (register_operand (operands[0], OHFmode)
+       || reg_or_0_operand (operands[1], OHFmode))"
+  { return riscv_output_move (operands[0], operands[1]); }
+  [(set_attr "move_type" "fmove,mtc,fpload,fpstore,store")
+   (set_attr "mode" "OHF")])
+
 
 ;; 32-bit floating point moves
 
@@ -6002,15 +6211,15 @@
 
 (define_expand "cbranch<mode>4"
   [(set (pc)
-	(if_then_else (match_operator 0 "fp_branch_comparison"
-		       [(match_operand:ANYF 1 "register_operand")
-			(match_operand:ANYF 2 "register_operand")])
-		      (label_ref (match_operand 3 ""))
-		      (pc)))]
-  "TARGET_HARD_FLOAT"
+        (if_then_else (match_operator 0 "fp_branch_comparison"
+                       [(match_operand:SCALARF 1 "register_operand")
+                        (match_operand:SCALARF 2 "register_operand")])
+                      (label_ref (match_operand 3 ""))
+                      (pc)))]
+  "TARGET_HARD_FLOAT && (<MODE>mode == SFmode || <MODE>mode == DFmode || (<MODE>mode == OHFmode && Has_F16ALT))"
 {
   riscv_expand_conditional_branch (operands[3], GET_CODE (operands[0]),
-				   operands[1], operands[2]);
+                                   operands[1], operands[2]);
   DONE;
 })
 

@@ -71,6 +71,7 @@ enum Pulp_Processor_Type
 /* __GAP8 Start */
   PULP_GAP8,
 /* __GAP8 Stop */
+  PULP_GAP9,
   PULP_LAST
 };
 
@@ -82,6 +83,7 @@ enum Pulp_Chip_Type
 /* __GAP8 Start */
   PULP_CHIP_GAP8,
 /* __GAP8 Stop */
+  PULP_CHIP_GAP9,
   PULP_CHIP_LAST
 };
 
@@ -110,6 +112,7 @@ static struct Pulp_Target_Chip Pulp_Defined_Chips[PULP_CHIP_LAST] = {
 /* __GAP8 Start */
 /* Gap8 */      {PULP_CHIP_GAP8,        PULP_GAP8,      1, 8, 1024*512, 1024*64, 1024*32},
 /* __GAP8 Stop */
+/* Gap9 */      {PULP_CHIP_GAP9,        PULP_GAP9,      1, 9, 1024*3*512, 1024*128, 0},
 };
 
 
@@ -128,6 +131,7 @@ static int Pulp_Check_Processor_Compatibility(enum Pulp_Processor_Type New_Proc,
 /* __GAP8 Start */
   		/* PULP_GAP8 */		((1<<PULP_RISCV) | (1<<PULP_V2) | (1<<PULP_GAP8)),
 /* __GAP8 Stop */
+  		/* PULP_GAP9 */		((1<<PULP_RISCV) | (1<<PULP_V2) | (1<<PULP_GAP8) | (1<<PULP_GAP9)),
 	};
 
 	return (Pulp_Compatible_Processors[New_Proc] & (1<<With_Proc));
@@ -159,6 +163,7 @@ static enum Pulp_Chip_Type PulpDecodeChip(const char *Text)
 /* __GAP8 Start */
         else if (strncmp (Text, "gap8", 4) == 0) return PULP_CHIP_GAP8;
 /* __GAP8 Stop */
+        else if (strncmp (Text, "gap9", 4) == 0) return PULP_CHIP_GAP9;
         else if (strncmp (Text, "none", 4) == 0) return PULP_CHIP_NONE;
         else return PULP_CHIP_NONE;
 }
@@ -179,6 +184,7 @@ static enum Pulp_Processor_Type PulpDecodeCpu(char *Text, int *Len)
 /* __GAP8 Start */
         else if (strncmp (Dup, "gap8", 4) == 0)   { free(Dup); if (Len) *Len = 4; return PULP_GAP8; }
 /* __GAP8 Stop */
+        else if (strncmp (Dup, "gap9", 4) == 0)   { free(Dup); if (Len) *Len = 4; return PULP_GAP9; }
         else if (strncmp (Dup, "pulpslim", 8) == 0)   { free(Dup); if (Len) *Len = 8; return PULP_SLIM; }
         else                                      { free(Dup); if (Len) *Len = 0; return PULP_NONE; }
 }
@@ -217,6 +223,7 @@ static const char *PulpChipImage(enum Pulp_Chip_Type Which)
 /* __GAP8 Start */
                 case PULP_CHIP_GAP8: return "gap8";
 /* __GAP8 Stop */
+                case PULP_CHIP_GAP9: return "gap9";
                 default: return "Error";
 
         }
@@ -235,6 +242,7 @@ static const char *PulpProcessorImage(enum Pulp_Processor_Type Which)
 /* __GAP8 Start */
                 case PULP_GAP8: return "gap8";
 /* __GAP8 Stop */
+                case PULP_GAP9: return "gap9";
                 case PULP_SLIM: return "pulpslim";
                 default: return "Error";
         }

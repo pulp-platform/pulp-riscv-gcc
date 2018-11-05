@@ -67,6 +67,9 @@ EnumValue
 Enum(Pulp_Chip_Type) String(gap8) Value(PULP_CHIP_GAP8)
 ;; __GAP8 Stop
 
+EnumValue
+Enum(Pulp_Chip_Type) String(gap9) Value(PULP_CHIP_GAP9)
+
 mchip=
 Target RejectNegative Joined Var(Pulp_Chip) Enum(Pulp_Chip_Type) Init(PULP_CHIP_NONE)
 -mchip=CHIP     Compile code for pulp chip CHIP
@@ -95,6 +98,9 @@ Enum(Pulp_Processor_Type) String(pulpv3) Value(PULP_V3)
 
 EnumValue
 Enum(Pulp_Processor_Type) String(pulpslim) Value(PULP_SLIM)
+
+EnumValue
+Enum(Pulp_Processor_Type) String(gap9) Value(PULP_GAP9)
 
 mcpu=
 Target RejectNegative Joined Var(Pulp_Cpu) Enum(Pulp_Processor_Type) Init(PULP_NONE)
@@ -301,6 +307,23 @@ Link in component mode
 mDIE=
 Target RejectNegative Joined UInteger Var(LINK_DUMP_IE_SECT) Init(0)
 Dump content of import and export sections, 0: no dump, 1 dump only, 2 C equiv, 3 dump and C equiv
+
+mfpint
+Target Report RejectNegative Mask(FPREGS_ON_GRREGS)
+When hw floating point is enabled maps floats to integer register file
+
+mf16alt
+Target UInteger Var(Has_F16ALT) Init(0)
+Enable binary16alt SmallFloat type
+
+mfvec
+Target UInteger Var(Has_FVEC) Init(0)
+Enable SmallFloat vector extensions
+
+mfaux
+Target UInteger Var(Has_FAUX) Init(0)
+Enable SmallFloat auxiliary extension
+
 
 Mask(64BIT)
 

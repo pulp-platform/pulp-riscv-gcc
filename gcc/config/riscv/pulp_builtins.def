@@ -260,6 +260,7 @@ Currently these macros are used in 2 contexts:
   DIRECT_NO_TARGET_BUILTIN1(OffsetedWriteByte,OffsetedWriteByte,RISCV_VOID_FTYPE_INT_POINTER_INT,			pulp_v2, NULL)
 
   DIRECT_BUILTIN1(OffsetedReadNonVol,	CoreCount,	RISCV_INT_FTYPE_VOID,				pulp_vall, CheckBuiltin)
+  DIRECT_BUILTIN1(OffsetedReadNonVol_m1,CoreCount_m1,	RISCV_INT_FTYPE_VOID,				pulp_vall, CheckBuiltin)
   DIRECT_BUILTIN1(read_spr,		CoreId,		RISCV_INT_FTYPE_VOID,				pulp_vall, CheckBuiltin)
   DIRECT_BUILTIN1(read_spr,		ClusterId,	RISCV_INT_FTYPE_VOID,				pulp_vall, CheckBuiltin)
   DIRECT_BUILTIN1(read_spr,		IsFc,		RISCV_INT_FTYPE_VOID,				pulp_vall, CheckBuiltin)
@@ -286,4 +287,17 @@ Currently these macros are used in 2 contexts:
   DIRECT_NO_TARGET_BUILTIN1(pulp_omp_barrier, 		pulp_GOMP_barrier,		RISCV_VOID_FTYPE_VOID,	pulp_v2, NULL)
   DIRECT_NO_TARGET_BUILTIN1(pulp_omp_critical_start, 	pulp_GOMP_critical_start,	RISCV_VOID_FTYPE_VOID,	pulp_v2, NULL)
   DIRECT_NO_TARGET_BUILTIN1(pulp_omp_critical_end, 	pulp_GOMP_critical_end,		RISCV_VOID_FTYPE_VOID,	pulp_v2, NULL)
+
+/* Gap9 */
+  DIRECT_BUILTIN1(sminsf3,          f32min,             RISCV_SF_FTYPE_SF_SF,                   pulp_v2, NULL)
+  DIRECT_BUILTIN1(smaxsf3,          f32max,             RISCV_SF_FTYPE_SF_SF,                   pulp_v2, NULL)
+  DIRECT_BUILTIN1(sqrtsf2,          f32sqrt,            RISCV_SF_FTYPE_SF,                      pulp_v2, NULL)
+  DIRECT_BUILTIN1(abssf2,           f32abs,             RISCV_SF_FTYPE_SF,                      pulp_v2, NULL)
+  DIRECT_BUILTIN1(sminohf3,         f16altmin,          RISCV_OHF_FTYPE_OHF_OHF,                pulp_v2, NULL)
+  DIRECT_BUILTIN1(smaxohf3,         f16altmax,          RISCV_OHF_FTYPE_OHF_OHF,                pulp_v2, NULL)
+  DIRECT_BUILTIN1(sqrtohf2,         f16altsqrt,         RISCV_OHF_FTYPE_OHF,                    pulp_v2, NULL)
+  DIRECT_BUILTIN1(absohf2,          f16altabs,          RISCV_OHF_FTYPE_OHF,                    pulp_v2, NULL)
+
+
+
 
