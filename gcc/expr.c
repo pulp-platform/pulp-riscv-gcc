@@ -254,7 +254,7 @@ convert_move (rtx to, rtx from, int unsignedp)
       return;
     }
 
-  if (VECTOR_MODE_P (to_mode) || VECTOR_MODE_P (from_mode))
+  if (!to_real && (VECTOR_MODE_P (to_mode) || VECTOR_MODE_P (from_mode)))
     {
       gcc_assert (GET_MODE_BITSIZE (from_mode) == GET_MODE_BITSIZE (to_mode));
 
@@ -9563,6 +9563,8 @@ expand_expr_real_2 (sepops ops, rtx target, machine_mode tmode,
  binop3:
   if (modifier == EXPAND_STACK_PARM)
     target = 0;
+  /* OPRECOMP GIPSY Fix to support cast and pack to float16alt (2 SF -> V2OHF) */
+  if(mode == V1SFmode && TYPE_MODE(type) == V2OHFmode) unsignedp = 1;
   temp = expand_binop (mode, this_optab, op0, op1, target,
 		       unsignedp, OPTAB_LIB_WIDEN);
   gcc_assert (temp);

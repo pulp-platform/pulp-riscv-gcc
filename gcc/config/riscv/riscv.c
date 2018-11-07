@@ -821,7 +821,7 @@ riscv_classify_address (struct riscv_address_info *info, rtx x,
       info->offset = XEXP (x, 1);
 
       if (((Pulp_Cpu>=PULP_V0) && !TARGET_MASK_NOINDREGREG && (GET_MODE_SIZE (mode) <= UNITS_PER_WORD) ) &&
-          !(TARGET_HARD_FLOAT && (mode == SFmode)) &&
+          !((TARGET_HARD_FLOAT &&!TARGET_FPREGS_ON_GRREGS) && (mode == SFmode)) &&
           ((GET_CODE(info->offset) == REG) || (GET_CODE(info->offset) == SUBREG))) {
                 info->type = ADDRESS_REG_REG;
                 return (riscv_valid_base_register_p (info->reg, mode, strict_p)
@@ -859,19 +859,19 @@ riscv_classify_address (struct riscv_address_info *info, rtx x,
       return SMALL_OPERAND (INTVAL (x));
 
     case POST_INC:
-      if (GET_MODE_SIZE (mode) > UNITS_PER_WORD || (TARGET_HARD_FLOAT && (mode == SFmode))) return false;
+      if (GET_MODE_SIZE (mode) > UNITS_PER_WORD || ((TARGET_HARD_FLOAT&&!TARGET_FPREGS_ON_GRREGS) && (mode == SFmode))) return false;
       info->type = ADDRESS_REG_POST_INC;
       info->reg = XEXP (x, 0);
       info->offset = XEXP (x, 1);
       return (riscv_valid_base_register_p (info->reg, mode, strict_p));
     case POST_DEC:
-      if (GET_MODE_SIZE (mode) > UNITS_PER_WORD || (TARGET_HARD_FLOAT && (mode == SFmode))) return false;
+      if (GET_MODE_SIZE (mode) > UNITS_PER_WORD || ((TARGET_HARD_FLOAT&&!TARGET_FPREGS_ON_GRREGS) && (mode == SFmode))) return false;
       info->type = ADDRESS_REG_POST_DEC;
       info->reg = XEXP (x, 0);
       info->offset = XEXP (x, 1);
       return (riscv_valid_base_register_p (info->reg, mode, strict_p));
     case POST_MODIFY:
-      if (GET_MODE_SIZE (mode) > UNITS_PER_WORD || (TARGET_HARD_FLOAT && (mode == SFmode))) return false;
+      if (GET_MODE_SIZE (mode) > UNITS_PER_WORD || ((TARGET_HARD_FLOAT&&!TARGET_FPREGS_ON_GRREGS) && (mode == SFmode))) return false;
       info->type = ADDRESS_REG_POST_MODIFY;
       info->reg = XEXP (x, 0);
       info->mode = mode;
@@ -3977,7 +3977,7 @@ riscv_compute_frame_info (void)
 
   /* Find out which FPRs we need to save.  This loop must iterate over
      the same space as its companion in riscv_for_each_saved_reg.  */
-  if (TARGET_HARD_FLOAT)
+  if (TARGET_HARD_FLOAT &&!TARGET_FPREGS_ON_GRREGS)
     for (regno = FP_REG_FIRST; regno <= FP_REG_LAST; regno++)
       if (riscv_save_reg_p (regno, frame->is_it)) {
 	frame->fmask |= 1 << (regno - FP_REG_FIRST), num_f_saved++;
@@ -5029,7 +5029,7 @@ riscv_option_override (void)
 static void
 riscv_conditional_register_usage (void)
 {
-  if (!TARGET_HARD_FLOAT)
+  if (!TARGET_HARD_FLOAT || TARGET_FPREGS_ON_GRREGS)
     {
       for (int regno = FP_REG_FIRST; regno <= FP_REG_LAST; regno++)
 	fixed_regs[regno] = call_used_regs[regno] = 1;

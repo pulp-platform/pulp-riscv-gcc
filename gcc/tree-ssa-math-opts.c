@@ -2967,7 +2967,11 @@ widening_mult_conversion_strippable_p (tree result_type, gimple *stmt)
 {
   enum tree_code rhs_code = gimple_assign_rhs_code (stmt);
 
-  if (TREE_CODE (result_type) == INTEGER_TYPE)
+  if (TREE_CODE (result_type) == INTEGER_TYPE
+      /* OPRECOMP GIPSY Adding REAL_TYPE to enable the expanding operations for smallFloat types  */
+      || TREE_CODE (result_type) == REAL_TYPE
+      /* */
+     )
     {
       tree op_type;
       tree inner_op_type;
@@ -3075,7 +3079,11 @@ is_widening_mult_p (gimple *stmt,
   tree type = TREE_TYPE (gimple_assign_lhs (stmt));
 
   if (TREE_CODE (type) != INTEGER_TYPE
-      && TREE_CODE (type) != FIXED_POINT_TYPE)
+      && TREE_CODE (type) != FIXED_POINT_TYPE
+      /* OPRECOMP GIPSY Adding REAL_TYPE to enable the expanding operations for smallFloat types  */
+      && TREE_CODE (type) != REAL_TYPE
+      /* */
+     )
     return false;
 
   if (!is_widening_mult_rhs_p (type, gimple_assign_rhs1 (stmt), type1_out,
@@ -3127,7 +3135,11 @@ convert_mult_to_widen (gimple *stmt, gimple_stmt_iterator *gsi)
 
   lhs = gimple_assign_lhs (stmt);
   type = TREE_TYPE (lhs);
-  if (TREE_CODE (type) != INTEGER_TYPE)
+  if (TREE_CODE (type) != INTEGER_TYPE
+      /* OPRECOMP GIPSY Adding REAL_TYPE to enable the expanding operations for smallFloat types  */
+      && TREE_CODE (type) != REAL_TYPE
+      /* */
+     )
     return false;
 
   if (!is_widening_mult_p (stmt, &type1, &rhs1, &type2, &rhs2))
@@ -3235,7 +3247,11 @@ convert_plusminus_to_widen (gimple_stmt_iterator *gsi, gimple *stmt,
   lhs = gimple_assign_lhs (stmt);
   type = TREE_TYPE (lhs);
   if (TREE_CODE (type) != INTEGER_TYPE
-      && TREE_CODE (type) != FIXED_POINT_TYPE)
+      && TREE_CODE (type) != FIXED_POINT_TYPE
+      /* OPRECOMP GIPSY Adding REAL_TYPE to enable the expanding operations for smallFloat types  */
+      && TREE_CODE (type) != REAL_TYPE
+      /* */
+     )
     return false;
 
   if (code == MINUS_EXPR)
