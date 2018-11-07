@@ -2570,8 +2570,9 @@ write_builtin_type (tree type)
 	write_string ("Dd");
       else if (type == dfloat128_type_node)
 	write_string ("De");
-      else
-	gcc_unreachable ();
+      else { // We can reach that point with fp16 or fp16_alt
+	// gcc_unreachable ();
+}
       break;
 
     case FIXED_POINT_TYPE:
