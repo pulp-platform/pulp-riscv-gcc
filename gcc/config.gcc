@@ -2034,14 +2034,23 @@ riscv*-*-linux*)
 riscv*-*-elf*)
 	tm_file="elfos.h newlib-stdint.h ${tm_file} riscv/elf.h"
 	case "x${enable_multilib}" in
-	xno) ;;
-	xyes) tmake_file="${tmake_file} riscv/t-elf-multilib" ;;
-	*) echo "Unknown value for enable_multilib"; exit 1
+		xno) ;;
+		xyes) tmake_file="${tmake_file} riscv/t-elf-multilib" ;;
+		*) echo "Unknown value for enable_multilib"; exit 1
 	esac
 	if test x$enable_as_accelerator = xyes; then
-          extra_programs="${extra_programs} mkoffload\$(exeext)"
-          tm_file="${tm_file} riscv/hero-offload.h"
-          tmake_file="${tmake_file} riscv/t-hero"
+		case $target in
+			riscv32-xpulpv2-elf*)
+				extra_programs="${extra_programs} mkoffload\$(exeext)"
+				tm_file="${tm_file} riscv/mrwolfe-offload.h"
+				tmake_file="${tmake_file} riscv/t-mrwolfe"
+				;;
+			*)
+				extra_programs="${extra_programs} mkoffload\$(exeext)"
+				tm_file="${tm_file} riscv/hero-offload.h"
+				tmake_file="${tmake_file} riscv/t-hero"
+				;;
+		esac
 	fi
 	tmake_file="${tmake_file} riscv/t-riscv"
 	gnu_ld=yes
