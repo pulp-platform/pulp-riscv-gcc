@@ -78,6 +78,9 @@ extern bool riscv_bitmask_ins_p (unsigned HOST_WIDE_INT, int, enum machine_mode)
 extern bool riscv_bottom_bitmask_p (unsigned HOST_WIDE_INT);
 
 extern bool riscv_valid_permute_operands(rtx op1, rtx op2, rtx sel);
+
+extern int riscv_valid_bitrev_imm_op(rtx radix, rtx npoints);
+extern void riscv_bitrev_imm_op(rtx radix, rtx npoints, int *R, int *N);
 #endif
 
 extern void riscv_hardware_loop (void);
