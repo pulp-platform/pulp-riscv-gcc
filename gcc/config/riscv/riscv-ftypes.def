@@ -43,6 +43,8 @@ along with GCC; see the file COPYING3.  If not see
    Please keep this list lexicographically sorted by the LIST argument.  */
 
 DEF_RISCV_FTYPE (1, (INT, INT))
+DEF_RISCV_FTYPE (1, (SHORT, INT))
+DEF_RISCV_FTYPE (1, (CHAR, INT))
 DEF_RISCV_FTYPE (1, (SF, SF))
 DEF_RISCV_FTYPE (1, (OHF, OHF))
 DEF_RISCV_FTYPE (1, (V2HI, V2HI))
