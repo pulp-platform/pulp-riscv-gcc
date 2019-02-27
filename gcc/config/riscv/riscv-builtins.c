@@ -159,6 +159,20 @@ riscv_builtin_avail_pulp_gap8_only (void)
 /* __GAP8 Stop */
 
 static unsigned int
+riscv_builtin_avail_pulp_gap8 (void)
+{
+  if (Pulp_Cpu>=PULP_GAP8) return 1;
+  return 0;
+}
+
+static unsigned int
+riscv_builtin_avail_pulp_gap9 (void)
+{
+  if (Pulp_Cpu>=PULP_GAP9) return 1;
+  return 0;
+}
+
+static unsigned int
 riscv_builtin_avail_pulp_vall (void)
 {
   if (Pulp_Cpu>=PULP_V0 || Pulp_Cpu==PULP_SLIM) return 1;
@@ -482,6 +496,24 @@ static int CheckBuiltin(int Code, int BuiltinIndex, struct ExtraBuiltinImmArg *E
 				if (Reg <= 4091) return 1;
 			}
 			Diag = "__builtin_pulp_read_then_spr_bit_clr(Spr, Value) expects Spr to be immediate and in [0..4091]";
+			break;
+		case CODE_FOR_bitrevsi:
+			if (Op[1] && (GET_CODE(Op[1]) == CONST_INT) && Op[2] && (GET_CODE(Op[2]) == CONST_INT)) {
+				HOST_WIDE_INT val;
+				int R, N;
+				val = INTVAL(Op[2]);
+				if (val>0) {
+					R = (31 - __builtin_clz(((int) val)));
+					if ((((HOST_WIDE_INT)(1<<R))==val) && (R<=3)) {
+						val = INTVAL(Op[1]);
+						if (val>0) {
+							N = (31 - __builtin_clz(((int) val)));
+							if (((HOST_WIDE_INT)(1<<N))==val) return 1;
+						}
+					}
+				}
+			}
+			Diag = "__builtin_pulp_bitrev(Src, Npoints, Radix) expects Radix immediate in [2,4,8] and Npoints immediate and a power of 2";
 			break;
 		/* Internal error no handler for this builtin code */
 		default:

@@ -2555,6 +2555,36 @@ int riscv_valid_norm_round_imm_op(rtx norm_oper, rtx round_oper, int MaxVal)
 	return 0;
 }
 
+int riscv_valid_bitrev_imm_op(rtx radix, rtx npoints)
+
+{
+	HOST_WIDE_INT val;
+	int R, N;
+	if ((GET_CODE(radix) != CONST_INT) || (GET_CODE(npoints) != CONST_INT)) return 0;
+ 	val = INTVAL (radix);
+	if (val==0 || val<0) return 0;
+	R = (31 - __builtin_clz(((int) val)));
+	if ((((HOST_WIDE_INT)(1<<R))!=val) || (R>3)) return 0;
+
+ 	val = INTVAL (npoints);
+	if (val==0 || val<0) return 0;
+	N = (31 - __builtin_clz(((int) val)));
+	if (((HOST_WIDE_INT)(1<<N))!=val) return 0;
+	return 1;
+}
+
+void riscv_bitrev_imm_op(rtx radix, rtx npoints, int *R, int *N)
+
+{
+	HOST_WIDE_INT val;
+
+ 	val = INTVAL (radix);
+	*R = (31 - __builtin_clz(((int) val)));
+ 	val = INTVAL (npoints);
+	*N = (31 - __builtin_clz(((int) val)));
+}
+
+
 bool riscv_valid_bit_field_imm_operand(rtx x, rtx shift_op, int Set_Mode, int *Size, int *Offset)
 
 {

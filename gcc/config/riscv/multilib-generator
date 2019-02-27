@@ -37,7 +37,9 @@ required = []
 reuse = []
 
 for cfg in sys.argv[1:]:
+  print('CFG = %s' % cfg)
   (arch, abi, extra, ext) = cfg.split('-')
+  print('ARCH = %s, ABI = %s, EXTRA = %s, EXT = %s' % (arch, abi, extra, ext))
   arches[arch] = 1
   abis[abi] = 1
   extra = list(filter(None, extra.split(',')))
