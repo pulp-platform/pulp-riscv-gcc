@@ -312,6 +312,10 @@ mfpint
 Target Report RejectNegative Mask(FPREGS_ON_GRREGS)
 When hw floating point is enabled maps floats to integer register file
 
+mf16
+Target UInteger Var(Has_F16) Init(0)
+Enable binary16 SmallFloat type
+
 mf16alt
 Target UInteger Var(Has_F16ALT) Init(0)
 Enable binary16alt SmallFloat type
