@@ -98,4 +98,6 @@ riscv_cpu_cpp_builtins (cpp_reader *pfile)
       builtin_define ("__pulp");
       builtin_define ("_pulp");
     }
+  if (Pulp_Cpu==PULP_GAP9) builtin_define ("__gap9__");
+  if (Pulp_Cpu==PULP_GAP8) builtin_define ("__gap8__");
 }

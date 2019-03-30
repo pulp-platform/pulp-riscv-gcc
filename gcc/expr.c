@@ -282,6 +282,10 @@ convert_move (rtx to, rtx from, int unsignedp)
 
       gcc_assert ((GET_MODE_PRECISION (from_mode)
 		   != GET_MODE_PRECISION (to_mode))
+      /* OPRECOMP GIPSY convert float16 <-> float16alt */
+      || ((from_mode == OHFmode) || (to_mode == OHFmode))
+      || ((from_mode == V2OHFmode) || (to_mode == V2OHFmode))
+      /**/
 		  || (DECIMAL_FLOAT_MODE_P (from_mode)
 		      != DECIMAL_FLOAT_MODE_P (to_mode)));
 
@@ -10893,7 +10897,14 @@ expand_expr_real_1 (tree exp, rtx target, machine_mode tmode,
 
       /* If the input and output modes are both the same, we are done.  */
       if (mode == GET_MODE (op0))
-	;
+        ;
+      /* OPRECOMP GIPSY Fix to support vectorial cast V2HFmode<->V2OHFmode */
+      else if((mode == V2HFmode  && GET_MODE (op0) == V2OHFmode) ||
+              (mode == V2OHFmode && GET_MODE (op0) == V2HFmode ))
+        op0 = convert_modes (mode, GET_MODE (op0), op0,
+             TYPE_UNSIGNED (TREE_TYPE (treeop0)));
+
+
       /* If neither mode is BLKmode, and both modes are the same size
 	 then we can use gen_lowpart.  */
       else if (mode != BLKmode && GET_MODE (op0) != BLKmode

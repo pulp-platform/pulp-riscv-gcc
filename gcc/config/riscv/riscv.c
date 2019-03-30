@@ -2461,9 +2461,30 @@ void riscv_expand_vector_init(rtx target, rtx vals)
 	   We could also extract all slices with an imm value an forge a 32bit constant to be moved to target reg, we
 	   then skip all immediates since they are already in
 	*/
+	if ((n_elts==2)&&((mode==V2HFmode) || (mode==V2OHFmode) || (mode==V2HImode)))
+		switch (mode) {
+			case V2HFmode:
+				emit_insn(gen_vec_pack_v2hf(target, XVECEXP (vals, 0, 0), XVECEXP (vals, 0, 1))); return;
+			case V2OHFmode:
+				emit_insn(gen_vec_pack_v2ohf(target, XVECEXP (vals, 0, 0), XVECEXP (vals, 0, 1))); return;
+			case V2HImode:
+				emit_insn(gen_vec_pack_v2hi(target, copy_to_mode_reg(inner_mode, XVECEXP (vals, 0, 0)), copy_to_mode_reg(inner_mode, XVECEXP (vals, 0, 1)))); return;
+			default: ;
+		}
+	else if ((n_elts==4)&&((mode==V4QImode))) {
+		emit_insn(gen_vec_pack_v4qi(target, XVECEXP (vals, 0, 0), XVECEXP (vals, 0, 1), XVECEXP (vals, 0, 2), XVECEXP (vals, 0, 3))); return;
+	}
 	for (i = 0; i < n_elts; ++i) {
 		x = copy_to_mode_reg(inner_mode, XVECEXP (vals, 0, i));
 		switch (mode) {
+			case V2HFmode:
+				if (first) emit_insn(gen_vec_set_firstv2hf(target, x, GEN_INT(i)));
+				else if (XVECEXP (vals, 0, i) != const0_rtx) emit_insn(gen_vec_setv2hf(target, x, GEN_INT(i)));
+				break;
+			case V2OHFmode:
+				if (first) emit_insn(gen_vec_set_firstv2ohf(target, x, GEN_INT(i)));
+				else if (XVECEXP (vals, 0, i) != const0_rtx) emit_insn(gen_vec_setv2ohf(target, x, GEN_INT(i)));
+				break;
 			case V2HImode:
 				if (first) emit_insn(gen_vec_set_firstv2hi(target, x, GEN_INT(i)));
 				else if (XVECEXP (vals, 0, i) != const0_rtx) emit_insn(gen_vec_setv2hi(target, x, GEN_INT(i)));
@@ -2721,6 +2742,9 @@ static bool riscv_vector_mode_supported_p (enum machine_mode mode)
     case V2HImode:
     case V4QImode:
     case V2QImode:
+    case V2HFmode:
+    case V2OHFmode:
+    case V1SFmode:
       return true;
     default:
       return false;
@@ -2737,6 +2761,12 @@ static enum machine_mode riscv_preferred_simd_mode (enum machine_mode mode)
       return V2HImode;
     case QImode:
       return V4QImode;
+    case HFmode:
+      return V2HFmode;
+    case OHFmode:
+      return V2OHFmode;
+    case SFmode:
+      return V1SFmode;
     default:
       return word_mode;
     }
