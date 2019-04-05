@@ -4659,8 +4659,20 @@
   ]
   "((Pulp_Cpu>=PULP_V2) && !(TARGET_MASK_NOVECT||TARGET_MASK_NOSHUFFLEPACK))"
 {
+	rtx R0 = gen_reg_rtx(QImode);
+	rtx R1 = gen_reg_rtx(QImode);
+	rtx R2 = gen_reg_rtx(QImode);
+	rtx R3 = gen_reg_rtx(QImode);
+	emit_insn(gen_movqi(R0, operands[1]));
+	emit_insn(gen_movqi(R1, operands[2]));
+	emit_insn(gen_movqi(R2, operands[3]));
+	emit_insn(gen_movqi(R3, operands[4]));
+	emit_insn (gen_vec_pack_v4qi_lo_first(operands[0], R0, R1));
+	emit_insn (gen_vec_pack_v4qi_hi      (operands[0], R2, R3, operands[0]));
+/*
 	emit_insn (gen_vec_pack_v4qi_lo_first(operands[0], operands[1], operands[2]));
 	emit_insn (gen_vec_pack_v4qi_hi      (operands[0], operands[3], operands[4], operands[0]));
+*/
   DONE;
 })
 
