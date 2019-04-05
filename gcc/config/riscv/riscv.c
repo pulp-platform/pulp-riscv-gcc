@@ -802,6 +802,12 @@ riscv_valid_lo_sum_p (enum riscv_symbol_type sym_type, enum machine_mode mode)
    fill in INFO appropriately.  STRICT_P is true if REG_OK_STRICT is in
    effect.  */
 
+static bool IsFloatMode(enum machine_mode mode)
+
+{
+	return (mode == SFmode || mode==V2HFmode || mode==V2OHFmode || mode==V1SFmode || mode == HFmode || mode == OHFmode);
+}
+
 static bool
 riscv_classify_address (struct riscv_address_info *info, rtx x,
 		       enum machine_mode mode, bool strict_p)
@@ -821,7 +827,7 @@ riscv_classify_address (struct riscv_address_info *info, rtx x,
       info->offset = XEXP (x, 1);
 
       if (((Pulp_Cpu>=PULP_V0) && !TARGET_MASK_NOINDREGREG && (GET_MODE_SIZE (mode) <= UNITS_PER_WORD) ) &&
-          !((TARGET_HARD_FLOAT &&!TARGET_FPREGS_ON_GRREGS) && (mode == SFmode)) &&
+          !((TARGET_HARD_FLOAT &&!TARGET_FPREGS_ON_GRREGS) && (IsFloatMode(mode))) &&
           ((GET_CODE(info->offset) == REG) || (GET_CODE(info->offset) == SUBREG))) {
                 info->type = ADDRESS_REG_REG;
                 return (riscv_valid_base_register_p (info->reg, mode, strict_p)
@@ -859,19 +865,19 @@ riscv_classify_address (struct riscv_address_info *info, rtx x,
       return SMALL_OPERAND (INTVAL (x));
 
     case POST_INC:
-      if (GET_MODE_SIZE (mode) > UNITS_PER_WORD || ((TARGET_HARD_FLOAT&&!TARGET_FPREGS_ON_GRREGS) && (mode == SFmode))) return false;
+      if (GET_MODE_SIZE (mode) > UNITS_PER_WORD || ((TARGET_HARD_FLOAT&&!TARGET_FPREGS_ON_GRREGS) && (IsFloatMode(mode)))) return false;
       info->type = ADDRESS_REG_POST_INC;
       info->reg = XEXP (x, 0);
       info->offset = XEXP (x, 1);
       return (riscv_valid_base_register_p (info->reg, mode, strict_p));
     case POST_DEC:
-      if (GET_MODE_SIZE (mode) > UNITS_PER_WORD || ((TARGET_HARD_FLOAT&&!TARGET_FPREGS_ON_GRREGS) && (mode == SFmode))) return false;
+      if (GET_MODE_SIZE (mode) > UNITS_PER_WORD || ((TARGET_HARD_FLOAT&&!TARGET_FPREGS_ON_GRREGS) && (IsFloatMode(mode)))) return false;
       info->type = ADDRESS_REG_POST_DEC;
       info->reg = XEXP (x, 0);
       info->offset = XEXP (x, 1);
       return (riscv_valid_base_register_p (info->reg, mode, strict_p));
     case POST_MODIFY:
-      if (GET_MODE_SIZE (mode) > UNITS_PER_WORD || ((TARGET_HARD_FLOAT&&!TARGET_FPREGS_ON_GRREGS) && (mode == SFmode))) return false;
+      if (GET_MODE_SIZE (mode) > UNITS_PER_WORD || ((TARGET_HARD_FLOAT&&!TARGET_FPREGS_ON_GRREGS) && (IsFloatMode(mode)))) return false;
       info->type = ADDRESS_REG_POST_MODIFY;
       info->reg = XEXP (x, 0);
       info->mode = mode;
@@ -1985,6 +1991,8 @@ riscv_output_move (rtx dest, rtx src)
         if ((Pulp_Cpu>=PULP_V0) && !TARGET_MASK_NOINDREGREG) {
                 if (addr.type == ADDRESS_REG_REG) Prefix = 1;
         }
+	if (addr.type == ADDRESS_REG_POST_INC || addr.type == ADDRESS_REG_POST_DEC || addr.type == ADDRESS_REG_POST_MODIFY) Prefix = 1;
+
         if (addr.type == ADDRESS_TINY_SYMBOL /* || addr.type == ADDRESS_REG_TINY_SYMBOL */ ) {
                 switch (GET_MODE_SIZE (mode)) {
                         case 1: return Prefix?"p.lbu\t%0,%%tiny(%1)(x0)":"lbu\t%0,%%tiny(%1)(x0)";
@@ -2053,6 +2061,7 @@ riscv_output_move (rtx dest, rtx src)
         if ((Pulp_Cpu>=PULP_V0) && !TARGET_MASK_NOINDREGREG) {
                 if (addr.type == ADDRESS_REG_REG) Prefix = 1;
         }
+	if (addr.type == ADDRESS_REG_POST_INC || addr.type == ADDRESS_REG_POST_DEC || addr.type == ADDRESS_REG_POST_MODIFY) Prefix = 1;
         if (addr.type == ADDRESS_TINY_SYMBOL /* || addr.type == ADDRESS_REG_TINY_SYMBOL */) {
                 switch (GET_MODE_SIZE (mode)) {
                         case 1: return Prefix?"p.sb\t%z1,%%tiny(%0)(x0)":"sb\t%z1,%%tiny(%0)(x0)";
