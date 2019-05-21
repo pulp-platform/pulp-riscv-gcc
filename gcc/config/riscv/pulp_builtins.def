@@ -326,4 +326,9 @@ Currently these macros are used in 2 contexts:
 
 
 
+/* PulpNN Extension */
+  DIRECT_BUILTIN1(addnv3,             add8,          RISCV_INT_FTYPE_INT_INT,                     pulp_v2, NULL)
+  DIRECT_BUILTIN1(addcv3,             add16,         RISCV_INT_FTYPE_INT_INT,                     pulp_v2, NULL)
+  DIRECT_BUILTIN1(addscnv3,             addsc8,          RISCV_INT_FTYPE_INT_INT,                     pulp_v2, NULL)
+  DIRECT_BUILTIN1(addsccv3,             addsc16,         RISCV_INT_FTYPE_INT_INT,                     pulp_v2, NULL)
 

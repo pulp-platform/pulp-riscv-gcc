@@ -8132,6 +8132,53 @@
   [(set_attr "length" "0")]
 )
 
+
+;;
+;; PulpNN Extension
+;;
+
+(define_c_enum "unspec_nn" [
+  UNSPEC_NN_VECTOR
+  UNSPEC_NN_SCALAR
+])
+
+
+(define_mode_iterator VMODESMALLINT   [CV NV])
+(define_mode_attr smallint_vec_size   [(CV "c")  (NV "n")])
+
+
+
+(define_insn "<vec_op2_name><VMODESMALLINT:mode>3"
+  [(set (match_operand:SI 0 "register_operand" "=r")
+        (zero_extend:SI (vec_op2:VMODESMALLINT (unspec:VMODESMALLINT [(match_operand:SI 1 "register_operand"  "r")] UNSPEC_NN_VECTOR)
+                                               (unspec:VMODESMALLINT [(match_operand:SI 2 "nonmemory_operand" "r")] UNSPEC_NN_VECTOR)
+                        )
+        )
+   )
+  ]
+""
+"pv.<vec_op2_asm_name>.<smallint_vec_size> \t%0,%1,%2\t # Vect Op Vect"
+[(set_attr "type" "arith")
+ (set_attr "mode" "SI")]
+)
+
+
+(define_insn "<vec_op2_name>sc<VMODESMALLINT:mode>3"
+  [(set (match_operand:SI 0 "register_operand" "=r")
+        (zero_extend:SI (vec_op2:VMODESMALLINT (unspec:VMODESMALLINT [(match_operand:SI 1 "register_operand"  "r")] UNSPEC_NN_VECTOR)
+                                               (unspec:VMODESMALLINT [(match_operand:SI 2 "nonmemory_operand" "r")] UNSPEC_NN_SCALAR)
+                        )
+        )
+   )
+  ]
+""
+"pv.<vec_op2_asm_name>.sc.<smallint_vec_size> \t%0,%1,%2\t # Vect Op Scalar"
+[(set_attr "type" "arith")
+ (set_attr "mode" "SI")]
+)
+
+
+
 (include "sync.md")
 (include "peephole.md")
 (include "pic.md")
