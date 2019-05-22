@@ -151,6 +151,13 @@ riscv_builtin_avail_pulp_v3 (void)
   return 0;
 }
 
+static unsigned int
+riscv_builtin_avail_pulp_nn (void)
+{
+  if (Pulp_Cpu>=PULP_NN) return 1;
+  return 0;
+}
+
 /* __GAP8 Start */
 static unsigned int
 riscv_builtin_avail_pulp_gap8_only (void)
@@ -517,6 +524,37 @@ static int CheckBuiltin(int Code, int BuiltinIndex, struct ExtraBuiltinImmArg *E
 			}
 			Diag = "__builtin_pulp_bitrev(Src, Npoints, Radix) expects Radix immediate in [2,4,8] and Npoints immediate and a power of 2";
 			break;
+		case CODE_FOR_vec_extract_sext_si_nv:
+		case CODE_FOR_vec_extract_zext_si_nv:
+			if (Op[1] && (GET_CODE(Op[1]) == CONST_INT)) {
+				int Offset = INTVAL (Op[1]);
+				if (Offset >=0 && Offset<=7) return 1;
+			}
+			Diag = "__builtin_pulp_extract[u]8(X, Offset) Expects Offset immediate constant in range [0..7]";
+			break;
+		case CODE_FOR_vec_extract_sext_si_cv:
+		case CODE_FOR_vec_extract_zext_si_cv:
+			if (Op[1] && (GET_CODE(Op[1]) == CONST_INT)) {
+				int Offset = INTVAL (Op[1]);
+				if (Offset >=0 && Offset<=15) return 1;
+			}
+			Diag = "__builtin_pulp_extract[u]16(X, Offset) Expects Offset immediate constant in range [0..15]";
+			break;
+		case CODE_FOR_vec_insert_si_nv:
+			if (Op[2] && (GET_CODE(Op[2]) == CONST_INT)) {
+				int Offset = INTVAL (Op[2]);
+				if (Offset >=0 && Offset<=7) return 1;
+			}
+			Diag = "__builtin_pulp_insert8(X, Offset) Expects Offset immediate constant in range [0..7]";
+			break;
+		case CODE_FOR_vec_insert_si_cv:
+			if (Op[2] && (GET_CODE(Op[2]) == CONST_INT)) {
+				int Offset = INTVAL (Op[2]);
+				if (Offset >=0 && Offset<=15) return 1;
+			}
+			Diag = "__builtin_pulp_insert16(X, Offset) Expects Offset immediate constant in range [0..15]";
+			break;
+
 		/* Internal error no handler for this builtin code */
 		default:
 			// gcc_unreachable ();
@@ -607,7 +645,7 @@ static struct {
 	tree	TypeDescr;
 	int	Base;
 	int 	Index;
-} Native_GOMP_Builtins[NATIVE_GOMP_LAST] = 
+} Native_GOMP_Builtins[NATIVE_GOMP_LAST] =
 {
 	{NULL, 0x00204000, 0x70},		// OMP Loop Chunk Size
 	{NULL, 0x00204000, 0x64},		// OMP Loop Start

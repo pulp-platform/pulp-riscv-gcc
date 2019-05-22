@@ -72,6 +72,7 @@ enum Pulp_Processor_Type
   PULP_GAP8,
 /* __GAP8 Stop */
   PULP_GAP9,
+  PULP_NN,
   PULP_LAST
 };
 
@@ -132,6 +133,7 @@ static int Pulp_Check_Processor_Compatibility(enum Pulp_Processor_Type New_Proc,
   		/* PULP_GAP8 */		((1<<PULP_RISCV) | (1<<PULP_V2) | (1<<PULP_GAP8)),
 /* __GAP8 Stop */
   		/* PULP_GAP9 */		((1<<PULP_RISCV) | (1<<PULP_V2) | (1<<PULP_GAP8) | (1<<PULP_GAP9)),
+      /* PULP_NN */		  ((1<<PULP_RISCV) | (1<<PULP_V3)),
 	};
 
 	return (Pulp_Compatible_Processors[New_Proc] & (1<<With_Proc));
@@ -181,6 +183,7 @@ static enum Pulp_Processor_Type PulpDecodeCpu(char *Text, int *Len)
         else if (strncmp (Dup, "pulpv1", 6) == 0) { free(Dup); if (Len) *Len = 6; return PULP_V1; }
         else if (strncmp (Dup, "pulpv2", 6) == 0) { free(Dup); if (Len) *Len = 6; return PULP_V2; }
         else if (strncmp (Dup, "pulpv3", 6) == 0) { free(Dup); if (Len) *Len = 6; return PULP_V3; }
+        else if (strncmp (Dup, "pulpnn", 6) == 0) { free(Dup); if (Len) *Len = 6; return PULP_NN; }
 /* __GAP8 Start */
         else if (strncmp (Dup, "gap8", 4) == 0)   { free(Dup); if (Len) *Len = 4; return PULP_GAP8; }
 /* __GAP8 Stop */
@@ -239,6 +242,7 @@ static const char *PulpProcessorImage(enum Pulp_Processor_Type Which)
                 case PULP_V1: return "pulpv1";
                 case PULP_V2: return "pulpv2";
                 case PULP_V3: return "pulpv3";
+                case PULP_NN: return "pulpnn";
 /* __GAP8 Start */
                 case PULP_GAP8: return "gap8";
 /* __GAP8 Stop */

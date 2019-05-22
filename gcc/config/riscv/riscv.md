@@ -230,7 +230,7 @@
 ;; logical      integer logical instructions
 ;; shift	integer shift instructions
 ;; slt		set less than instructions
-;; imul		integer multiply 
+;; imul		integer multiply
 ;; idiv		integer divide
 ;; move		integer register move (addi rd, rs1, 0)
 ;; fmove	floating point register move
@@ -900,7 +900,7 @@
 	(sqrt:ANYF (match_operand:ANYF 1 "register_operand" " f")))]
   "TARGET_HARD_FLOAT && TARGET_FDIV"
 {
-    return (Pulp_DP_Format==PULP_DP_FORMAT32) ? "fsqrt.s\t%0,%1" : "fsqrt.<fmt>\t%0,%1"; 
+    return (Pulp_DP_Format==PULP_DP_FORMAT32) ? "fsqrt.s\t%0,%1" : "fsqrt.<fmt>\t%0,%1";
 }
   [(set_attr "type" "fsqrt")
    (set_attr "mode" "<UNITMODE>")])
@@ -2348,7 +2348,7 @@
 	rtx xoperands[5];
 
 	(void) riscv_valid_bit_field_imm_operand(operands[2], NULL, 0, &Size, &Offset);
-	
+
 	xoperands[0] = operands[0];
 	xoperands[1] = operands[1];
 	xoperands[2] = operands[2];
@@ -2849,7 +2849,7 @@
                 case 0:
                         if ((Pulp_Cpu>=PULP_V0) && !TARGET_MASK_NOSEXT) return "p.exthz\t%0,%1";
                         else return "#";
-                case 1: 
+                case 1:
                         if ((Pulp_Cpu>=PULP_V0) && !TARGET_MASK_NOINDREGREG) {
                                 rtx Addr = XEXP(operands[1], 0);
                                 if (GET_CODE(Addr) == PLUS && (GET_CODE(XEXP(Addr, 1)) == REG || GET_CODE(XEXP(Addr, 1)) == SUBREG))
@@ -2923,7 +2923,7 @@
                 case 0:
                         if ((Pulp_Cpu>=PULP_V0) && !TARGET_MASK_NOSEXT) return "p.ext<SHORT:size>s\t%0,%1";
                         else return "#";
-                case 1: 
+                case 1:
                         if ((Pulp_Cpu>=PULP_V0) && !TARGET_MASK_NOINDREGREG) {
                                 rtx Addr = XEXP(operands[1], 0);
                                 if (GET_CODE(Addr) == PLUS && (GET_CODE(XEXP(Addr, 1)) == REG || GET_CODE(XEXP(Addr, 1)) == SUBREG))
@@ -3392,7 +3392,7 @@
   csrrs \tx0,%0,%1\t# SPR bit set
   csrrsi \tx0,%0,%1\t# SPR bit set uimm5"
 )
- 
+
 (define_insn "read_then_spr_bit_set"
   [(set (match_operand:SI 0 "register_operand" "=r,r")
 	(unspec_volatile [(match_operand:SI 1 "immediate_operand" "L,L") (match_operand:SI 2 "nonmemory_operand" "r,K")] UNSPEC_SPR_BIT_SET)
@@ -8142,6 +8142,7 @@
   UNSPEC_NN_SCALAR
 ])
 
+(define_code_iterator vec_op2_smallint    	[plus minus smin smax mult])
 
 (define_mode_iterator VMODESMALLINT   [CV NV])
 (define_mode_attr smallint_vec_size   [(CV "c")  (NV "n")])
@@ -8150,13 +8151,13 @@
 
 (define_insn "<vec_op2_name><VMODESMALLINT:mode>3"
   [(set (match_operand:SI 0 "register_operand" "=r")
-        (zero_extend:SI (vec_op2:VMODESMALLINT (unspec:VMODESMALLINT [(match_operand:SI 1 "register_operand"  "r")] UNSPEC_NN_VECTOR)
+        (zero_extend:SI (vec_op2_smallint:VMODESMALLINT (unspec:VMODESMALLINT [(match_operand:SI 1 "register_operand"  "r")] UNSPEC_NN_VECTOR)
                                                (unspec:VMODESMALLINT [(match_operand:SI 2 "nonmemory_operand" "r")] UNSPEC_NN_VECTOR)
                         )
         )
    )
   ]
-""
+"((Pulp_Cpu==PULP_NN) && !TARGET_MASK_NOVECT)"
 "pv.<vec_op2_asm_name>.<smallint_vec_size> \t%0,%1,%2\t # Vect Op Vect"
 [(set_attr "type" "arith")
  (set_attr "mode" "SI")]
@@ -8165,19 +8166,237 @@
 
 (define_insn "<vec_op2_name>sc<VMODESMALLINT:mode>3"
   [(set (match_operand:SI 0 "register_operand" "=r")
-        (zero_extend:SI (vec_op2:VMODESMALLINT (unspec:VMODESMALLINT [(match_operand:SI 1 "register_operand"  "r")] UNSPEC_NN_VECTOR)
+        (zero_extend:SI (vec_op2_smallint:VMODESMALLINT (unspec:VMODESMALLINT [(match_operand:SI 1 "register_operand"  "r")] UNSPEC_NN_VECTOR)
                                                (unspec:VMODESMALLINT [(match_operand:SI 2 "nonmemory_operand" "r")] UNSPEC_NN_SCALAR)
                         )
         )
    )
   ]
-""
+"((Pulp_Cpu==PULP_NN)  && !TARGET_MASK_NOVECT)"
 "pv.<vec_op2_asm_name>.sc.<smallint_vec_size> \t%0,%1,%2\t # Vect Op Scalar"
 [(set_attr "type" "arith")
  (set_attr "mode" "SI")]
 )
 
 
+(define_insn "<vec_op2u_name><VMODESMALLINT:mode>3"
+  [(set (match_operand:SI 0 "register_operand" "=r")
+        (zero_extend:SI (vec_op2u:VMODESMALLINT (unspec:VMODESMALLINT [(match_operand:SI 1 "register_operand"  "r")] UNSPEC_NN_VECTOR)
+                                                (unspec:VMODESMALLINT [(match_operand:SI 2 "nonmemory_operand" "r")] UNSPEC_NN_VECTOR)
+                        )
+        )
+   )
+  ]
+"((Pulp_Cpu==PULP_NN) && !TARGET_MASK_NOVECT)"
+"pv.<vec_op2u_asm_name>.<smallint_vec_size> \t%0,%1,%2\t # Vect Op Vect"
+[(set_attr "type" "arith")
+ (set_attr "mode" "SI")]
+)
+
+
+(define_insn "<vec_op2u_name>sc<VMODESMALLINT:mode>3"
+  [(set (match_operand:SI 0 "register_operand" "=r")
+        (zero_extend:SI (vec_op2u:VMODESMALLINT (unspec:VMODESMALLINT [(match_operand:SI 1 "register_operand"  "r")] UNSPEC_NN_VECTOR)
+                                                (unspec:VMODESMALLINT [(match_operand:SI 2 "nonmemory_operand" "r")] UNSPEC_NN_SCALAR)
+                        )
+        )
+   )
+  ]
+"((Pulp_Cpu==PULP_NN)  && !TARGET_MASK_NOVECT)"
+"pv.<vec_op2u_asm_name>.sc.<smallint_vec_size> \t%0,%1,%2\t # Vect Op Scalar"
+[(set_attr "type" "arith")
+ (set_attr "mode" "SI")]
+)
+
+
+(define_insn "<vec_op2s_name><VMODESMALLINT:mode>3"
+  [(set (match_operand:SI 0 "register_operand" "=r")
+        (zero_extend:SI (vec_op2s:VMODESMALLINT (unspec:VMODESMALLINT [(match_operand:SI 1 "register_operand"  "r")] UNSPEC_NN_VECTOR)
+                                                (unspec:VMODESMALLINT [(match_operand:SI 2 "nonmemory_operand" "r")] UNSPEC_NN_VECTOR)
+                        )
+        )
+   )
+  ]
+"((Pulp_Cpu==PULP_NN) && !TARGET_MASK_NOVECT)"
+"pv.<vec_op2s_asm_name>.<smallint_vec_size> \t%0,%1,%2\t # Vect Op Vect"
+[(set_attr "type" "arith")
+ (set_attr "mode" "SI")]
+)
+
+
+(define_insn "<vec_op2s_name>sc<VMODESMALLINT:mode>3"
+  [(set (match_operand:SI 0 "register_operand" "=r")
+        (zero_extend:SI (vec_op2s:VMODESMALLINT (unspec:VMODESMALLINT [(match_operand:SI 1 "register_operand"  "r")] UNSPEC_NN_VECTOR)
+                                                (unspec:VMODESMALLINT [(match_operand:SI 2 "nonmemory_operand" "r")] UNSPEC_NN_SCALAR)
+                        )
+        )
+   )
+  ]
+"((Pulp_Cpu==PULP_NN)  && !TARGET_MASK_NOVECT)"
+"pv.<vec_op2s_asm_name>.sc.<smallint_vec_size> \t%0,%1,%2\t # Vect Op Scalar"
+[(set_attr "type" "arith")
+ (set_attr "mode" "SI")]
+)
+
+
+(define_insn "<vec_log2_name><VMODESMALLINT:mode>3"
+  [(set (match_operand:SI 0 "register_operand" "=r")
+        (zero_extend:SI (vec_log2:VMODESMALLINT (unspec:VMODESMALLINT [(match_operand:SI 1 "register_operand"  "r")] UNSPEC_NN_VECTOR)
+                                                (unspec:VMODESMALLINT [(match_operand:SI 2 "nonmemory_operand" "r")] UNSPEC_NN_VECTOR)
+                        )
+        )
+   )
+  ]
+"((Pulp_Cpu==PULP_NN) && !TARGET_MASK_NOVECT)"
+"pv.<vec_log2_asm_name>.<smallint_vec_size> \t%0,%1,%2\t # Vect Op Vect"
+[(set_attr "type" "arith")
+ (set_attr "mode" "SI")]
+)
+
+
+(define_insn "<vec_log2_name>sc<VMODESMALLINT:mode>3"
+  [(set (match_operand:SI 0 "register_operand" "=r")
+        (zero_extend:SI (vec_log2:VMODESMALLINT (unspec:VMODESMALLINT [(match_operand:SI 1 "register_operand"  "r")] UNSPEC_NN_VECTOR)
+                                                (unspec:VMODESMALLINT [(match_operand:SI 2 "nonmemory_operand" "r")] UNSPEC_NN_SCALAR)
+                        )
+        )
+   )
+  ]
+"((Pulp_Cpu==PULP_NN)  && !TARGET_MASK_NOVECT)"
+"pv.<vec_log2_asm_name>.sc.<smallint_vec_size> \t%0,%1,%2\t # Vect Op Scalar"
+[(set_attr "type" "arith")
+ (set_attr "mode" "SI")]
+)
+
+
+(define_insn "avg<VMODESMALLINT:mode>3"
+  [(set (match_operand:SI 0 "register_operand" "=r")
+	   (zero_extend:SI(ashiftrt:VMODESMALLINT
+	   	 (plus:VMODESMALLINT (unspec:VMODESMALLINT [(match_operand:SI 1  "register_operand" "r")] UNSPEC_NN_VECTOR)
+		    	                 (unspec:VMODESMALLINT [(match_operand:SI 2 "nonmemory_operand" "r")] UNSPEC_NN_VECTOR)
+       )
+	     (unspec:VMODESMALLINT [(const_int 1)] UNSPEC_NN_VECTOR)
+  	 ))
+   )
+  ]
+"((Pulp_Cpu==PULP_NN) && !TARGET_MASK_NOVECT)"
+"pv.avg.<smallint_vec_size> \t%0,%1,%2\t # Vect Avg Vect"
+[(set_attr "type" "arith")
+ (set_attr "mode" "SI")]
+)
+
+
+(define_insn "avgsc<VMODESMALLINT:mode>3"
+  [(set (match_operand:SI 0 "register_operand" "=r")
+	   (zero_extend:SI(ashiftrt:VMODESMALLINT
+	   	 (plus:VMODESMALLINT (unspec:VMODESMALLINT [(match_operand:SI 1  "register_operand" "r")] UNSPEC_NN_VECTOR)
+		    	                 (unspec:VMODESMALLINT [(match_operand:SI 2 "nonmemory_operand" "r")] UNSPEC_NN_SCALAR)
+       )
+	     (unspec:VMODESMALLINT [(const_int 1)] UNSPEC_NN_VECTOR)
+  	 ))
+   )
+  ]
+"((Pulp_Cpu==PULP_NN) && !TARGET_MASK_NOVECT)"
+"pv.avg.sc.<smallint_vec_size> \t%0,%1,%2\t # Vect Avg Vect"
+[(set_attr "type" "arith")
+ (set_attr "mode" "SI")]
+)
+
+
+(define_insn "avgu<VMODESMALLINT:mode>3"
+  [(set (match_operand:SI 0 "register_operand" "=r")
+	   (zero_extend:SI(lshiftrt:VMODESMALLINT
+	   	 (plus:VMODESMALLINT (unspec:VMODESMALLINT [(match_operand:SI 1  "register_operand" "r")] UNSPEC_NN_VECTOR)
+		    	                 (unspec:VMODESMALLINT [(match_operand:SI 2 "nonmemory_operand" "r")] UNSPEC_NN_VECTOR)
+       )
+	     (unspec:VMODESMALLINT [(const_int 1)] UNSPEC_NN_VECTOR)
+  	 ))
+   )
+  ]
+"((Pulp_Cpu==PULP_NN) && !TARGET_MASK_NOVECT)"
+"pv.avgu.<smallint_vec_size> \t%0,%1,%2\t # Vect Avg Vect"
+[(set_attr "type" "arith")
+ (set_attr "mode" "SI")]
+)
+
+
+(define_insn "avgusc<VMODESMALLINT:mode>3"
+  [(set (match_operand:SI 0 "register_operand" "=r")
+	   (zero_extend:SI(lshiftrt:VMODESMALLINT
+	   	 (plus:VMODESMALLINT (unspec:VMODESMALLINT [(match_operand:SI 1  "register_operand" "r")] UNSPEC_NN_VECTOR)
+		    	                 (unspec:VMODESMALLINT [(match_operand:SI 2 "nonmemory_operand" "r")] UNSPEC_NN_SCALAR)
+       )
+	     (unspec:VMODESMALLINT [(const_int 1)] UNSPEC_NN_VECTOR)
+  	 ))
+   )
+  ]
+"((Pulp_Cpu==PULP_NN) && !TARGET_MASK_NOVECT)"
+"pv.avgu.sc.<smallint_vec_size> \t%0,%1,%2\t # Vect Avg Vect"
+[(set_attr "type" "arith")
+ (set_attr "mode" "SI")]
+)
+
+
+(define_insn "abs<VMODESMALLINT:mode>2"
+  [(set (match_operand:SI 0 "register_operand" "=r")
+        (zero_extend:SI
+          (abs:VMODESMALLINT (unspec:VMODESMALLINT [(match_operand:SI 1 "register_operand" "r")] UNSPEC_NN_VECTOR) )
+        )
+   )
+  ]
+"((Pulp_Cpu==PULP_NN) && !TARGET_MASK_NOVECT)"
+"pv.abs.<smallint_vec_size> \t%0,%1\t # Vect abs"
+[(set_attr "type" "arith")
+ (set_attr "mode" "SI")]
+)
+
+
+(define_insn "vec_extract_sext_si_<VMODESMALLINT:mode>"
+  [(set (match_operand:SI 0 "register_operand" "=r")
+        (sign_extend:SI
+          (vec_select:HI
+             (unspec:V2HI [ (unspec:VMODESMALLINT [(match_operand:SI 1 "register_operand" "r")] UNSPEC_NN_VECTOR) ] UNSPEC_NN_VECTOR)
+             (parallel [(match_operand:SI 2 "immediate_operand" "i")])
+          )
+        )
+   )
+  ]
+  "((Pulp_Cpu==PULP_NN) && !TARGET_MASK_NOVECT)"
+  "pv.extract.<smallint_vec_size>\t%0,%1,%2\t # vect extract, with sign ext"
+[(set_attr "type" "move")
+ (set_attr "mode" "SI")]
+)
+
+
+(define_insn "vec_extract_zext_si_<VMODESMALLINT:mode>"
+  [(set (match_operand:SI 0 "register_operand" "=r")
+        (zero_extend:SI
+          (vec_select:HI
+             (unspec:V2HI [ (unspec:VMODESMALLINT [(match_operand:SI 1 "register_operand" "r")] UNSPEC_NN_VECTOR) ] UNSPEC_NN_VECTOR)
+             (parallel [(match_operand:SI 2 "immediate_operand" "i")])
+          )
+        )
+   )
+  ]
+  "((Pulp_Cpu==PULP_NN) && !TARGET_MASK_NOVECT)"
+  "pv.extractu.<smallint_vec_size>\t%0,%1,%2\t # vect extract, with zero ext"
+[(set_attr "type" "move")
+ (set_attr "mode" "SI")]
+)
+
+(define_insn "vec_insert_si_<VMODESMALLINT:mode>"
+  [(set (match_operand:SI 0 "register_operand" "=r")
+        (unspec:SI [(vec_merge:V2HI
+          (unspec:V2HI [(unspec:VMODESMALLINT [(match_operand:SI 1  "register_operand" "0")] UNSPEC_NN_VECTOR)] UNSPEC_NN_VECTOR)
+          (unspec:V2HI [(unspec:VMODESMALLINT [(match_operand:SI 2 "nonmemory_operand" "r")] UNSPEC_NN_VECTOR)] UNSPEC_NN_VECTOR)
+          (match_operand:SI 3 "immediate_operand" "i")
+         )] UNSPEC_NN_VECTOR)
+   )]
+  "((Pulp_Cpu==PULP_NN) && !TARGET_MASK_NOVECT)"
+"pv.insert.<smallint_vec_size>\t%0,%1,%2\t # Vect insert"
+[(set_attr "type" "move")
+ (set_attr "mode" "SI")]
+)
 
 (include "sync.md")
 (include "peephole.md")
