@@ -8398,6 +8398,272 @@
  (set_attr "mode" "SI")]
 )
 
+
+
+(define_insn "dotup<VMODESMALLINT:mode>"
+  [(set (match_operand:SI 0 "register_operand" "=r")
+  	 (plus:SI
+  		(mult:SI
+  			(zero_extend:SI (vec_select:HI (unspec:V2HI [(unspec:VMODESMALLINT [(match_operand:SI 1  "register_operand" "r")] UNSPEC_NN_VECTOR)]   UNSPEC_NN_VECTOR) (parallel [(const_int 0)])))
+  			(zero_extend:SI (vec_select:HI (unspec:V2HI [(unspec:VMODESMALLINT [(match_operand:SI 2  "register_operand" "r")] UNSPEC_NN_VECTOR)]   UNSPEC_NN_VECTOR) (parallel [(const_int 0)])))
+  		)
+  		(mult:SI
+  			(zero_extend:SI (vec_select:HI (unspec:V2HI [(unspec:VMODESMALLINT [(match_dup 1)] UNSPEC_NN_VECTOR)]   UNSPEC_NN_VECTOR)(parallel [(const_int 1)])))
+  			(zero_extend:SI (vec_select:HI (unspec:V2HI [(unspec:VMODESMALLINT [(match_dup 2)] UNSPEC_NN_VECTOR)]   UNSPEC_NN_VECTOR) (parallel [(const_int 1)])))
+  		)
+  	 )
+  )]
+"((Pulp_Cpu==PULP_NN) && !TARGET_MASK_NOVECT)"
+"pv.dotup.<smallint_vec_size> \t%0,%1,%2\t # Vect 2 unsigned dot product"
+[(set_attr "type" "arith")
+ (set_attr "mode" "SI")]
+)
+
+(define_insn "dotupsc<VMODESMALLINT:mode>"
+  [(set (match_operand:SI 0 "register_operand" "=r")
+	(plus:SI
+		(mult:SI
+			(zero_extend:SI (vec_select:HI (unspec:V2HI [(unspec:VMODESMALLINT [(match_operand:SI 1  "register_operand" "r")] UNSPEC_NN_VECTOR)]   UNSPEC_NN_VECTOR) (parallel [(const_int 0)])))
+			(zero_extend:SI (subreg:HI (match_operand:SI 2 "register_operand" "r") 0))
+		)
+		(mult:SI
+			(zero_extend:SI (vec_select:HI (unspec:V2HI [(unspec:VMODESMALLINT [(match_dup 1)] UNSPEC_NN_VECTOR)]   UNSPEC_NN_VECTOR) (parallel [(const_int 1)])))
+			(zero_extend:SI (subreg:HI (match_dup 2) 0))
+		)
+	)
+   )
+  ]
+"((Pulp_Cpu==PULP_NN) && !TARGET_MASK_NOVECT)"
+"pv.dotup.sc.<smallint_vec_size> \t%0,%1,%2\t # Vect/Scalar reg 2 unsigned dot product"
+[(set_attr "type" "arith")
+ (set_attr "mode" "SI")]
+)
+
+
+(define_insn "dotsp<VMODESMALLINT:mode>"
+  [(set (match_operand:SI 0 "register_operand" "=r")
+  	 (plus:SI
+  		(mult:SI
+  			(sign_extend:SI (vec_select:HI (unspec:V2HI [(unspec:VMODESMALLINT [(match_operand:SI 1  "register_operand" "r")] UNSPEC_NN_VECTOR)]   UNSPEC_NN_VECTOR) (parallel [(const_int 0)])))
+  			(sign_extend:SI (vec_select:HI (unspec:V2HI [(unspec:VMODESMALLINT [(match_operand:SI 2  "register_operand" "r")] UNSPEC_NN_VECTOR)]   UNSPEC_NN_VECTOR) (parallel [(const_int 0)])))
+  		)
+  		(mult:SI
+  			(sign_extend:SI (vec_select:HI (unspec:V2HI [(unspec:VMODESMALLINT [(match_dup 1)] UNSPEC_NN_VECTOR)]   UNSPEC_NN_VECTOR)(parallel [(const_int 1)])))
+  			(sign_extend:SI (vec_select:HI (unspec:V2HI [(unspec:VMODESMALLINT [(match_dup 2)] UNSPEC_NN_VECTOR)]   UNSPEC_NN_VECTOR) (parallel [(const_int 1)])))
+  		)
+  	 )
+  )]
+"((Pulp_Cpu==PULP_NN) && !TARGET_MASK_NOVECT)"
+"pv.dotsp.<smallint_vec_size> \t%0,%1,%2\t # Vect 2 signed dot product"
+[(set_attr "type" "arith")
+ (set_attr "mode" "SI")]
+)
+
+(define_insn "dotspsc<VMODESMALLINT:mode>"
+  [(set (match_operand:SI 0 "register_operand" "=r")
+	(plus:SI
+		(mult:SI
+			(sign_extend:SI (vec_select:HI (unspec:V2HI [(unspec:VMODESMALLINT [(match_operand:SI 1  "register_operand" "r")] UNSPEC_NN_VECTOR)]   UNSPEC_NN_VECTOR) (parallel [(const_int 0)])))
+			(sign_extend:SI (subreg:HI (match_operand:SI 2 "register_operand" "r") 0))
+		)
+		(mult:SI
+			(sign_extend:SI (vec_select:HI (unspec:V2HI [(unspec:VMODESMALLINT [(match_dup 1)] UNSPEC_NN_VECTOR)]   UNSPEC_NN_VECTOR) (parallel [(const_int 1)])))
+			(sign_extend:SI (subreg:HI (match_dup 2) 0))
+		)
+	)
+   )
+  ]
+"((Pulp_Cpu==PULP_NN) && !TARGET_MASK_NOVECT)"
+"pv.dotsp.sc.<smallint_vec_size> \t%0,%1,%2\t # Vect/Scalar reg 2 signed dot product"
+[(set_attr "type" "arith")
+ (set_attr "mode" "SI")]
+)
+
+(define_insn "dotusp<VMODESMALLINT:mode>"
+  [(set (match_operand:SI 0 "register_operand" "=r")
+  	 (plus:SI
+  		(mult:SI
+  			(zero_extend:SI (vec_select:HI (unspec:V2HI [(unspec:VMODESMALLINT [(match_operand:SI 1  "register_operand" "r")] UNSPEC_NN_VECTOR)]   UNSPEC_NN_VECTOR) (parallel [(const_int 0)])))
+  			(sign_extend:SI (vec_select:HI (unspec:V2HI [(unspec:VMODESMALLINT [(match_operand:SI 2  "register_operand" "r")] UNSPEC_NN_VECTOR)]   UNSPEC_NN_VECTOR) (parallel [(const_int 0)])))
+  		)
+  		(mult:SI
+  			(zero_extend:SI (vec_select:HI (unspec:V2HI [(unspec:VMODESMALLINT [(match_dup 1)] UNSPEC_NN_VECTOR)]   UNSPEC_NN_VECTOR)(parallel [(const_int 1)])))
+  			(sign_extend:SI (vec_select:HI (unspec:V2HI [(unspec:VMODESMALLINT [(match_dup 2)] UNSPEC_NN_VECTOR)]   UNSPEC_NN_VECTOR) (parallel [(const_int 1)])))
+  		)
+  	 )
+  )]
+"((Pulp_Cpu==PULP_NN) && !TARGET_MASK_NOVECT)"
+"pv.dotusp.<smallint_vec_size> \t%0,%1,%2\t # Vect 2 unsigned/signed dot product"
+[(set_attr "type" "arith")
+ (set_attr "mode" "SI")]
+)
+
+(define_insn "dotuspsc<VMODESMALLINT:mode>"
+  [(set (match_operand:SI 0 "register_operand" "=r")
+	(plus:SI
+		(mult:SI
+			(zero_extend:SI (vec_select:HI (unspec:V2HI [(unspec:VMODESMALLINT [(match_operand:SI 1  "register_operand" "r")] UNSPEC_NN_VECTOR)]   UNSPEC_NN_VECTOR) (parallel [(const_int 0)])))
+			(sign_extend:SI (subreg:HI (match_operand:SI 2 "register_operand" "r") 0))
+		)
+		(mult:SI
+			(zero_extend:SI (vec_select:HI (unspec:V2HI [(unspec:VMODESMALLINT [(match_dup 1)] UNSPEC_NN_VECTOR)]   UNSPEC_NN_VECTOR) (parallel [(const_int 1)])))
+			(sign_extend:SI (subreg:HI (match_dup 2) 0))
+		)
+	)
+   )
+  ]
+"((Pulp_Cpu==PULP_NN) && !TARGET_MASK_NOVECT)"
+"pv.dotusp.sc.<smallint_vec_size> \t%0,%1,%2\t # Vect/Scalar reg 2 unsigned/signed dot product"
+[(set_attr "type" "arith")
+ (set_attr "mode" "SI")]
+)
+
+
+
+
+
+(define_insn "sdotup<VMODESMALLINT:mode>"
+  [(set (match_operand:SI 0 "register_operand" "=r")
+       (plus:SI
+  	 (plus:SI
+  		(mult:SI
+  			(zero_extend:SI (vec_select:HI (unspec:V2HI [(unspec:VMODESMALLINT [(match_operand:SI 1  "register_operand" "r")] UNSPEC_NN_VECTOR)]   UNSPEC_NN_VECTOR) (parallel [(const_int 0)])))
+  			(zero_extend:SI (vec_select:HI (unspec:V2HI [(unspec:VMODESMALLINT [(match_operand:SI 2  "register_operand" "r")] UNSPEC_NN_VECTOR)]   UNSPEC_NN_VECTOR) (parallel [(const_int 0)])))
+  		)
+  		(mult:SI
+  			(zero_extend:SI (vec_select:HI (unspec:V2HI [(unspec:VMODESMALLINT [(match_dup 1)] UNSPEC_NN_VECTOR)]   UNSPEC_NN_VECTOR)(parallel [(const_int 1)])))
+  			(zero_extend:SI (vec_select:HI (unspec:V2HI [(unspec:VMODESMALLINT [(match_dup 2)] UNSPEC_NN_VECTOR)]   UNSPEC_NN_VECTOR) (parallel [(const_int 1)])))
+  		)
+  	 )
+         (match_operand:SI 3 "register_operand" "0")
+       )
+  )]
+"((Pulp_Cpu==PULP_NN) && !TARGET_MASK_NOVECT)"
+"pv.sdotup.<smallint_vec_size> \t%0,%1,%2\t # Accumulation of Vect unsigned dot product"
+[(set_attr "type" "arith")
+ (set_attr "mode" "SI")]
+)
+
+(define_insn "sdotupsc<VMODESMALLINT:mode>"
+  [(set (match_operand:SI 0 "register_operand" "=r")
+       (plus:SI
+	 (plus:SI
+		(mult:SI
+			(zero_extend:SI (vec_select:HI (unspec:V2HI [(unspec:VMODESMALLINT [(match_operand:SI 1  "register_operand" "r")] UNSPEC_NN_VECTOR)]   UNSPEC_NN_VECTOR) (parallel [(const_int 0)])))
+			(zero_extend:SI (subreg:HI (match_operand:SI 2 "register_operand" "r") 0))
+		)
+		(mult:SI
+			(zero_extend:SI (vec_select:HI (unspec:V2HI [(unspec:VMODESMALLINT [(match_dup 1)] UNSPEC_NN_VECTOR)]   UNSPEC_NN_VECTOR) (parallel [(const_int 1)])))
+			(zero_extend:SI (subreg:HI (match_dup 2) 0))
+		)
+	 )
+         (match_operand:SI 3 "register_operand" "0")
+       )
+   )]
+"((Pulp_Cpu==PULP_NN) && !TARGET_MASK_NOVECT)"
+"pv.sdotup.sc.<smallint_vec_size> \t%0,%1,%2\t # Accumulation of Vect/Scalar reg unsigned dot product"
+[(set_attr "type" "arith")
+ (set_attr "mode" "SI")]
+)
+
+
+(define_insn "sdotsp<VMODESMALLINT:mode>"
+  [(set (match_operand:SI 0 "register_operand" "=r")
+       (plus:SI
+  	 (plus:SI
+  		(mult:SI
+  			(sign_extend:SI (vec_select:HI (unspec:V2HI [(unspec:VMODESMALLINT [(match_operand:SI 1  "register_operand" "r")] UNSPEC_NN_VECTOR)]   UNSPEC_NN_VECTOR) (parallel [(const_int 0)])))
+  			(sign_extend:SI (vec_select:HI (unspec:V2HI [(unspec:VMODESMALLINT [(match_operand:SI 2  "register_operand" "r")] UNSPEC_NN_VECTOR)]   UNSPEC_NN_VECTOR) (parallel [(const_int 0)])))
+  		)
+  		(mult:SI
+  			(sign_extend:SI (vec_select:HI (unspec:V2HI [(unspec:VMODESMALLINT [(match_dup 1)] UNSPEC_NN_VECTOR)]   UNSPEC_NN_VECTOR)(parallel [(const_int 1)])))
+  			(sign_extend:SI (vec_select:HI (unspec:V2HI [(unspec:VMODESMALLINT [(match_dup 2)] UNSPEC_NN_VECTOR)]   UNSPEC_NN_VECTOR) (parallel [(const_int 1)])))
+  		)
+  	 )
+         (match_operand:SI 3 "register_operand" "0")
+       )
+  )]
+"((Pulp_Cpu==PULP_NN) && !TARGET_MASK_NOVECT)"
+"pv.sdotsp.<smallint_vec_size> \t%0,%1,%2\t # Accumulation of Vect signed dot product"
+[(set_attr "type" "arith")
+ (set_attr "mode" "SI")]
+)
+
+(define_insn "sdotspsc<VMODESMALLINT:mode>"
+  [(set (match_operand:SI 0 "register_operand" "=r")
+       (plus:SI
+	 (plus:SI
+		(mult:SI
+			(sign_extend:SI (vec_select:HI (unspec:V2HI [(unspec:VMODESMALLINT [(match_operand:SI 1  "register_operand" "r")] UNSPEC_NN_VECTOR)]   UNSPEC_NN_VECTOR) (parallel [(const_int 0)])))
+			(sign_extend:SI (subreg:HI (match_operand:SI 2 "register_operand" "r") 0))
+		)
+		(mult:SI
+			(sign_extend:SI (vec_select:HI (unspec:V2HI [(unspec:VMODESMALLINT [(match_dup 1)] UNSPEC_NN_VECTOR)]   UNSPEC_NN_VECTOR) (parallel [(const_int 1)])))
+			(sign_extend:SI (subreg:HI (match_dup 2) 0))
+		)
+	 )
+         (match_operand:SI 3 "register_operand" "0")
+       )
+  )]
+"((Pulp_Cpu==PULP_NN) && !TARGET_MASK_NOVECT)"
+"pv.sdotsp.sc.<smallint_vec_size> \t%0,%1,%2\t # Accumulation of Vect/Scalar reg signed dot product"
+[(set_attr "type" "arith")
+ (set_attr "mode" "SI")]
+)
+
+(define_insn "sdotusp<VMODESMALLINT:mode>"
+  [(set (match_operand:SI 0 "register_operand" "=r")
+       (plus:SI
+  	 (plus:SI
+  		(mult:SI
+  			(zero_extend:SI (vec_select:HI (unspec:V2HI [(unspec:VMODESMALLINT [(match_operand:SI 1  "register_operand" "r")] UNSPEC_NN_VECTOR)]   UNSPEC_NN_VECTOR) (parallel [(const_int 0)])))
+  			(sign_extend:SI (vec_select:HI (unspec:V2HI [(unspec:VMODESMALLINT [(match_operand:SI 2  "register_operand" "r")] UNSPEC_NN_VECTOR)]   UNSPEC_NN_VECTOR) (parallel [(const_int 0)])))
+  		)
+  		(mult:SI
+  			(zero_extend:SI (vec_select:HI (unspec:V2HI [(unspec:VMODESMALLINT [(match_dup 1)] UNSPEC_NN_VECTOR)]   UNSPEC_NN_VECTOR)(parallel [(const_int 1)])))
+  			(sign_extend:SI (vec_select:HI (unspec:V2HI [(unspec:VMODESMALLINT [(match_dup 2)] UNSPEC_NN_VECTOR)]   UNSPEC_NN_VECTOR) (parallel [(const_int 1)])))
+  		)
+  	 )
+         (match_operand:SI 3 "register_operand" "0")
+       )
+  )]
+"((Pulp_Cpu==PULP_NN) && !TARGET_MASK_NOVECT)"
+"pv.sdotusp.<smallint_vec_size> \t%0,%1,%2\t # Accumulation of Vect unsigned/signed dot product"
+[(set_attr "type" "arith")
+ (set_attr "mode" "SI")]
+)
+
+(define_insn "sdotuspsc<VMODESMALLINT:mode>"
+  [(set (match_operand:SI 0 "register_operand" "=r")
+       (plus:SI
+	 (plus:SI
+		(mult:SI
+			(zero_extend:SI (vec_select:HI (unspec:V2HI [(unspec:VMODESMALLINT [(match_operand:SI 1  "register_operand" "r")] UNSPEC_NN_VECTOR)]   UNSPEC_NN_VECTOR) (parallel [(const_int 0)])))
+			(sign_extend:SI (subreg:HI (match_operand:SI 2 "register_operand" "r") 0))
+		)
+		(mult:SI
+			(zero_extend:SI (vec_select:HI (unspec:V2HI [(unspec:VMODESMALLINT [(match_dup 1)] UNSPEC_NN_VECTOR)]   UNSPEC_NN_VECTOR) (parallel [(const_int 1)])))
+			(sign_extend:SI (subreg:HI (match_dup 2) 0))
+		)
+	 )
+         (match_operand:SI 3 "register_operand" "0")
+       )
+  )]
+"((Pulp_Cpu==PULP_NN) && !TARGET_MASK_NOVECT)"
+"pv.sdotusp.sc.<smallint_vec_size> \t%0,%1,%2\t # Accumulation of Vect/Scalar reg unsigned/signed dot product"
+[(set_attr "type" "arith")
+ (set_attr "mode" "SI")]
+)
+
+
+
+
+
+
+
+
+
+
 (include "sync.md")
 (include "peephole.md")
 (include "pic.md")
