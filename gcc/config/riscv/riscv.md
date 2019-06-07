@@ -836,7 +836,7 @@
 	    (const_int 32))))]
   "(TARGET_MUL||(Pulp_Cpu>=PULP_V2)||(Pulp_Cpu==PULP_SLIM)) && !TARGET_64BIT"
   {
-        if (Pulp_Cpu) return "p.mulhsu\t%0,%1,%1";
+        if (Pulp_Cpu) return "p.mulhsu\t%0,%2,%1";
         else return "mulhsu\t%0,%2,%1";
   }
   [(set_attr "type" "imul")
@@ -4463,6 +4463,7 @@
  (set_attr "mode" "SF")]
 )
 
+
 ;; V2HF -> V1SF (high)
 (define_expand "vec_unpacks_hi_v2hf"
   [(set (match_operand:V1SF 0 "register_operand" "=f")
@@ -4549,6 +4550,44 @@
 
 
 ;; Vector Packing
+
+;; (define_expand "vec_pack_hf_hf_v2hf"
+;;   [(set (match_operand:V2HF 0 "register_operand" "=f")
+;;         (vec_concat:V2HF
+;; 		(match_operand:HF 1 "")
+;; 		(match_operand:HF 2 "")
+;; 	)
+;;    )
+;;   ]
+;;   "TARGET_HARD_FLOAT && Has_F16"
+;;   {
+;; 	rtx R0 = gen_reg_rtx(HFmode);
+;; 	rtx R1 = gen_reg_rtx(HFmode);
+;; 	emit_insn(gen_movhf(R0, operands[1]));
+;; 	emit_insn(gen_movhf(R1, operands[2]));
+;; 	emit_insn(gen_vec_pack_v2hf(operands[0], R0, R1));
+;; 	// DONE;
+;;   }
+;; )
+
+;; (define_expand "vec_pack_ohf_ohf_v2ohf"
+;;   [(set (match_operand:V2OHF 0 "register_operand" "=f")
+;;         (vec_concat:V2OHF
+;; 		(match_operand:OHF 1 "")
+;; 		(match_operand:OHF 2 "")
+;; 	)
+;;    )
+;;   ]
+;;   "TARGET_HARD_FLOAT && Has_F16ALT"
+;;   {
+;; 	rtx R0 = gen_reg_rtx(OHFmode);
+;; 	rtx R1 = gen_reg_rtx(OHFmode);
+;; 	emit_insn(gen_movhf(R0, operands[1]));
+;; 	emit_insn(gen_movhf(R1, operands[2]));
+;; 	emit_insn(gen_vec_pack_v2ohf(operands[0], R0, R1));
+;; 	// DONE;
+;;   }
+;; )
 
 (define_insn "vec_pack_<VMODEALL2:mode>"
   [(set	(match_operand:VMODEALL2 0 "register_operand" "=r")
