@@ -3927,7 +3927,8 @@ riscv_save_reg_p (unsigned int regno, unsigned int is_it)
                        || df_regs_ever_live_p (regno)
                        || (regno == HARD_FRAME_POINTER_REGNUM
                            && frame_pointer_needed);
-  bool it_rel = is_it && df_regs_ever_live_p(regno) && scan_reg_definitions(regno);
+  // bool it_rel = is_it && df_regs_ever_live_p(regno) && scan_reg_definitions(regno);
+  bool it_rel = is_it && df_regs_ever_live_p(regno); 
   /*
   if ((call_saved && might_clobber)
          || (regno == RETURN_ADDR_REGNUM && crtl->calls_eh_return)
