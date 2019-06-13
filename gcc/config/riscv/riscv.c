@@ -2473,9 +2473,11 @@ void riscv_expand_vector_init(rtx target, rtx vals)
 	if ((n_elts==2)&&((mode==V2HFmode) || (mode==V2OHFmode) || (mode==V2HImode)))
 		switch (mode) {
 			case V2HFmode:
-				emit_insn(gen_vec_pack_v2hf(target, XVECEXP (vals, 0, 0), XVECEXP (vals, 0, 1))); return;
+				// emit_insn(gen_vec_pack_v2hf(target, XVECEXP (vals, 0, 0), XVECEXP (vals, 0, 1))); return;
+				emit_insn(gen_vec_pack_v2hf(target, copy_to_mode_reg(inner_mode, XVECEXP (vals, 0, 0)), copy_to_mode_reg(inner_mode, XVECEXP (vals, 0, 1)))); return;
 			case V2OHFmode:
-				emit_insn(gen_vec_pack_v2ohf(target, XVECEXP (vals, 0, 0), XVECEXP (vals, 0, 1))); return;
+				// emit_insn(gen_vec_pack_v2ohf(target, XVECEXP (vals, 0, 0), XVECEXP (vals, 0, 1))); return;
+				emit_insn(gen_vec_pack_v2ohf(target, copy_to_mode_reg(inner_mode, XVECEXP (vals, 0, 0)), copy_to_mode_reg(inner_mode, XVECEXP (vals, 0, 1)))); return;
 			case V2HImode:
 				emit_insn(gen_vec_pack_v2hi(target, copy_to_mode_reg(inner_mode, XVECEXP (vals, 0, 0)), copy_to_mode_reg(inner_mode, XVECEXP (vals, 0, 1)))); return;
 			default: ;
