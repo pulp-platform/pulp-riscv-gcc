@@ -421,3 +421,6 @@ Currently these macros are used in 2 contexts:
   DIRECT_BUILTIN1(sdotuspcv,           sdotusp16,       RISCV_INT_FTYPE_INT_INT_INT,                     pulp_nn, NULL)
   DIRECT_BUILTIN1(sdotuspscnv,         sdotuspsc8,      RISCV_INT_FTYPE_INT_INT_INT,                     pulp_nn, NULL)
   DIRECT_BUILTIN1(sdotuspsccv,         sdotuspsc16,     RISCV_INT_FTYPE_INT_INT_INT,                     pulp_nn, NULL)
+
+  DIRECT_BUILTIN1(qntnv,               qnt8,            RISCV_INT_FTYPE_INT_INTPTR,                     pulp_nn, NULL)
+  DIRECT_BUILTIN1(qntcv,               qnt16,           RISCV_INT_FTYPE_INT_INTPTR,                     pulp_nn, NULL)

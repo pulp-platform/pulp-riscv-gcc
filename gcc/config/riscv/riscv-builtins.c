@@ -21,7 +21,7 @@ You should have received a copy of the GNU General Public License
 along with GCC; see the file COPYING3.  If not see
 <http://www.gnu.org/licenses/>.  */
 
-#include "config.h" 
+#include "config.h"
 #include "system.h"
 #include "coretypes.h"
 #include "tm.h"
@@ -585,6 +585,7 @@ static GTY(()) int riscv_builtin_decl_index[NUM_INSN_CODES];
 #define RISCV_ATYPE_INT integer_type_node
 #define RISCV_ATYPE_POINTER ptr_type_node
 #define RISCV_ATYPE_CPOINTER const_ptr_type_node
+#define RISCV_ATYPE_INTPTR integer_ptr_type_node
 
 /* Standard mode-based argument types.  */
 #define RISCV_ATYPE_UQI unsigned_intQI_type_node

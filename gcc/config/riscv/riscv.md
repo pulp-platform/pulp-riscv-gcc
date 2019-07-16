@@ -247,7 +247,7 @@
 (define_attr "type"
   "unknown,branch,jump,call,load,fpload,store,fpstore,
    mtc,mfc,const,arith,logical,shift,slt,imul,idiv,move,fmove,fadd,fmul,
-   fmadd,fdiv,fcmp,fcvt,fsqrt,multi,nop,ghost"
+   fmadd,fdiv,fcmp,fcvt,fsqrt,multi,nop,ghost,qnt"
   (cond [(eq_attr "got" "load") (const_string "load")
 
 	 ;; If a doubleword move uses these expensive instructions,
@@ -8140,6 +8140,7 @@
 (define_c_enum "unspec_nn" [
   UNSPEC_NN_VECTOR
   UNSPEC_NN_SCALAR
+  UNSPEC_NN_QNT
 ])
 
 (define_code_iterator vec_op2_smallint    	[plus minus smin smax mult])
@@ -8655,6 +8656,20 @@
  (set_attr "mode" "SI")]
 )
 
+(define_insn "qnt<VMODESMALLINT:mode>"
+  [(set (match_operand:SI 0 "register_operand" "=r")
+        (zero_extend:SI
+          (unspec:VMODESMALLINT [(unspec:VMODESMALLINT [(match_operand:SI 1 "register_operand" "r")] UNSPEC_NN_VECTOR)
+                                (match_operand:SI 2 "register_operand" "r")]
+           UNSPEC_NN_QNT)
+        )
+   )
+  ]
+"((Pulp_Cpu==PULP_NN) && !TARGET_MASK_NOVECT)"
+"pv.qnt.<smallint_vec_size> \t%0,%1,%2\t # Vect abs"
+[(set_attr "type" "qnt")
+ (set_attr "mode" "SI")]
+)
 
 
 
