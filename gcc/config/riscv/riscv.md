@@ -8425,11 +8425,11 @@
 	(plus:SI
 		(mult:SI
 			(zero_extend:SI (vec_select:HI (unspec:V2HI [(unspec:VMODESMALLINT [(match_operand:SI 1  "register_operand" "r")] UNSPEC_NN_VECTOR)]   UNSPEC_NN_VECTOR) (parallel [(const_int 0)])))
-			(zero_extend:SI (subreg:HI (match_operand:SI 2 "register_operand" "r") 0))
+			(zero_extend:SI (unspec:SI [(match_operand:SI 2 "register_operand" "r")] UNSPEC_NN_SCALAR))
 		)
 		(mult:SI
 			(zero_extend:SI (vec_select:HI (unspec:V2HI [(unspec:VMODESMALLINT [(match_dup 1)] UNSPEC_NN_VECTOR)]   UNSPEC_NN_VECTOR) (parallel [(const_int 1)])))
-			(zero_extend:SI (subreg:HI (match_dup 2) 0))
+			(zero_extend:SI (unspec:SI [(match_dup 2)] UNSPEC_NN_SCALAR))
 		)
 	)
    )
@@ -8465,11 +8465,11 @@
 	(plus:SI
 		(mult:SI
 			(sign_extend:SI (vec_select:HI (unspec:V2HI [(unspec:VMODESMALLINT [(match_operand:SI 1  "register_operand" "r")] UNSPEC_NN_VECTOR)]   UNSPEC_NN_VECTOR) (parallel [(const_int 0)])))
-			(sign_extend:SI (subreg:HI (match_operand:SI 2 "register_operand" "r") 0))
+			(sign_extend:SI (unspec:SI [(match_operand:SI 2 "register_operand" "r")] UNSPEC_NN_SCALAR))
 		)
 		(mult:SI
 			(sign_extend:SI (vec_select:HI (unspec:V2HI [(unspec:VMODESMALLINT [(match_dup 1)] UNSPEC_NN_VECTOR)]   UNSPEC_NN_VECTOR) (parallel [(const_int 1)])))
-			(sign_extend:SI (subreg:HI (match_dup 2) 0))
+			(sign_extend:SI (unspec:SI [(match_dup 2)] UNSPEC_NN_SCALAR))
 		)
 	)
    )
@@ -8504,11 +8504,11 @@
 	(plus:SI
 		(mult:SI
 			(zero_extend:SI (vec_select:HI (unspec:V2HI [(unspec:VMODESMALLINT [(match_operand:SI 1  "register_operand" "r")] UNSPEC_NN_VECTOR)]   UNSPEC_NN_VECTOR) (parallel [(const_int 0)])))
-			(sign_extend:SI (subreg:HI (match_operand:SI 2 "register_operand" "r") 0))
+			(sign_extend:SI (unspec:SI [(match_operand:SI 2 "register_operand" "r")] UNSPEC_NN_SCALAR))
 		)
 		(mult:SI
 			(zero_extend:SI (vec_select:HI (unspec:V2HI [(unspec:VMODESMALLINT [(match_dup 1)] UNSPEC_NN_VECTOR)]   UNSPEC_NN_VECTOR) (parallel [(const_int 1)])))
-			(sign_extend:SI (subreg:HI (match_dup 2) 0))
+			(sign_extend:SI (unspec:SI [(match_dup 2)] UNSPEC_NN_SCALAR))
 		)
 	)
    )
@@ -8551,11 +8551,11 @@
 	 (plus:SI
 		(mult:SI
 			(zero_extend:SI (vec_select:HI (unspec:V2HI [(unspec:VMODESMALLINT [(match_operand:SI 1  "register_operand" "r")] UNSPEC_NN_VECTOR)]   UNSPEC_NN_VECTOR) (parallel [(const_int 0)])))
-			(zero_extend:SI (subreg:HI (match_operand:SI 2 "register_operand" "r") 0))
+			(zero_extend:SI (unspec:SI [(match_operand:SI 2 "register_operand" "r")] UNSPEC_NN_SCALAR))
 		)
 		(mult:SI
 			(zero_extend:SI (vec_select:HI (unspec:V2HI [(unspec:VMODESMALLINT [(match_dup 1)] UNSPEC_NN_VECTOR)]   UNSPEC_NN_VECTOR) (parallel [(const_int 1)])))
-			(zero_extend:SI (subreg:HI (match_dup 2) 0))
+			(zero_extend:SI (unspec:SI [(match_dup 2)] UNSPEC_NN_SCALAR))
 		)
 	 )
          (match_operand:SI 3 "register_operand" "0")
@@ -8600,7 +8600,7 @@
 		)
 		(mult:SI
 			(sign_extend:SI (vec_select:HI (unspec:V2HI [(unspec:VMODESMALLINT [(match_dup 1)] UNSPEC_NN_VECTOR)]   UNSPEC_NN_VECTOR) (parallel [(const_int 1)])))
-			(sign_extend:SI (subreg:HI (match_dup 2) 0))
+			(sign_extend:SI (unspec:SI [(match_dup 2)] UNSPEC_NN_SCALAR))
 		)
 	 )
          (match_operand:SI 3 "register_operand" "0")
@@ -8640,11 +8640,11 @@
 	 (plus:SI
 		(mult:SI
 			(zero_extend:SI (vec_select:HI (unspec:V2HI [(unspec:VMODESMALLINT [(match_operand:SI 1  "register_operand" "r")] UNSPEC_NN_VECTOR)]   UNSPEC_NN_VECTOR) (parallel [(const_int 0)])))
-			(sign_extend:SI (subreg:HI (match_operand:SI 2 "register_operand" "r") 0))
+			(sign_extend:SI (unspec:SI [(match_operand:SI 2 "register_operand" "r")] UNSPEC_NN_SCALAR))
 		)
 		(mult:SI
 			(zero_extend:SI (vec_select:HI (unspec:V2HI [(unspec:VMODESMALLINT [(match_dup 1)] UNSPEC_NN_VECTOR)]   UNSPEC_NN_VECTOR) (parallel [(const_int 1)])))
-			(sign_extend:SI (subreg:HI (match_dup 2) 0))
+			(sign_extend:SI (unspec:SI [(match_dup 2)] UNSPEC_NN_SCALAR))
 		)
 	 )
          (match_operand:SI 3 "register_operand" "0")
