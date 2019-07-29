@@ -354,7 +354,8 @@
 (define_mode_iterator MOVE64 [DI DF])
 
 ;; Iterator for sub-32-bit integer modes.
-(define_mode_iterator SHORT [QI HI])
+(define_mode_iterator SHORT_ALL [QI HI])
+(define_mode_iterator SHORT [HI])
 
 (define_mode_iterator SUBDISF [QI HI (HF "(Has_F16)") (OHF "(Has_F16ALT)") SI (SF "(!TARGET_HARD_FLOAT || TARGET_FPREGS_ON_GRREGS)") V2HI (V2HF "(Has_F16)") (V2OHF "(Has_F16ALT)") V4QI])
 (define_mode_iterator SUBDI [QI HI SI])
@@ -2913,23 +2914,23 @@
   [(set_attr "move_type" "move,load")
    (set_attr "mode" "DI")])
 
-(define_insn_and_split "extend<SHORT:mode><SUPERQI:mode>2"
+(define_insn_and_split "extend<SHORT_ALL:mode><SUPERQI:mode>2"
   [(set (match_operand:SUPERQI 0 "register_operand" "=r,r")
         (sign_extend:SUPERQI
-             (match_operand:SHORT 1 "nonimmediate_operand_exclude_post" "r,m")))]
+             (match_operand:SHORT_ALL 1 "nonimmediate_operand_exclude_post" "r,m")))]
   ""
   {
         switch (which_alternative) {
                 case 0:
-                        if ((Pulp_Cpu>=PULP_V0) && !TARGET_MASK_NOSEXT) return "p.ext<SHORT:size>s\t%0,%1";
+                        if ((Pulp_Cpu>=PULP_V0) && !TARGET_MASK_NOSEXT) return "p.ext<SHORT_ALL:size>s\t%0,%1";
                         else return "#";
                 case 1: 
                         if ((Pulp_Cpu>=PULP_V0) && !TARGET_MASK_NOINDREGREG) {
                                 rtx Addr = XEXP(operands[1], 0);
                                 if (GET_CODE(Addr) == PLUS && (GET_CODE(XEXP(Addr, 1)) == REG || GET_CODE(XEXP(Addr, 1)) == SUBREG))
-                                        return "p.l<SHORT:size>\t%0,%1";
+                                        return "p.l<SHORT_ALL:size>\t%0,%1";
                         }
-                        return "l<SHORT:size>\t%0,%1";
+                        return "l<SHORT_ALL:size>\t%0,%1";
                 default: return "";
         }
   }
@@ -2940,7 +2941,7 @@
   operands[0] = gen_lowpart (SImode, operands[0]);
   operands[1] = gen_lowpart (SImode, operands[1]);
   operands[2] = GEN_INT (GET_MODE_BITSIZE (SImode)
-                         - GET_MODE_BITSIZE (<SHORT:MODE>mode));
+                         - GET_MODE_BITSIZE (<SHORT_ALL:MODE>mode));
 }
   [(set_attr "move_type" "shift_shift,load")
    (set_attr "mode" "SI")])
@@ -4667,26 +4668,26 @@
  (set_attr "mode" "SI")]
 )
 
-(define_insn "vec_pack_v4qi_hi_first"
-  [(set	(match_operand:V4QI 0 "register_operand" "=r")
-	(vec_merge:V4QI
-		(vec_concat:V4QI
-			(const_vector:V2QI [(const_int 0) (const_int 0)])
-			(vec_concat:V2QI
-				(match_operand:QI 1 "register_operand" "r")
-				(match_operand:QI 2 "register_operand" "r")
-			)
-		)
-	  	(const_vector:V4QI [(const_int 0) (const_int 0) (const_int 0) (const_int 0)])
-		(const_int 12)
-	)
-   )
-  ]
-  "((Pulp_Cpu>=PULP_V2) && !(TARGET_MASK_NOVECT||TARGET_MASK_NOSHUFFLEPACK))"
-  "pv.packhi.b \t%0,%2,%1 \t# Vector pack of 2 bytes (first), high part"
-[(set_attr "type" "move")
- (set_attr "mode" "SI")]
-)
+;;(define_insn "vec_pack_v4qi_hi_first"
+;;  [(set	(match_operand:V4QI 0 "register_operand" "=r")
+;;	(vec_merge:V4QI
+;;		(vec_concat:V4QI
+;;			(const_vector:V2QI [(const_int 0) (const_int 0)])
+;;			(vec_concat:V2QI
+;;				(match_operand:QI 1 "register_operand" "r")
+;;				(match_operand:QI 2 "register_operand" "r")
+;;			)
+;;		)
+;;	  	(const_vector:V4QI [(const_int 0) (const_int 0) (const_int 0) (const_int 0)])
+;;		(const_int 12)
+;;	)
+;;   )
+;;  ]
+;;  "((Pulp_Cpu>=PULP_V2) && !(TARGET_MASK_NOVECT||TARGET_MASK_NOSHUFFLEPACK))"
+;;  "pv.packhi.b \t%0,%2,%1 \t# Vector pack of 2 bytes (first), high part"
+;;[(set_attr "type" "move")
+;; (set_attr "mode" "SI")]
+;;)
 
 
 (define_expand "vec_pack_v4qi"
