@@ -217,7 +217,7 @@ Currently these macros are used in 2 contexts:
   DIRECT_BUILTIN1(vec_permv2hi_int1, 	shuffleh, 	RISCV_V2HI_FTYPE_V2HI_V2HI,			pulp_v2, NULL)
   DIRECT_BUILTIN1(vec_permv4qi_int1, 	shuffleb, 	RISCV_V4QI_FTYPE_V4QI_V4QI,			pulp_v2, NULL)
   DIRECT_BUILTIN1(vec_pack_v4qi_lo,	pack4_lo,	RISCV_V4QI_FTYPE_CHAR_CHAR_V4QI,		pulp_v2, NULL)
-  DIRECT_BUILTIN1(vec_pack_v4qi_lo,	pack4_hi,	RISCV_V4QI_FTYPE_CHAR_CHAR_V4QI,		pulp_v2, NULL)
+  DIRECT_BUILTIN1(vec_pack_v4qi_hi,	pack4_hi,	RISCV_V4QI_FTYPE_CHAR_CHAR_V4QI,		pulp_v2, NULL)
   DIRECT_BUILTIN1(vec_permv4qi,		shuffle4b,	RISCV_V4QI_FTYPE_V4QI_V4QI_V4QI,		pulp_v2, NULL)
   DIRECT_BUILTIN1(vec_permv2hi,		shuffle2h,	RISCV_V2HI_FTYPE_V2HI_V2HI_V2HI,		pulp_v2, NULL)
 
