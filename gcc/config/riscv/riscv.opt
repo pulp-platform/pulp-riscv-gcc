@@ -328,6 +328,10 @@ mfaux
 Target UInteger Var(Has_FAUX) Init(0)
 Enable SmallFloat auxiliary extension
 
+mhwloopmin=
+Target Joined Separate UInteger Var(MinHWLoopInst) Init(2)
+Minimum instruction in a hardware loop, default is 2
+
 
 Mask(64BIT)
 
