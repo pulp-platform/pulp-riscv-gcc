@@ -5641,7 +5641,7 @@ hwloop_optimize (hwloop_info loop)
   if (loop->length < MIN_LOOP_LENGTH && TARGET_MASK_SLOOP) {
 	Padding = true;
   } else {
-  	while (loop->length < MIN_LOOP_LENGTH) {
+  	while (loop->length < MinHWLoopInst) {
       		last_insn = emit_insn_after (gen_forced_nop (), last_insn);
 		loop->length += 1;
   	}
