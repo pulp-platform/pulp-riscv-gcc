@@ -5541,7 +5541,7 @@ hwloop_optimize (hwloop_info loop)
 					hit_enclosed_end_label = true; break;
 				}
 			}
-			if (hit_enclosed_end_label) {
+			if (hit_enclosed_end_label && MinHWLoopInst) {
 				if (dump_file) {
 					fprintf(dump_file, " Hitting enclose loop end label (enclosed=%d), insn:\n", i->loop_no);
 					fprintf(dump_file, " Adding a nop after it\n");
@@ -5599,7 +5599,7 @@ hwloop_optimize (hwloop_info loop)
 
  	}
 	/* Could use a define containing the min number of inst that always have to be executed at loop tail */
-	if (cnt == 0) {
+	if (MinHWLoopInst && (cnt == 0)) {
   		if (dump_file) {
 			fprintf (dump_file, " Branch to loop tail exist, adding a nop after last_insn\n");
 		}
@@ -5620,11 +5620,11 @@ hwloop_optimize (hwloop_info loop)
       return false;
     }
   /* In all other cases, try to replace a bad last insn with a nop.  */
-  else if (JUMP_P (last_insn)
+  else if (MinHWLoopInst && (JUMP_P (last_insn)
 	   || CALL_P (last_insn)
 	   || recog_memoized (last_insn) == CODE_FOR_simple_return_internal
 	   || GET_CODE (PATTERN (last_insn)) == ASM_INPUT
-	   || asm_noperands (PATTERN (last_insn)) >= 0) {
+	   || asm_noperands (PATTERN (last_insn)) >= 0)) {
       	if (loop->length + 1 > MAX_LOOP_LENGTH) {
 	  	if (dump_file) fprintf (dump_file, ";; loop %d too long\n", loop->loop_no);
 	  	return false;
