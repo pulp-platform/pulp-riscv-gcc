@@ -332,6 +332,9 @@ mhwloopmin=
 Target Joined Separate UInteger Var(MinHWLoopInst) Init(2)
 Minimum instruction in a hardware loop, default is 2
 
+mhwloopalign
+Target UInteger Var(Hw_Loop_Align) Init(0)
+Enable SmallFloat vector extensions
 
 Mask(64BIT)
 
