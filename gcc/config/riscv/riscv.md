@@ -154,6 +154,9 @@
   ;; Read write CSR
   UNSPECV_SPR_READ_VOL
 
+  ;; Volatile argument
+  UNSPECV_POINTER_ARG
+
 ])
 
 (define_constants
@@ -200,8 +203,8 @@
    const,logical,arith,andi,shift_shift"
   (const_string "unknown"))
 
-;; Main data type used by the insn
-(define_attr "mode" "unknown,none,QI,HI,SI,DI,TI,HF,OHF,SF,DF,TF,V2HI,V4QI,V2HF,V2OHF"
+;; Main data type used by the insn ADDED V1SF
+(define_attr "mode" "unknown,none,QI,HI,SI,DI,TI,HF,OHF,SF,DF,TF,V1SF,V2HI,V4QI,V2HF,V2OHF"
   (const_string "unknown"))
 
 ;; True if the main data type is twice the size of a word.
@@ -348,7 +351,8 @@
 ;; 32-bit moves for which we provide move patterns.
 (define_mode_iterator MOVE32 [SI])
 
-(define_mode_iterator MODE_PULP [V4QI V2HI (V2HF "Has_F16") (V2OHF "Has_F16ALT") (OHF "Has_F16ALT") SF SI])
+;; ADDED V1SF
+(define_mode_iterator MODE_PULP [V4QI V2HI (V2HF "Has_F16") (V2OHF "Has_F16ALT") (OHF "Has_F16ALT") V1SF SF SI])
 
 ;; 64-bit modes for which we provide move patterns.
 (define_mode_iterator MOVE64 [DI DF])
@@ -378,8 +382,9 @@
 ;; Iterator for hardware-supported floating-point modes.
 (define_mode_iterator STDF [(SF "TARGET_HARD_FLOAT")
                             (DF "TARGET_DOUBLE_FLOAT")])
-
-(define_mode_iterator ANYF [(SF "TARGET_HARD_FLOAT")
+;; ADDED V1SF
+(define_mode_iterator ANYF [(V1SF "TARGET_HARD_FLOAT")
+			    (SF "TARGET_HARD_FLOAT")
 			    (DF "TARGET_DOUBLE_FLOAT")
                             (HF "(TARGET_HARD_FLOAT&&Has_F16)")
                             (OHF "(TARGET_HARD_FLOAT&&Has_F16ALT)")])
@@ -398,9 +403,9 @@
                               (HF "(TARGET_HARD_FLOAT&&Has_F16)")
                               (OHF "(TARGET_HARD_FLOAT&&Has_F16ALT)")])
 
-
-(define_mode_attr size_mem   [(V4QI "4") (V2HI "4") (V2HF "4") (V2OHF "4") (SF "4") (SI "4") (HI "2") (HF "2") (OHF "2") (QI "1")])
-(define_mode_attr size_load_store [(V4QI "w") (V2HI "w") (V2HF "w") (V2OHF "w") (SF "w") (SI "w") (QI "b") (HI "h") (HF "h") (OHF "h")])
+;; ADDED V1SF
+(define_mode_attr size_mem   [(V4QI "4") (V2HI "4") (V2HF "4") (V2OHF "4") (V1SF "4") (SF "4") (SI "4") (HI "2") (HF "2") (OHF "2") (QI "1")])
+(define_mode_attr size_load_store [(V4QI "w") (V2HI "w") (V2HF "w") (V2OHF "w") (V1SF "w") (SF "w") (SI "w") (QI "b") (HI "h") (HF "h") (OHF "h")])
 
 ;; This attribute gives the length suffix for a sign- or zero-extension
 ;; instruction.
@@ -3590,6 +3595,19 @@
 
 (define_insn "OffsetedWrite"
   [(unspec_volatile [(match_operand:SI 0 "reg_or_0_operand" "rJ,rJ")
+		     (match_operand:SI 1 "register_operand" "r,r")
+		     (match_operand:SI 2 "nonmemory_operand" "r,I")] UNSPECV_OFFSETED_WRITE)]
+ "(Pulp_Cpu>=PULP_V2)"
+  "@
+   p.sw \t%z0,%2(%1)\t# Offseted Write volatile
+   p.sw \t%z0,%2(%1)\t# Offseted Write volatile"
+  [(set_attr "type" "store,store")
+   (set_attr "mode" "SI,SI")]
+)
+
+
+(define_insn "OffsetedWritePtr"
+  [(unspec_volatile [(unspec_volatile:SI [(match_operand:SI 0 "reg_or_0_operand" "rJ,rJ")] UNSPECV_POINTER_ARG)
 		     (match_operand:SI 1 "register_operand" "r,r")
 		     (match_operand:SI 2 "nonmemory_operand" "r,I")] UNSPECV_OFFSETED_WRITE)]
  "(Pulp_Cpu>=PULP_V2)"

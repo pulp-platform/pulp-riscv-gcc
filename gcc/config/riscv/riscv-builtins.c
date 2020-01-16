@@ -238,6 +238,7 @@ static int CheckBuiltin(int Code, int BuiltinIndex, struct ExtraBuiltinImmArg *E
 #define DIRECT_NO_TARGET_BUILTIN1(INSN, NAME, FUNCTION_TYPE, AVAIL, CHECK)                      \
   RISCV_BUILTIN1 (INSN, #NAME, RISCV_BUILTIN_DIRECT_NO_TARGET, FUNCTION_TYPE, AVAIL, CHECK)
 
+
 static const struct riscv_builtin_description riscv_builtins[] = {
 #include "pulp_builtins.def"
 };
