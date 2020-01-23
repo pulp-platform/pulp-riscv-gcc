@@ -504,7 +504,8 @@ enum reg_class
    factor or added to another register (as well as added to a
    displacement).  */
 
-#define INDEX_REG_CLASS NO_REGS
+// #define INDEX_REG_CLASS NO_REGS
+#define INDEX_REG_CLASS GR_REGS
 
 /* We generally want to put call-clobbered registers ahead of
    call-saved ones.  (IRA expects this.)  */

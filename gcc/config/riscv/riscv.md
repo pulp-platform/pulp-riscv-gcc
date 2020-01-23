@@ -3299,7 +3299,7 @@
                               (match_operand:SI 2 "register_operand" "r")))
    )
   ]
-  "((Pulp_Cpu>=PULP_V0) && !TARGET_MASK_NOINDREGREG)"
+  "((Pulp_Cpu>=PULP_V0) && !TARGET_MASK_NOINDREGREG && ((reload_completed || reload_in_progress) || !(<MODE>mode == QImode || <MODE>mode == HImode)))"
   "p.l<size_load_store>\t%0,%2(%1)\t# load reg(reg)"
   [(set_attr "type" "load")
    (set_attr "mode" "<LDSTINDMODE>")]
@@ -3684,7 +3684,7 @@
         (mem:SUBDISF (post_inc:SI (match_operand:SI 1 "register_operand" "+r")))
    )
   ]
-  "((Pulp_Cpu>=PULP_V0) && !TARGET_MASK_NOPOSTMOD)"
+  "((Pulp_Cpu>=PULP_V0) && !TARGET_MASK_NOPOSTMOD && ((reload_completed || reload_in_progress) || !(<MODE>mode == QImode || <MODE>mode == HImode)))"
   "p.l<size_load_store>\t%0,<size_mem>(%1!)\t# load post inc"
   [(set_attr "type" "load")
    (set_attr "mode" "<LDSTINDMODE>")]
@@ -3708,7 +3708,7 @@
         (mem:SUBDISF (post_dec:SI (match_operand:SI 1 "register_operand" "+r")))
    )
   ]
-  "((Pulp_Cpu>=PULP_V0) && !TARGET_MASK_NOPOSTMOD)"
+  "((Pulp_Cpu>=PULP_V0) && !TARGET_MASK_NOPOSTMOD && ((reload_completed || reload_in_progress) || !(<MODE>mode == QImode || <MODE>mode == HImode)))"
   "p.l<size_load_store>\t%0,-<size_mem>(%1!)\t# load post dec"
   [(set_attr "type" "load")
    (set_attr "mode" "<LDSTINDMODE>")]
@@ -3734,7 +3734,7 @@
                                      (plus:SI (match_dup 1) (match_operand:SI 2 "nonmemory_operand" "r,I"))))
    )
   ]
-  "((Pulp_Cpu>=PULP_V0) && !TARGET_MASK_NOPOSTMOD)"
+  "((Pulp_Cpu>=PULP_V0) && !TARGET_MASK_NOPOSTMOD && ((reload_completed || reload_in_progress) || !(<MODE>mode == QImode || <MODE>mode == HImode)))"
   "@
    p.l<size_load_store>\t%0,%2(%1!)\t# load post modify reg
    p.l<size_load_store>\t%0,%2(%1!)\t# load post modify imm"
