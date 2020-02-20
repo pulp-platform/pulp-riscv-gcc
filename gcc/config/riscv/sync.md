@@ -33,6 +33,25 @@
 
 ;; Memory barriers.
 
+(define_expand "memory_barrier"
+  [(set (match_dup 0)
+        (unspec:BLK [(match_dup 0)] UNSPEC_MEMORY_BARRIER))]
+  ""
+{
+  operands[0] = gen_rtx_MEM (BLKmode, gen_rtx_SCRATCH (Pmode));
+  MEM_VOLATILE_P (operands[0]) = 1;
+})
+
+(define_insn "*memory_barrier"
+  [(set (match_operand:BLK 0 "" "")
+        (unspec:BLK [(match_dup 0)] UNSPEC_MEMORY_BARRIER))]
+  ""
+  {
+       return "";
+  }
+)
+
+
 (define_expand "mem_thread_fence"
   [(match_operand:SI 0 "const_int_operand" "")] ;; model
   ""
@@ -54,7 +73,7 @@
    (match_operand:SI 1 "const_int_operand" "")] ;; model
   ""
   {
-	if (Pulp_Cpu==PULP_GAP8) return ""; else return "fence\tiorw,iorw";
+	if (Pulp_Cpu==PULP_GAP8||Pulp_Cpu==PULP_GAP9) return ""; else return "fence\tiorw,iorw";
   }
 )
 

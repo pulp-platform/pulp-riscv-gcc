@@ -35,6 +35,7 @@ along with GCC; see the file COPYING3.  If not see
       VOID for void_type_node
       INT for integer_type_node
       POINTER for ptr_type_node
+      VPOINTER for vol_ptr_type_node
       V2H for opaque_V2HI_type_node
       V4Q for opaque_V4QI_type_node
 
@@ -96,6 +97,7 @@ DEF_RISCV_FTYPE (3, (VOID, INT, INT, INT))
 DEF_RISCV_FTYPE (3, (VOID, INT, POINTER, INT))
 DEF_RISCV_FTYPE (3, (VOID, POINTER, INT, INT))
 DEF_RISCV_FTYPE (3, (VOID, POINTER, POINTER, INT))
+DEF_RISCV_FTYPE (3, (VOID, VPOINTER, POINTER, INT))
 
 DEF_RISCV_FTYPE (4, (INT, INT, INT, INT, INT))
 DEF_RISCV_FTYPE (4, (SHORT, SHORT, SHORT, INT, INT))

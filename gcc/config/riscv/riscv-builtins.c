@@ -118,6 +118,7 @@ AVAIL (hard_float, TARGET_HARD_FLOAT)
 
 static tree floatHF_type_node;
 static tree floatOHF_type_node;
+static tree vol_ptr_type_node;
 
 static tree opaque_V4QI_type_node;
 static tree opaque_V2HI_type_node;
@@ -548,6 +549,7 @@ static GTY(()) int riscv_builtin_decl_index[NUM_INSN_CODES];
 #define RISCV_ATYPE_INT integer_type_node
 #define RISCV_ATYPE_POINTER ptr_type_node
 #define RISCV_ATYPE_CPOINTER const_ptr_type_node
+#define RISCV_ATYPE_VPOINTER vol_ptr_type_node
 
 /* Standard mode-based argument types.  */
 #define RISCV_ATYPE_UQI unsigned_intQI_type_node
@@ -668,6 +670,8 @@ riscv_init_builtins (void)
 
   opaque_V4QI_type_node    = build_opaque_vector_type (intQI_type_node, 4);
   opaque_V2HI_type_node    = build_opaque_vector_type (intHI_type_node, 2);
+  vol_ptr_type_node        = build_pointer_type (build_type_variant (void_type_node, 0, 1));
+
 
  /* Initialize the HFmode scalar and vector type.  */
   floatHF_type_node = make_node (REAL_TYPE);

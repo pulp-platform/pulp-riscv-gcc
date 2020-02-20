@@ -277,10 +277,12 @@ Currently these macros are used in 2 contexts:
   DIRECT_BUILTIN1(OffsetedReadHalf,	OffsetedReadHalf,RISCV_INT_FTYPE_POINTER_INT,			pulp_v2, NULL)
   DIRECT_BUILTIN1(OffsetedReadByte,	OffsetedReadByte,RISCV_INT_FTYPE_POINTER_INT,			pulp_v2, NULL)
   DIRECT_BUILTIN1(OffsetedReadOMP,	OffsetedReadOMP,RISCV_INT_FTYPE_POINTER_INT,			pulp_v2, NULL)
-  DIRECT_NO_TARGET_BUILTIN1(OffsetedWrite,OffsetedWrite,RISCV_VOID_FTYPE_INT_POINTER_INT,			pulp_v2, NULL)
-  DIRECT_NO_TARGET_BUILTIN1(OffsetedWritePtr,OffsetedWritePtr,RISCV_VOID_FTYPE_POINTER_POINTER_INT,			pulp_v2, NULL)
-  DIRECT_NO_TARGET_BUILTIN1(OffsetedWriteHalf,OffsetedWriteHalf,RISCV_VOID_FTYPE_INT_POINTER_INT,			pulp_v2, NULL)
-  DIRECT_NO_TARGET_BUILTIN1(OffsetedWriteByte,OffsetedWriteByte,RISCV_VOID_FTYPE_INT_POINTER_INT,			pulp_v2, NULL)
+
+  DIRECT_NO_TARGET_BUILTIN1(OffsetedWritePtr, OffsetedWritePtr, RISCV_VOID_FTYPE_POINTER_POINTER_INT,	pulp_v2, NULL)
+  DIRECT_NO_TARGET_BUILTIN1(OffsetedWrite, OffsetedWrite, RISCV_VOID_FTYPE_INT_POINTER_INT,		pulp_v2, NULL)
+
+  DIRECT_NO_TARGET_BUILTIN1(OffsetedWriteHalf,OffsetedWriteHalf,RISCV_VOID_FTYPE_INT_POINTER_INT,	pulp_v2, NULL)
+  DIRECT_NO_TARGET_BUILTIN1(OffsetedWriteByte,OffsetedWriteByte,RISCV_VOID_FTYPE_INT_POINTER_INT,	pulp_v2, NULL)
 
   DIRECT_BUILTIN1(OffsetedReadNonVol,	CoreCount,	RISCV_INT_FTYPE_VOID,				pulp_vall, CheckBuiltin)
   DIRECT_BUILTIN1(OffsetedReadNonVol_m1,CoreCount_m1,	RISCV_INT_FTYPE_VOID,				pulp_vall, CheckBuiltin)

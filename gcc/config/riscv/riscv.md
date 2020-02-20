@@ -3606,7 +3606,7 @@
 )
 
 
-(define_insn "OffsetedWritePtr"
+(define_insn "OffsetedWritePtrInternal"
   [(unspec_volatile [(unspec_volatile:SI [(match_operand:SI 0 "reg_or_0_operand" "rJ,rJ")] UNSPECV_POINTER_ARG)
 		     (match_operand:SI 1 "register_operand" "r,r")
 		     (match_operand:SI 2 "nonmemory_operand" "r,I")] UNSPECV_OFFSETED_WRITE)]
@@ -3616,6 +3616,21 @@
    p.sw \t%z0,%2(%1)\t# Offseted Write volatile"
   [(set_attr "type" "store,store")
    (set_attr "mode" "SI,SI")]
+)
+
+
+(define_expand "OffsetedWritePtr"
+
+  [(match_operand:SI 0 "reg_or_0_operand" "")
+   (match_operand:SI 1 "register_operand" "")
+   (match_operand:SI 2 "nonmemory_operand" "")
+  ]
+ "(Pulp_Cpu>=PULP_V2)"
+{
+	emit_insn (gen_memory_barrier());
+	emit_insn (gen_OffsetedWritePtrInternal(operands[0], operands[1], operands[2]));
+	DONE;
+}
 )
 
 (define_insn "OffsetedWriteHalf"
