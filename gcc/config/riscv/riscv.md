@@ -110,6 +110,7 @@
   UNSPEC_TRUNCSIQI
 
   UNSPEC_BITREV
+
 ])
 
 (define_c_enum "unspecv" [
@@ -8671,10 +8672,110 @@
  (set_attr "mode" "SI")]
 )
 
+;;
+;; PulpNN Extension v2
+;;
+
+(define_c_enum "unspec_nn_v2" [
+  UNSPEC_MLSDOT
+])
+
+(define_mode_iterator VMODESALLINT   [HV BV CV NV])
+(define_mode_attr allint_vec_size   [(HV "h")  (BV "b") (CV "c")  (NV "n")])
 
 
+(define_insn "mlinitspr"
+  [(unspec_volatile [ (match_operand:SI 0 "register_operand" "r") (match_operand:SI 1 "immediate_operand" "L")] UNSPEC_SPR_WRITE)
+  ]
+"((Pulp_Cpu==PULP_NN) && !TARGET_MASK_NOVECT)"
+"pv.mlsdotup.h.%1 \tx0,%0,x0\t"
+[(set_attr "type" "arith")
+ (set_attr "mode" "SI")]
+)
 
 
+(define_insn "mlsdotup<VMODESALLINT:mode>"
+  [
+    (parallel[
+      (use:SI (post_inc:SI (match_operand:SI 1 "register_operand" "+r")))
+      (set (match_operand:SI 0 "register_operand" "=r")
+           (plus:SI
+          	 (plus:SI
+          		(mult:SI
+          			(zero_extend:SI (vec_select:HI (unspec:V2HI [(unspec:VMODESALLINT [(match_dup 1) (match_operand:SI 4 "immediate_operand" "L")] UNSPEC_NN_VECTOR)]   UNSPEC_MLSDOT) (parallel [(const_int 0)])))
+          			(zero_extend:SI (vec_select:HI (unspec:V2HI [(unspec:VMODESALLINT [(match_operand:SI 2  "register_operand" "r")] UNSPEC_NN_VECTOR)]   UNSPEC_MLSDOT) (parallel [(const_int 0)])))
+          		)
+          		(mult:SI
+          			(zero_extend:SI (vec_select:HI (unspec:V2HI [(unspec:VMODESALLINT [(match_dup 1)] UNSPEC_MLSDOT)]   UNSPEC_MLSDOT)(parallel [(const_int 1)])))
+          			(zero_extend:SI (vec_select:HI (unspec:V2HI [(unspec:VMODESALLINT [(match_dup 2)] UNSPEC_MLSDOT)]   UNSPEC_MLSDOT) (parallel [(const_int 1)])))
+          		)
+          	 )
+             (match_operand:SI 3 "register_operand" "0")
+           )
+      )
+    ])
+  ]   
+"((Pulp_Cpu==PULP_NN) && !TARGET_MASK_NOVECT)"
+"pv.mlsdotup.<allint_vec_size>.%4 \t%0,%1,%2\t"
+[(set_attr "type" "arith")
+ (set_attr "mode" "SI")]
+)
+
+
+(define_insn "mlsdotusp<VMODESALLINT:mode>"
+  [
+    (parallel[
+      (use:SI (post_inc:SI (match_operand:SI 1 "register_operand" "+r")))
+      (set (match_operand:SI 0 "register_operand" "=r")
+           (plus:SI
+          	 (plus:SI
+          		(mult:SI
+          			(zero_extend:SI (vec_select:HI (unspec:V2HI [(unspec:VMODESALLINT [(match_dup 1) (match_operand:SI 4 "immediate_operand" "L")] UNSPEC_NN_VECTOR)]   UNSPEC_MLSDOT) (parallel [(const_int 0)])))
+          			(sign_extend:SI (vec_select:HI (unspec:V2HI [(unspec:VMODESALLINT [(match_operand:SI 2  "register_operand" "r")] UNSPEC_NN_VECTOR)]   UNSPEC_MLSDOT) (parallel [(const_int 0)])))
+          		)
+          		(mult:SI
+          			(zero_extend:SI (vec_select:HI (unspec:V2HI [(unspec:VMODESALLINT [(match_dup 1)] UNSPEC_MLSDOT)]   UNSPEC_MLSDOT)(parallel [(const_int 1)])))
+          			(sign_extend:SI (vec_select:HI (unspec:V2HI [(unspec:VMODESALLINT [(match_dup 2)] UNSPEC_MLSDOT)]   UNSPEC_MLSDOT) (parallel [(const_int 1)])))
+          		)
+          	 )
+             (match_operand:SI 3 "register_operand" "0")
+           )
+      )
+    ])
+  ]   
+"((Pulp_Cpu==PULP_NN) && !TARGET_MASK_NOVECT)"
+"pv.mlsdotusp.<allint_vec_size>.%4 \t%0,%1,%2\t"
+[(set_attr "type" "arith")
+ (set_attr "mode" "SI")]
+)
+
+
+(define_insn "mlsdotsp<VMODESALLINT:mode>"
+  [
+    (parallel[
+      (use:SI (post_inc:SI (match_operand:SI 1 "register_operand" "+r")))
+      (set (match_operand:SI 0 "register_operand" "=r")
+           (plus:SI
+          	 (plus:SI
+          		(mult:SI
+          			(sign_extend:SI (vec_select:HI (unspec:V2HI [(unspec:VMODESALLINT [(match_dup 1) (match_operand:SI 4 "immediate_operand" "L")] UNSPEC_NN_VECTOR)]   UNSPEC_MLSDOT) (parallel [(const_int 0)])))
+          			(sign_extend:SI (vec_select:HI (unspec:V2HI [(unspec:VMODESALLINT [(match_operand:SI 2  "register_operand" "r")] UNSPEC_NN_VECTOR)]   UNSPEC_MLSDOT) (parallel [(const_int 0)])))
+          		)
+          		(mult:SI
+          			(sign_extend:SI (vec_select:HI (unspec:V2HI [(unspec:VMODESALLINT [(match_dup 1)] UNSPEC_MLSDOT)]   UNSPEC_MLSDOT)(parallel [(const_int 1)])))
+          			(sign_extend:SI (vec_select:HI (unspec:V2HI [(unspec:VMODESALLINT [(match_dup 2)] UNSPEC_MLSDOT)]   UNSPEC_MLSDOT) (parallel [(const_int 1)])))
+          		)
+          	 )
+             (match_operand:SI 3 "register_operand" "0")
+           )
+      )
+    ])
+  ]   
+"((Pulp_Cpu==PULP_NN) && !TARGET_MASK_NOVECT)"
+"pv.mlsdotsp.<allint_vec_size>.%4 \t%0,%1,%2\t"
+[(set_attr "type" "arith")
+ (set_attr "mode" "SI")]
+)
 
 
 
