@@ -8677,6 +8677,7 @@
 ;;
 
 (define_c_enum "unspec_nn_v2" [
+  UNSPEC_MLSDOT_INIT
   UNSPEC_MLSDOT
 ])
 
@@ -8685,7 +8686,7 @@
 
 
 (define_insn "mlinitspr"
-  [(unspec_volatile [ (match_operand:SI 0 "register_operand" "r") (match_operand:SI 1 "immediate_operand" "L")] UNSPEC_SPR_WRITE)
+  [(unspec_volatile [ (match_operand:SI 0 "register_operand" "r") (match_operand:SI 1 "immediate_operand" "L")] UNSPEC_MLSDOT_INIT)
   ]
 "((Pulp_Cpu==PULP_NN) && !TARGET_MASK_NOVECT)"
 "pv.mlsdotup.h.%1 \tx0,%0,x0\t"
