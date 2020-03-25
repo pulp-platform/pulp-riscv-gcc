@@ -433,9 +433,14 @@ Currently these macros are used in 2 contexts:
   DIRECT_BUILTIN1(mlsdotupcv,          mlsdotup16,      RISCV_INT_FTYPE_INTPTR_INT_INT_INT,             pulp_nn, NULL)
 
   DIRECT_BUILTIN1(mlsdotusphv,         mlsdotusp2,      RISCV_INT_FTYPE_INTPTR_INT_INT_INT,             pulp_nn, NULL)
-  DIRECT_BUILTIN1(mlsdotuspbv,         mlsdotusp4,      RISCV_INT_FTYPE_INTPTR_INT_INT_INT,             pulp_nn, NULL)
   DIRECT_BUILTIN1(mlsdotuspnv,         mlsdotusp8,      RISCV_INT_FTYPE_INTPTR_INT_INT_INT,             pulp_nn, NULL)
+  DIRECT_BUILTIN1(mlsdotuspbv,         mlsdotusp4,      RISCV_INT_FTYPE_INTPTR_INT_INT_INT,             pulp_nn, NULL)
   DIRECT_BUILTIN1(mlsdotuspcv,         mlsdotusp16,     RISCV_INT_FTYPE_INTPTR_INT_INT_INT,             pulp_nn, NULL)
+
+  DIRECT_BUILTIN1(mlsdotsuphv,         mlsdotsup2,      RISCV_INT_FTYPE_INTPTR_INT_INT_INT,             pulp_nn, NULL)
+  DIRECT_BUILTIN1(mlsdotsupbv,         mlsdotsup4,      RISCV_INT_FTYPE_INTPTR_INT_INT_INT,             pulp_nn, NULL)
+  DIRECT_BUILTIN1(mlsdotsupnv,         mlsdotsup8,      RISCV_INT_FTYPE_INTPTR_INT_INT_INT,             pulp_nn, NULL)
+  DIRECT_BUILTIN1(mlsdotsupcv,         mlsdotsup16,     RISCV_INT_FTYPE_INTPTR_INT_INT_INT,             pulp_nn, NULL)
 
   DIRECT_BUILTIN1(mlsdotsphv,          mlsdotsp2,       RISCV_INT_FTYPE_INTPTR_INT_INT_INT,             pulp_nn, NULL)
   DIRECT_BUILTIN1(mlsdotspbv,          mlsdotsp4,       RISCV_INT_FTYPE_INTPTR_INT_INT_INT,             pulp_nn, NULL)
