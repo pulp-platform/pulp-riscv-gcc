@@ -4296,7 +4296,8 @@
         (float:VMODEFLOAT (match_operand:<VMODEFLOAT:int_vec_mode> 1 "register_operand" "r")))]
   "TARGET_HARD_FLOAT"
   "vfcvt.<VMODEFLOAT:float_vec_size>.<VMODEFLOAT:ifmt>\t%0,%1"
- )
+  [(set_attr "type" "fcvt")]
+)
 
 (define_expand "float<VMODEFLOAT:int_vec_type><VMODEFLOAT:vec_type>2"
 [(set (match_operand:VMODEFLOAT 0 "register_operand" "")
@@ -4319,6 +4320,7 @@
         (unsigned_float:VMODEFLOAT (match_operand:<VMODEFLOAT:int_vec_mode> 1 "register_operand" "r")))]
   "TARGET_HARD_FLOAT"
   "vfcvt.<VMODEFLOAT:float_vec_size>.<VMODEFLOAT:ifmt>u\t%0,%1"
+  [(set_attr "type" "fcvt")]
  )
 
 (define_expand "floatuns<VMODEFLOAT:int_vec_type><VMODEFLOAT:vec_type>2"
@@ -4343,6 +4345,7 @@
         (fix:<VMODEFLOAT:int_vec_mode> (match_operand:VMODEFLOAT 1 "register_operand" "xf")))]
   "TARGET_HARD_FLOAT"
   "vfcvt.<VMODEFLOAT:ifmt>.<VMODEFLOAT:float_vec_size>\t%0,%1"
+  [(set_attr "type" "fcvt")]
  )
 
 (define_expand "fix_trunc<VMODEFLOAT:vec_type><VMODEFLOAT:int_vec_type>2"
@@ -4366,6 +4369,7 @@
         (unsigned_fix:<VMODEFLOAT:int_vec_mode> (match_operand:VMODEFLOAT 1 "register_operand" "xf")))]
   "TARGET_HARD_FLOAT"
   "vfcvt.<VMODEFLOAT:ifmt>u.<VMODEFLOAT:float_vec_size>\t%0,%1"
+  [(set_attr "type" "fcvt")]
  )
 
 (define_expand "fixuns_trunc<VMODEFLOAT:vec_type><VMODEFLOAT:int_vec_type>2"
@@ -4417,7 +4421,7 @@
   ]
   "TARGET_HARD_FLOAT && Has_F16"
   "vfcpka.h.s \t%0,%1,%2 \t"
-[(set_attr "type" "move")
+[(set_attr "type" "fcvt")
  (set_attr "mode" "SF")]
 )
 
@@ -4431,7 +4435,7 @@
   ]
   "TARGET_HARD_FLOAT && Has_F16"
   "vfcpka.h.s \t%0,%1,%2 \t"
-[(set_attr "type" "move")
+[(set_attr "type" "fcvt")
  (set_attr "mode" "SF")]
 )
 
@@ -4446,7 +4450,7 @@
   ]
   "TARGET_HARD_FLOAT && Has_F16ALT"
   "vfcpka.ah.s \t%0,%1,%2 \t"
-[(set_attr "type" "move")
+[(set_attr "type" "fcvt")
  (set_attr "mode" "SF")]
 )
 
@@ -4460,7 +4464,7 @@
   ]
   "TARGET_HARD_FLOAT && Has_F16ALT"
   "vfcpka.ah.s \t%0,%1,%2 \t"
-[(set_attr "type" "move")
+[(set_attr "type" "fcvt")
  (set_attr "mode" "SF")]
 )
 
@@ -5316,7 +5320,7 @@
   ]
  "TARGET_HARD_FLOAT && (Has_F16 || Has_F16ALT)"
 "vf<vec_op2_asm_name>.<float_vec_size> \t%0,%1,%2\t # FVect Op FVect"
-[(set_attr "type" "arith")
+[(set_attr "type" "fmadd")
  (set_attr "mode" "<VMODEFLOAT:MODE>")]
 )
 
@@ -5328,7 +5332,7 @@
    )]
  "TARGET_HARD_FLOAT && (Has_F16 || Has_F16ALT)"
 "vf<vec_op2_asm_name>.r.<float_vec_size> \t%0,%1,%2\t # FVect Op Scalar"
-[(set_attr "type" "arith")
+[(set_attr "type" "fmadd")
  (set_attr "mode" "SF")]
 )
 
@@ -5383,7 +5387,7 @@
  )]
  "TARGET_HARD_FLOAT && (Has_F16 || Has_F16ALT)"
  "vfmac.<float_vec_size>\t%0,%1,%2"
- [(set_attr "type" "arith")
+ [(set_attr "type" "fmadd")
   (set_attr "mode" "<VMODEFLOAT:MODE>")])
 
 
@@ -5410,7 +5414,7 @@
 ;;                        (neg:VMODEFLOAT (match_dup 0))))]
 ;;  "TARGET_HARD_FLOAT && (Has_F16 || Has_F16ALT)"
 ;;  "vfmre.<float_vec_size>\t%0,%1,%2"
-;;  [(set_attr "type" "arith")
+;;  [(set_attr "type" "fmadd")
 ;;   (set_attr "mode" "<VMODEFLOAT:MODE>")])
 
 ;; d = a * b - c
@@ -5434,7 +5438,7 @@
 			(neg:VMODEFLOAT (match_operand:VMODEFLOAT 3 "register_operand" " 0"))))]
   "TARGET_HARD_FLOAT && (Has_F16 || Has_F16ALT)"
   "vfmre.<float_vec_size>\t%0,%1,%2"
-  [(set_attr "type" "arith")
+  [(set_attr "type" "fmadd")
    (set_attr "mode" "<VMODEFLOAT:MODE>")])
 
 
@@ -5446,7 +5450,7 @@
          UNSPEC_COPYSIGN))]
   "TARGET_HARD_FLOAT &&  (Has_F16 || Has_F16ALT)"
   "vfsgnj.<float_vec_size>\t%0,%1,%2"
-  [(set_attr "type" "fmove")
+  [(set_attr "type" "fadd")
    (set_attr "mode" "<VMODEFLOAT:MODE>")])
 
 
@@ -5762,7 +5766,7 @@
   (abs:VMODEFLOAT (match_operand:VMODEFLOAT 1 "register_operand" "xf")))]
   "TARGET_HARD_FLOAT && ((<MODE>mode == V2HFmode && Has_F16) || (<MODE>mode == V2OHFmode && Has_F16ALT))"
   "vfabs.<vec_size>\t%0,%1"
-  [(set_attr "type" "fmove")
+  [(set_attr "type" "fadd")
    (set_attr "mode" "SF")])
 
 (define_insn "abs<VMODEINT:mode>2"
@@ -5782,7 +5786,7 @@
   (neg:VMODEFLOAT (match_operand:VMODEFLOAT 1 "register_operand" "xf")))]
   "TARGET_HARD_FLOAT && ((<MODE>mode == V2HFmode && Has_F16) || (<MODE>mode == V2OHFmode && Has_F16ALT))"
   "vfneg.<vec_size>\t%0,%1"
-  [(set_attr "type" "fmove")
+  [(set_attr "type" "fadd")
    (set_attr "mode" "SF")])
 
 (define_insn "neg<VMODEINT:mode>2"
@@ -7043,7 +7047,7 @@
   )]
   "((Pulp_Cpu>=PULP_V2) && !TARGET_MASK_NOVECT)"
   "vf<vec_cmp_op_name>.<VMODEFLOAT:float_vec_size>\t%0,%1,%2"
-  [(set_attr "type" "arith")
+  [(set_attr "type" "fadd")
    (set_attr "mode" "SF")]
 )
 
@@ -7055,7 +7059,7 @@
   )]
   "((Pulp_Cpu>=PULP_V2) && !TARGET_MASK_NOVECT)"
   "vfeq.<VMODEFLOAT:float_vec_size>\t%0,%1,%2"
-  [(set_attr "type" "arith")
+  [(set_attr "type" "fadd")
    (set_attr "mode" "SF")]
 )
 
@@ -7068,7 +7072,7 @@
   ]
   "((Pulp_Cpu>=PULP_V2) && !TARGET_MASK_NOVECT)"
   "vf<vec_cmp_op_name>.r.<VMODEFLOAT:float_vec_size>\t%0,%1,%2 # cmp vect/scalar op"
-  [(set_attr "type" "arith")
+  [(set_attr "type" "fadd")
    (set_attr "mode" "SF")]
 )
 
@@ -7081,7 +7085,7 @@
   ]
   "((Pulp_Cpu>=PULP_V2) && !TARGET_MASK_NOVECT)"
   "vf<vec_cmp_swap_op_name>.r.<VMODEFLOAT:float_vec_size>\t%0,%2,%1 # cmp (swap) vect/scalar op"
-  [(set_attr "type" "arith")
+  [(set_attr "type" "fadd")
    (set_attr "mode" "SF")]
 )
 
@@ -8811,3 +8815,8 @@
 (include "peephole.md")
 (include "pic.md")
 (include "generic.md")
+(include "marsellus0.md")
+(include "marsellus1.md")
+(include "marsellus2.md")
+(include "marsellus3.md")
+
