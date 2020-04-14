@@ -1,5 +1,6 @@
+
 ;; Generic DFA-based pipeline description for RISC-V targets.
-;; Copyright (C) 2011-2017 Free Software Foundation, Inc.
+;; Copyright (C) 2011-2018 Free Software Foundation, Inc.
 ;; Contributed by Andrew Waterman (andrew@sifive.com).
 ;; Based on MIPS target for GNU compiler.
 
@@ -20,59 +21,78 @@
 ;; <http://www.gnu.org/licenses/>.
 
 
+;; Microarchitectures we know how to tune for.
+;; Keep this in sync with enum riscv_microarchitecture.
+(define_attr "tune"
+  "generic,marsellus0,marsellus1,marsellus2,marsellus3"
+  (const (symbol_ref "((enum attr_tune) riscv_microarchitecture)")))
+
 (define_automaton "pipe0")
 (define_cpu_unit "alu" "pipe0")
 (define_cpu_unit "imuldiv" "pipe0")
 (define_cpu_unit "fdivsqrt" "pipe0")
 
 (define_insn_reservation "generic_alu" 1
-  (eq_attr "type" "unknown,const,arith,shift,slt,multi,nop,logical,move")
+  (and (eq_attr "tune" "generic")
+       (eq_attr "type" "unknown,const,arith,shift,slt,multi,nop,logical,move"))
   "alu")
 
 (define_insn_reservation "generic_load" 3
-  (eq_attr "type" "load,fpload")
+  (and (eq_attr "tune" "generic")
+       (eq_attr "type" "load,fpload"))
   "alu")
 
 (define_insn_reservation "generic_store" 1
-  (eq_attr "type" "store,fpstore")
+  (and (eq_attr "tune" "generic")
+       (eq_attr "type" "store,fpstore"))
   "alu")
 
 (define_insn_reservation "generic_xfer" 3
-  (eq_attr "type" "mfc,mtc,fcvt,fmove,fcmp")
+  (and (eq_attr "tune" "generic")
+       (eq_attr "type" "mfc,mtc,fcvt,fmove,fcmp"))
   "alu")
 
 (define_insn_reservation "generic_branch" 1
-  (eq_attr "type" "branch,jump,call")
+  (and (eq_attr "tune" "generic")
+       (eq_attr "type" "branch,jump,call"))
   "alu")
 
 (define_insn_reservation "generic_imul" 10
-  (eq_attr "type" "imul")
+  (and (eq_attr "tune" "generic")
+       (eq_attr "type" "imul"))
   "imuldiv*10")
 
 (define_insn_reservation "generic_idivsi" 34
-  (and (eq_attr "type" "idiv")
-       (eq_attr "mode" "SI"))
+  (and (eq_attr "tune" "generic")
+       (and (eq_attr "type" "idiv")
+	    (eq_attr "mode" "SI")))
   "imuldiv*34")
 
 (define_insn_reservation "generic_idivdi" 66
-  (and (eq_attr "type" "idiv")
-       (eq_attr "mode" "DI"))
+  (and (eq_attr "tune" "generic")
+       (and (eq_attr "type" "idiv")
+	    (eq_attr "mode" "DI")))
   "imuldiv*66")
 
 (define_insn_reservation "generic_fmul_single" 5
-  (and (eq_attr "type" "fadd,fmul,fmadd")
-       (eq_attr "mode" "SF"))
+  (and (eq_attr "tune" "generic")
+       (and (eq_attr "type" "fadd,fmul,fmadd")
+	    (eq_attr "mode" "SF")))
   "alu")
 
 (define_insn_reservation "generic_fmul_double" 7
-  (and (eq_attr "type" "fadd,fmul,fmadd")
-       (eq_attr "mode" "DF"))
+  (and (eq_attr "tune" "generic")
+       (and (eq_attr "type" "fadd,fmul,fmadd")
+	    (eq_attr "mode" "DF")))
   "alu")
 
 (define_insn_reservation "generic_fdiv" 20
-  (eq_attr "type" "fdiv")
+  (and (eq_attr "tune" "generic")
+       (eq_attr "type" "fdiv"))
   "fdivsqrt*20")
 
 (define_insn_reservation "generic_fsqrt" 25
-  (eq_attr "type" "fsqrt")
+  (and (eq_attr "tune" "generic")
+       (eq_attr "type" "fsqrt"))
   "fdivsqrt*25")
+

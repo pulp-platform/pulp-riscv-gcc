@@ -110,3 +110,8 @@
   (and (eq_attr "type" "fsqrt")
        (eq_attr "mode" "DF"))
   "alu")
+
+(define_insn_reservation "generic_qnt" 4
+    (and (eq_attr "type" "qnt")
+         (eq_attr "mode" "SI"))
+    "alu*4")  

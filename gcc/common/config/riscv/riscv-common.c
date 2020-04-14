@@ -138,6 +138,12 @@ riscv_parse_arch_string (const char *isa, int *flags, location_t loc)
                         if (Pulp_Cpu == PULP_NONE || Pulp_Cpu == PULP_V3) Pulp_Cpu = PULP_V3;
                         else error("-Xpulpv3: pulp architecture is already defined as %s", PulpProcessorImage(Pulp_Cpu));
                         break;
+                case PULP_NN:
+                        *flags &= ~MASK_64BIT; *flags |= MASK_MUL; *flags &= ~MASK_ATOMIC;
+                        if (Pulp_DP_Format != PULP_DP_FORMAT32) riscv_abi = ABI_ILP32;
+                        if (Pulp_Cpu == PULP_NONE || Pulp_Cpu == PULP_NN) Pulp_Cpu = PULP_NN;
+                        else error("-XpulpNN: pulp architecture is already defined as %s", PulpProcessorImage(Pulp_Cpu));
+                        break;
 /* __GAP8 Start */
                 case PULP_GAP8:
                         *flags &= ~MASK_64BIT; *flags |= MASK_MUL; *flags &= ~MASK_ATOMIC;
@@ -175,7 +181,7 @@ riscv_parse_arch_string (const char *isa, int *flags, location_t loc)
         }
   }
 
-                                                           
+
   if (*p)
     {
       error_at (loc, "-march=%s: unsupported ISA substring %qs", isa, p);

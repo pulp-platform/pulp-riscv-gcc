@@ -285,6 +285,9 @@ struct riscv_cpu_info {
   /* This CPU's canonical name.  */
   const char *name;
 
+  /* Which automaton to use for tuning.  */
+  enum riscv_microarchitecture_type microarchitecture;
+
   /* Tuning parameters for this CPU.  */
   const struct riscv_tune_info *tune_info;
 };
@@ -296,6 +299,9 @@ bool riscv_slow_unaligned_access;
 
 /* Which tuning parameters to use.  */
 static const struct riscv_tune_info *tune_info;
+
+/* Which automaton to use for tuning.  */
+enum riscv_microarchitecture_type riscv_microarchitecture;
 
 /* Index R is the smallest register class that contains register R.  */
 const enum reg_class riscv_regno_to_class[FIRST_PSEUDO_REGISTER] = {
@@ -318,6 +324,19 @@ const enum reg_class riscv_regno_to_class[FIRST_PSEUDO_REGISTER] = {
   FRAME_REGS,	FRAME_REGS,     LC_REGS,        LC_REGS,
   LE_REGS,      LE_REGS,        LS_REGS,        LS_REGS,
   VIT_REGS
+};
+
+/* Costs to use when optimizing for marsellus.  */
+static const struct riscv_tune_info marsellus_tune_info = {
+  {COSTS_N_INSNS (1), COSTS_N_INSNS (5)},       /* fp_add */
+  {COSTS_N_INSNS (1), COSTS_N_INSNS (5)},       /* fp_mul */
+  {COSTS_N_INSNS (10), COSTS_N_INSNS (50)},     /* fp_div */
+  {COSTS_N_INSNS (1), COSTS_N_INSNS (5)},       /* int_mul */
+  {COSTS_N_INSNS (5), COSTS_N_INSNS (25)},       /* int_div */
+  1,                                            /* issue_rate */
+  4,                                            /* branch_cost */
+  2,                                            /* memory_cost */
+  true,                                         /* slow_unaligned_access */
 };
 
 /* Costs to use when optimizing for rocket.  */
@@ -348,8 +367,12 @@ static const struct riscv_tune_info optimize_size_tune_info = {
 
 /* A table describing all the processors GCC knows about.  */
 static const struct riscv_cpu_info riscv_cpu_info_table[] = {
-  { "rocket", &rocket_tune_info },
-  { "size", &optimize_size_tune_info },
+  { "marsellus0", marsellus0, &rocket_tune_info },	
+  { "marsellus1", marsellus1, &rocket_tune_info },
+  { "marsellus2", marsellus2, &rocket_tune_info },
+  { "marsellus3", marsellus3, &rocket_tune_info },
+  { "rocket", marsellus2, &rocket_tune_info },
+  { "size", generic, &optimize_size_tune_info },
 };
 
 static unsigned int MaxArgInReg = MAX_ARGS_IN_REGISTERS;
@@ -5059,6 +5082,7 @@ riscv_option_override (void)
   /* Handle -mtune.  */
   cpu = riscv_parse_cpu (riscv_tune_string ? riscv_tune_string :
 			 RISCV_TUNE_STRING_DEFAULT);
+  riscv_microarchitecture = cpu->microarchitecture;
   tune_info = optimize_size ? &optimize_size_tune_info : cpu->tune_info;
 
   /* Use -mtune's setting for slow_unaligned_access, even when optimizing
