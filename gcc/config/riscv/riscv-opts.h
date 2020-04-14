@@ -25,6 +25,16 @@ along with GCC; see the file COPYING3.  If not see
 #define GCC_RISCV_OPTS_H
 // #include <string.h>
 
+
+enum riscv_microarchitecture_type {
+  generic,
+  marsellus0,
+  marsellus1,
+  marsellus2,
+  marsellus3
+};
+extern enum riscv_microarchitecture_type riscv_microarchitecture;
+
 enum riscv_abi_type {
   ABI_ILP32,
   ABI_ILP32F,
@@ -166,6 +176,7 @@ static enum Pulp_Chip_Type PulpDecodeChip(const char *Text)
         else if (strncmp (Text, "gap8", 4) == 0) return PULP_CHIP_GAP8;
 /* __GAP8 Stop */
         else if (strncmp (Text, "gap9", 4) == 0) return PULP_CHIP_GAP9;
+	else if (strncmp (Text, "hua20", 5) == 0) return PULP_CHIP_GAP9;
         else if (strncmp (Text, "none", 4) == 0) return PULP_CHIP_NONE;
         else return PULP_CHIP_NONE;
 }
@@ -188,6 +199,7 @@ static enum Pulp_Processor_Type PulpDecodeCpu(char *Text, int *Len)
         else if (strncmp (Dup, "gap8", 4) == 0)   { free(Dup); if (Len) *Len = 4; return PULP_GAP8; }
 /* __GAP8 Stop */
         else if (strncmp (Dup, "gap9", 4) == 0)   { free(Dup); if (Len) *Len = 4; return PULP_GAP9; }
+	else if (strncmp (Dup, "hua20", 5) == 0)   { free(Dup); if (Len) *Len = 5; return PULP_GAP9; }
         else if (strncmp (Dup, "pulpslim", 8) == 0)   { free(Dup); if (Len) *Len = 8; return PULP_SLIM; }
         else                                      { free(Dup); if (Len) *Len = 0; return PULP_NONE; }
 }

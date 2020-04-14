@@ -371,7 +371,7 @@ static const struct riscv_cpu_info riscv_cpu_info_table[] = {
   { "marsellus1", marsellus1, &rocket_tune_info },
   { "marsellus2", marsellus2, &rocket_tune_info },
   { "marsellus3", marsellus3, &rocket_tune_info },
-  { "rocket", rocket, &rocket_tune_info },
+  { "rocket", marsellus2, &rocket_tune_info },
   { "size", generic, &optimize_size_tune_info },
 };
 
