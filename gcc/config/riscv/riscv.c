@@ -865,19 +865,19 @@ riscv_classify_address (struct riscv_address_info *info, rtx x,
       return SMALL_OPERAND (INTVAL (x));
 
     case POST_INC:
-      if (GET_MODE_SIZE (mode) > UNITS_PER_WORD || ((TARGET_HARD_FLOAT&&!TARGET_FPREGS_ON_GRREGS) && (IsFloatMode(mode)))) return false;
+      if ((!Has_64Int && (GET_MODE_SIZE (mode) > UNITS_PER_WORD)) || ((TARGET_HARD_FLOAT&&!TARGET_FPREGS_ON_GRREGS) && (IsFloatMode(mode)))) return false;
       info->type = ADDRESS_REG_POST_INC;
       info->reg = XEXP (x, 0);
       info->offset = XEXP (x, 1);
       return (riscv_valid_base_register_p (info->reg, mode, strict_p));
     case POST_DEC:
-      if (GET_MODE_SIZE (mode) > UNITS_PER_WORD || ((TARGET_HARD_FLOAT&&!TARGET_FPREGS_ON_GRREGS) && (IsFloatMode(mode)))) return false;
+      if ((!Has_64Int && (GET_MODE_SIZE (mode) > UNITS_PER_WORD)) || ((TARGET_HARD_FLOAT&&!TARGET_FPREGS_ON_GRREGS) && (IsFloatMode(mode)))) return false;
       info->type = ADDRESS_REG_POST_DEC;
       info->reg = XEXP (x, 0);
       info->offset = XEXP (x, 1);
       return (riscv_valid_base_register_p (info->reg, mode, strict_p));
     case POST_MODIFY:
-      if (GET_MODE_SIZE (mode) > UNITS_PER_WORD || ((TARGET_HARD_FLOAT&&!TARGET_FPREGS_ON_GRREGS) && (IsFloatMode(mode)))) return false;
+      if ((!Has_64Int && (GET_MODE_SIZE (mode) > UNITS_PER_WORD)) || ((TARGET_HARD_FLOAT&&!TARGET_FPREGS_ON_GRREGS) && (IsFloatMode(mode)))) return false;
       info->type = ADDRESS_REG_POST_MODIFY;
       info->reg = XEXP (x, 0);
       info->mode = mode;
@@ -1922,17 +1922,69 @@ riscv_split_doubleword_move (rtx dest, rtx src)
 
    /* The operation can be split into two normal moves.  Decide in
       which order to do them.  */
-   low_dest = riscv_subword (dest, false);
-   if (REG_P (low_dest) && reg_overlap_mentioned_p (low_dest, src))
-     {
-       riscv_emit_move (riscv_subword (dest, true), riscv_subword (src, true));
-       riscv_emit_move (low_dest, riscv_subword (src, false));
-     }
-   else
-     {
-       riscv_emit_move (low_dest, riscv_subword (src, false));
-       riscv_emit_move (riscv_subword (dest, true), riscv_subword (src, true));
-     }
+	if (!Has_64Int || (!(MEM_P (dest) && auto_inc_p (XEXP (dest, 0))) && !(MEM_P (src) && auto_inc_p (XEXP (src, 0))))) {
+		if (Has_64Int && GET_CODE(dest) == REG && GET_CODE(src) == REG) {
+			emit_move_insn (dest, src);
+			return;
+		}
+   		low_dest = riscv_subword (dest, false);
+   		if (REG_P (low_dest) && reg_overlap_mentioned_p (low_dest, src)) {
+       			riscv_emit_move (riscv_subword (dest, true), riscv_subword (src, true));
+       			riscv_emit_move (low_dest, riscv_subword (src, false));
+     		} else {
+       			riscv_emit_move (low_dest, riscv_subword (src, false));
+       			riscv_emit_move (riscv_subword (dest, true), riscv_subword (src, true));
+     		}
+   	} else {
+		machine_mode mode = GET_MODE (dest);
+		int swap = 0;
+		rtx xop[4];
+
+      		if (MEM_P (dest) && auto_inc_p (XEXP (dest, 0))) {
+	          	rtx addr = XEXP (dest, 0);
+	          	rtx r, o;
+	          	enum rtx_code code;
+	          	gcc_assert (!reg_overlap_mentioned_p (dest, addr));
+	          	switch (GET_CODE (addr)) {
+	            		case POST_DEC: o = GEN_INT (-8); code = POST_MODIFY; swap = 2; break;
+	            		case POST_INC: o = GEN_INT (8); code = POST_MODIFY; swap = 2; break;
+	            		case POST_MODIFY: o = XEXP (XEXP (addr, 1), 1); code = POST_MODIFY; swap = 2; break;
+	            		default: gcc_unreachable ();
+	            	}
+	          	r = XEXP (addr, 0);
+	          	xop[0+0] = adjust_automodify_address_nv(dest, SImode, gen_rtx_fmt_ee (code, Pmode, r, gen_rtx_PLUS (Pmode, r, o)), 0);
+	          	xop[2+0] = adjust_automodify_address_nv(dest, SImode, plus_constant (Pmode, r, 4), 4);
+		} else {
+			xop[0+0] = operand_subword (dest, 0, 0, mode);
+			xop[2+0] = operand_subword (dest, 1, 0, mode);
+		}
+
+      		if (MEM_P (src) && auto_inc_p (XEXP (src, 0))) {
+	          	rtx addr = XEXP (src, 0);
+	          	rtx r, o;
+	          	enum rtx_code code;
+	          	gcc_assert (!reg_overlap_mentioned_p (src, addr));
+	          	switch (GET_CODE (addr)) {
+	            		case POST_DEC: o = GEN_INT (-8); code = POST_MODIFY; swap = 2; break;
+	            		case POST_INC: o = GEN_INT (8); code = POST_MODIFY; swap = 2; break;
+	            		case POST_MODIFY: o = XEXP (XEXP (addr, 1), 1); code = POST_MODIFY; swap = 2; break;
+	            		default: gcc_unreachable ();
+	            	}
+	          	r = XEXP (addr, 0);
+	          	xop[0+1] = adjust_automodify_address_nv(src, SImode, gen_rtx_fmt_ee (code, Pmode, r, gen_rtx_PLUS (Pmode, r, o)), 0);
+	          	xop[2+1] = adjust_automodify_address_nv(src, SImode, plus_constant (Pmode, r, 4), 4);
+		} else {
+			xop[0+1] = operand_subword (src, 0, 0, mode);
+			xop[2+1] = operand_subword (src, 1, 0, mode);
+		}
+
+		if (reg_overlap_mentioned_p (xop[0], xop[3])) {
+			swap = 2;
+			gcc_assert (!reg_overlap_mentioned_p (xop[2], xop[1]));
+    		}
+		emit_move_insn (xop[0 + swap], xop[1 + swap]);
+		emit_move_insn (xop[2 - swap], xop[3 - swap]);
+        }
 }
 
 const char * riscv_explicit_load_store(rtx AddrReg, rtx SrcReg, unsigned int Address, int IsLoad)
@@ -1975,8 +2027,10 @@ riscv_output_move (rtx dest, rtx src)
   mode = GET_MODE (dest);
   dbl_p = (GET_MODE_SIZE (mode) == 8);
 
-  if (dbl_p && riscv_split_64bit_move_p (dest, src))
-    return "#";
+  if (dbl_p && riscv_split_64bit_move_p (dest, src)) {
+	  if (Has_64Int && dest_code == REG && src_code == REG) return "mv.d\t%0,%1";
+	  else return "#";
+  }
 
   if (dest_code == REG && GP_REG_P (REGNO (dest)))
     {
@@ -2255,6 +2309,14 @@ riscv_extend_comparands (rtx_code code, rtx *op0, rtx *op1)
 static void
 riscv_emit_int_compare (enum rtx_code *code, rtx *op0, rtx *op1)
 {
+
+  if (Has_64Int && (GET_MODE_SIZE (word_mode) < GET_MODE_SIZE (GET_MODE (*op0)))) {
+     	*op0 = riscv_force_binary (word_mode, *code, *op0, *op1);
+      	*op1 = const0_rtx;
+	*code = NE;
+      	return;
+  }
+
   if (splittable_const_int_operand (*op1, VOIDmode))
     {
       HOST_WIDE_INT rhs = INTVAL (*op1);
@@ -2399,13 +2461,14 @@ riscv_expand_int_scc (rtx target, enum rtx_code code, rtx op0, rtx op1)
   riscv_extend_comparands (code, &op0, &op1);
   op0 = force_reg (word_mode, op0);
 
-  if (code == EQ || code == NE)
-    {
-      rtx zie = riscv_zero_if_equal (op0, op1);
-      riscv_emit_binary (code, target, zie, const0_rtx);
-    }
-  else
-    riscv_emit_int_order_test (code, 0, target, op0, op1);
+  if (code == EQ || code == NE) {
+  	if (Has_64Int && (GET_MODE_SIZE (word_mode) < GET_MODE_SIZE (GET_MODE (op0)))) {
+      		riscv_emit_binary (code, target, op0, op1);
+	} else {
+      		rtx zie = riscv_zero_if_equal (op0, op1);
+      		riscv_emit_binary (code, target, zie, const0_rtx);
+	}
+  } else riscv_emit_int_order_test (code, 0, target, op0, op1);
 }
 
 /* Like riscv_expand_int_scc, but for floating-point comparisons.  */

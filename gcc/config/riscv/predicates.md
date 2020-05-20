@@ -49,6 +49,11 @@
   (ior (match_operand 0 "const_arith_operand")
        (match_operand 0 "register_operand")))
 
+(define_predicate "arith_operand_opt_imm"
+  (ior (match_operand 0 "register_operand")
+       (and (match_operand 0 "const_arith_operand") (match_test "(Has_64Int==0)"))))
+
+
 (define_predicate "const_csr_operand"
   (and (match_code "const_int")
        (match_test "IN_RANGE (INTVAL (op), 0, 31)")))
@@ -79,6 +84,30 @@
             (ior (match_operand 0 "const_0_operand")
                  (match_test "((Pulp_Cpu>=PULP_V2) && (INTVAL(op)>=-16) && (INTVAL(op)<=15))")
             )
+       )
+  )
+)
+
+(define_predicate "reg_or_uimm5_operand"
+  (ior (match_operand 0 "register_operand")
+       (and (match_code "const_int") (match_test "(INTVAL(op)>=0) && (INTVAL(op)<=31)"))
+  )
+)
+
+(define_predicate "arith_operand_short_imm"
+  (ior (match_operand 0 "register_operand")
+       (ior
+       		(and (match_operand 0 "const_arith_operand") (match_test "(Has_64Int==0)"))
+       		(and (match_operand 0 "reg_or_imm5_operand") (match_test "(Has_64Int!=0)"))
+       )
+  )
+)
+
+(define_predicate "arith_operand_short_uimm"
+  (ior (match_operand 0 "register_operand")
+       (ior
+       		(and (match_operand 0 "const_arith_operand") (match_test "(Has_64Int==0)"))
+       		(and (match_operand 0 "reg_or_uimm5_operand") (match_test "(Has_64Int!=0)"))
        )
   )
 )

@@ -172,7 +172,6 @@ Currently these macros are used in 2 contexts:
   DIRECT_BUILTIN1(mulsForcedRNr_si3,    mulfsRN,       	RISCV_INT_FTYPE_INT_INT_INT_INT,     		pulp_v2, CheckBuiltin)
   DIRECT_BUILTIN1(muluForcedRNr_si3,    mulfuRN,       	RISCV_INT_FTYPE_INT_INT_INT_INT,     		pulp_v2, CheckBuiltin)
 
-
   DIRECT_BUILTIN1(mulsi3_highpart,      mul64hs,       	RISCV_INT_FTYPE_INT_INT,     			pulp_v2, NULL)
   DIRECT_BUILTIN1(umulsi3_highpart,     mul64hu,       	RISCV_INT_FTYPE_INT_INT,     			pulp_v2, NULL)
   DIRECT_BUILTIN1(usmulsi3_highpart,    mul64hus,      	RISCV_INT_FTYPE_INT_INT,     			pulp_v2, NULL)

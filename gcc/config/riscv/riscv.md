@@ -3,6 +3,9 @@
 ;; Contributed by Andrew Waterman (andrew@sifive.com).
 ;; Based on MIPS target for GNU compiler.
 
+;; PULP family support contributed by Eric Flamand (eflamand@iis.ee.ethz.ch) at ETH-Zurich
+;; and Greenwaves Technologies (eric.flamand@greenwaves-technologies.com)
+
 ;; This file is part of GCC.
 
 ;; GCC is free software; you can redistribute it and/or modify
@@ -203,8 +206,8 @@
    const,logical,arith,andi,shift_shift"
   (const_string "unknown"))
 
-;; Main data type used by the insn ADDED V1SF
-(define_attr "mode" "unknown,none,QI,HI,SI,DI,TI,HF,OHF,SF,DF,TF,V1SF,V2HI,V4QI,V2HF,V2OHF"
+;; Main data type used by the insn
+(define_attr "mode" "unknown,none,QI,HI,SI,DI,TI,HF,OHF,SF,DF,TF,V2HI,V4QI,V2HF,V2OHF"
   (const_string "unknown"))
 
 ;; True if the main data type is twice the size of a word.
@@ -337,22 +340,25 @@
 ;; from the same template.
 (define_mode_iterator GPR [SI (DI "TARGET_64BIT")])
 
+(define_mode_iterator GPR64 [SI (DI "!TARGET_64BIT && Has_64Int")])
+
 ;; This mode iterator allows :P to be used for patterns that operate on
 ;; pointer-sized quantities.  Exactly one of the two alternatives will match.
 (define_mode_iterator P [(SI "Pmode == SImode") (DI "Pmode == DImode")])
 
 ;; Likewise, but for XLEN-sized quantities.
-(define_mode_iterator X [(SI "!TARGET_64BIT") (DI "TARGET_64BIT")])
+(define_mode_iterator X   [(SI "!TARGET_64BIT") (DI "TARGET_64BIT")])
+(define_mode_iterator X64 [(SI "!TARGET_64BIT") (DI "(TARGET_64BIT || Has_64Int)")])
 
 ;; Branches operate on XLEN-sized quantities, but for RV64 we accept
 ;; QImode values so we can force zero-extension.
 (define_mode_iterator BR [(QI "TARGET_64BIT") SI (DI "TARGET_64BIT")])
+(define_mode_iterator BR64 [SI (DI "!TARGET_64BIT && Has_64Int")])
 
 ;; 32-bit moves for which we provide move patterns.
 (define_mode_iterator MOVE32 [SI])
 
-;; ADDED V1SF
-(define_mode_iterator MODE_PULP [V4QI V2HI (V2HF "Has_F16") (V2OHF "Has_F16ALT") (OHF "Has_F16ALT") V1SF SF SI])
+(define_mode_iterator MODE_PULP [V4QI V2HI (V2HF "Has_F16") (V2OHF "Has_F16ALT") (OHF "Has_F16ALT") SF SI])
 
 ;; 64-bit modes for which we provide move patterns.
 (define_mode_iterator MOVE64 [DI DF])
@@ -382,9 +388,8 @@
 ;; Iterator for hardware-supported floating-point modes.
 (define_mode_iterator STDF [(SF "TARGET_HARD_FLOAT")
                             (DF "TARGET_DOUBLE_FLOAT")])
-;; ADDED V1SF
-(define_mode_iterator ANYF [(V1SF "TARGET_HARD_FLOAT")
-			    (SF "TARGET_HARD_FLOAT")
+
+(define_mode_iterator ANYF [(SF "TARGET_HARD_FLOAT")
 			    (DF "TARGET_DOUBLE_FLOAT")
                             (HF "(TARGET_HARD_FLOAT&&Has_F16)")
                             (OHF "(TARGET_HARD_FLOAT&&Has_F16ALT)")])
@@ -403,9 +408,8 @@
                               (HF "(TARGET_HARD_FLOAT&&Has_F16)")
                               (OHF "(TARGET_HARD_FLOAT&&Has_F16ALT)")])
 
-;; ADDED V1SF
-(define_mode_attr size_mem   [(V4QI "4") (V2HI "4") (V2HF "4") (V2OHF "4") (V1SF "4") (SF "4") (SI "4") (HI "2") (HF "2") (OHF "2") (QI "1")])
-(define_mode_attr size_load_store [(V4QI "w") (V2HI "w") (V2HF "w") (V2OHF "w") (V1SF "w") (SF "w") (SI "w") (QI "b") (HI "h") (HF "h") (OHF "h")])
+(define_mode_attr size_mem   [(V4QI "4") (V2HI "4") (V2HF "4") (V2OHF "4") (SF "4") (SI "4") (HI "2") (HF "2") (OHF "2") (QI "1")])
+(define_mode_attr size_load_store [(V4QI "w") (V2HI "w") (V2HF "w") (V2OHF "w") (SF "w") (SI "w") (QI "b") (HI "h") (HF "h") (OHF "h")])
 
 ;; This attribute gives the length suffix for a sign- or zero-extension
 ;; instruction.
@@ -429,6 +433,9 @@
 
 ;; This attribute gives the format suffix for atomic memory operations.
 (define_mode_attr amo [(SI "w") (DI "d")])
+
+;; This attribute gives the suffix for 64bits operation when 64 is not native
+(define_mode_attr Int64 [(SI "") (DI ".d")])
 
 ;; This attribute gives the upper-case mode name for one unit of a
 ;; floating-point mode.
@@ -565,11 +572,15 @@
    (set_attr "mode" "SI")])
 
 (define_insn "adddi3"
-  [(set (match_operand:DI          0 "register_operand" "=r,r")
-	(plus:DI (match_operand:DI 1 "register_operand" " r,r")
-		 (match_operand:DI 2 "arith_operand"    " r,I")))]
-  "TARGET_64BIT"
-  "add\t%0,%1,%2"
+  [(set (match_operand:DI          0 "register_operand"         "=r,r")
+	(plus:DI (match_operand:DI 1 "register_operand"         " r,r")
+		 (match_operand:DI 2 "arith_operand_short_imm"  " r,I")))]
+  "(TARGET_64BIT||Has_64Int)"
+  {
+	if (Has_64Int) {
+  		if (which_alternative == 0) return "add.d\t%0,%1,%2"; else return "addi.d\t%0,%1,%2";
+	} else return "add\t%0,%1,%2";
+  }
   [(set_attr "type" "arith")
    (set_attr "mode" "DI")])
 
@@ -615,8 +626,11 @@
   [(set (match_operand:DI 0            "register_operand" "= r")
 	(minus:DI (match_operand:DI 1  "reg_or_0_operand" " rJ")
 		   (match_operand:DI 2 "register_operand" "  r")))]
-  "TARGET_64BIT"
-  "sub\t%0,%z1,%2"
+  "(TARGET_64BIT||Has_64Int)"
+  {
+	if (Has_64Int)return "sub.d\t%0,%z1,%2";
+	else return "sub\t%0,%z1,%2";
+  }
   [(set_attr "type" "arith")
    (set_attr "mode" "DI")])
 
@@ -699,6 +713,7 @@
   [(set_attr "type" "imul")
    (set_attr "mode" "SI")])
 
+
 (define_insn "*mulsi3_extended2"
   [(set (match_operand:DI                       0 "register_operand" "=r")
 	(sign_extend:DI
@@ -709,6 +724,7 @@
   "mulw\t%0,%1,%2"
   [(set_attr "type" "imul")
    (set_attr "mode" "SI")])
+
 
 ;;
 ;;  ........................
@@ -789,11 +805,14 @@
 		   (match_operand:SI 2 "register_operand" " r"))))]
   "(TARGET_MUL||(Pulp_Cpu>=PULP_V2)||(Pulp_Cpu==PULP_SLIM)) && !TARGET_64BIT"
 {
-  rtx temp = gen_reg_rtx (SImode);
-  emit_insn (gen_mulsi3 (temp, operands[1], operands[2]));
-  emit_insn (gen_<u>mulsi3_highpart (riscv_subword (operands[0], true),
-				     operands[1], operands[2]));
-  emit_insn (gen_movsi (riscv_subword (operands[0], false), temp));
+  if (Pulp_Cpu==PULP_GAP9 && Has_64Int) {
+	emit_insn (gen_mulsi3_<u>64extended(operands[0], operands[1], operands[2]));
+  } else {
+  	rtx temp = gen_reg_rtx (SImode);
+  	emit_insn (gen_mulsi3 (temp, operands[1], operands[2]));
+  	emit_insn (gen_<u>mulsi3_highpart (riscv_subword (operands[0], true), operands[1], operands[2]));
+  	emit_insn (gen_movsi (riscv_subword (operands[0], false), temp));
+  }
   DONE;
 })
 
@@ -847,6 +866,28 @@
   }
   [(set_attr "type" "imul")
    (set_attr "mode" "SI")])
+
+(define_insn "mulsi3_64extended"
+  [(set (match_operand:DI              0 "register_operand" "=r")
+	(mult:DI (sign_extend:DI (match_operand:SI 1 "register_operand" " r"))
+		 (sign_extend:DI (match_operand:SI 2 "register_operand" " r")))
+   )
+  ]
+  "(Pulp_Cpu==PULP_GAP9) && Has_64Int"
+  "p.muls.d\t%0,%1,%2"
+  [(set_attr "type" "imul")
+   (set_attr "mode" "DI")])
+
+(define_insn "mulsi3_u64extended"
+  [(set (match_operand:DI              0 "register_operand" "=r")
+	(mult:DI (zero_extend:DI (match_operand:SI 1 "register_operand" " r"))
+		 (zero_extend:DI (match_operand:SI 2 "register_operand" " r")))
+   )
+  ]
+  "(Pulp_Cpu==PULP_GAP9) && Has_64Int"
+  "p.mulu.d\t%0,%1,%2"
+  [(set_attr "type" "imul")
+   (set_attr "mode" "DI")])
 
 ;;
 ;;  ....................
@@ -1077,6 +1118,13 @@
   [(set_attr "type" "arith")
    (set_attr "mode" "SI")])
 
+(define_insn "absdi2"
+  [(set (match_operand:DI 0 "register_operand" "=r")
+        (abs:DI (match_operand:DI 1 "register_operand" "r")))]
+  "((Pulp_Cpu==PULP_GAP9) && Has_64Int)"
+  "p.abs.d\t%0,%1"
+  [(set_attr "type" "arith")
+   (set_attr "mode" "DI")])
 
 (define_insn "copysign<mode>3"
   [(set (match_operand:ANYF 0 "register_operand"               "=f")
@@ -1138,6 +1186,21 @@
  (set_attr "mode" "SI")]
 )
 
+(define_insn "smindi3"
+  [(set (match_operand:DI 0 "register_operand" "=r,r")
+        (smin:DI (match_operand:DI 1 "register_operand" "r,r")
+                 (match_operand:DI 2 "nonmemory_operand" "r,J")
+        )
+   )
+  ]
+"((Pulp_Cpu==PULP_GAP9) && !TARGET_MASK_NOMINMAX && Has_64Int)"
+"@
+ p.min.d \t%0,%1,%2\t# signed min
+ p.min.d \t%0,%1,x0\t# signed min 0"
+[(set_attr "type" "arith,arith")
+ (set_attr "mode" "DI")]
+)
+
 
 (define_insn "smaxsi3"
   [(set (match_operand:SI 0 "register_operand" "=r,r")
@@ -1154,6 +1217,21 @@
  (set_attr "mode" "SI")]
 )
 
+(define_insn "smaxdi3"
+  [(set (match_operand:DI 0 "register_operand" "=r,r")
+        (smax:DI (match_operand:DI 1 "register_operand" "r,r")
+                 (match_operand:DI 2 "nonmemory_operand" "r,J")
+        )
+   )
+  ]
+"((Pulp_Cpu==PULP_GAP9) && !TARGET_MASK_NOMINMAX && Has_64Int)"
+"@
+ p.max.d \t%0,%1,%2\t# signed max
+ p.max.d \t%0,%1,x0\t# signed max 0"
+[(set_attr "type" "arith,arith")
+ (set_attr "mode" "DI")]
+)
+
 (define_insn "uminsi3"
   [(set (match_operand:SI 0 "register_operand" "=r")
         (umin:SI (match_operand:SI 1 "register_operand" "r")
@@ -1167,6 +1245,19 @@
  (set_attr "mode" "SI")]
 )
 
+(define_insn "umindi3"
+  [(set (match_operand:DI 0 "register_operand" "=r")
+        (umin:DI (match_operand:DI 1 "register_operand" "r")
+                 (match_operand:DI 2 "register_operand" "r")
+        )
+   )
+  ]
+"((Pulp_Cpu==PULP_GAP9) && !TARGET_MASK_NOMINMAX && Has_64Int)"
+"p.minu.d \t%0,%1,%2\t# unsigned min"
+[(set_attr "type" "arith")
+ (set_attr "mode" "DI")]
+)
+
 (define_insn "umaxsi3"
   [(set (match_operand:SI 0 "register_operand" "=r")
         (umax:SI (match_operand:SI 1 "register_operand" "r")
@@ -1178,6 +1269,19 @@
 "p.maxu \t%0,%1,%2\t# signed max"
 [(set_attr "type" "arith")
  (set_attr "mode" "SI")]
+)
+
+(define_insn "umaxdi3"
+  [(set (match_operand:DI 0 "register_operand" "=r")
+        (umax:DI (match_operand:DI 1 "register_operand" "r")
+                 (match_operand:DI 2 "register_operand" "r")
+        )
+   )
+  ]
+"((Pulp_Cpu==PULP_GAP9) && !TARGET_MASK_NOMINMAX && Has_64Int)"
+"p.maxu.d \t%0,%1,%2\t# signed max"
+[(set_attr "type" "arith")
+ (set_attr "mode" "DI")]
 )
 
 ;;
@@ -1232,6 +1336,18 @@
   ]
 "((Pulp_Cpu>=PULP_V0) && !TARGET_MASK_NOBITOP)"
 "p.cnt \t%0,%1\t# count bit set to 1"
+[(set_attr "type" "arith")
+ (set_attr "mode" "SI")]
+)
+
+(define_insn "popcountdi2"
+  [(set (match_operand:SI 0 "register_operand" "=r")
+        (popcount:SI (match_operand:DI 1 "register_operand" "r")
+        )
+   )
+  ]
+"((Pulp_Cpu==PULP_GAP9) && Has_64Int && !TARGET_MASK_NOBITOP)"
+"p.cnt.d \t%0,%1\t# count bit set to 1"
 [(set_attr "type" "arith")
  (set_attr "mode" "SI")]
 )
@@ -2069,6 +2185,60 @@
  (set_attr "mode" "SI")]
 )
 
+(define_insn "madddisisi4"
+  [(set (match_operand:DI 0 "register_operand" "=r")
+        (plus:DI (mult:DI (sign_extend:DI (match_operand:SI 1 "register_operand" "r"))
+                          (sign_extend:DI (match_operand:SI 2 "register_operand" "r")))
+		 (match_operand:DI 3 "register_operand" "0")
+        )
+   )
+  ]
+"((Pulp_Cpu==PULP_GAP9) && !TARGET_MASK_NOMAC && Has_64Int)"
+"p.mac.d \t%0,%1,%2\t# mac 32x32 in 64 instruction"
+[(set_attr "type" "imul")
+ (set_attr "mode" "DI")]
+)
+
+(define_insn "msubdisisi4"
+  [(set (match_operand:DI 0 "register_operand" "=r")
+        (minus:DI (match_operand:DI 3 "register_operand" "0")
+		  (mult:DI (sign_extend:DI (match_operand:SI 1 "register_operand" "r"))
+                           (sign_extend:DI (match_operand:SI 2 "register_operand" "r")))
+	)
+   )
+  ]
+"((Pulp_Cpu==PULP_GAP9) && !TARGET_MASK_NOMAC && Has_64Int)"
+"p.msu.d \t%0,%1,%2\t# mac 32x32 in 64 instruction"
+[(set_attr "type" "imul")
+ (set_attr "mode" "DI")]
+)
+
+(define_insn "madddiusiusi4"
+  [(set (match_operand:DI 0 "register_operand" "=r")
+        (plus:DI (mult:DI (zero_extend:DI (match_operand:SI 1 "register_operand" "r"))
+                          (zero_extend:DI (match_operand:SI 2 "register_operand" "r")))
+                 (match_operand:DI 3 "register_operand" "0"))
+   )
+  ]
+"((Pulp_Cpu==PULP_GAP9) && !TARGET_MASK_NOMAC && Has_64Int)"
+"p.macu.d \t%0,%1,%2\t# mac 32x32 in 64 instruction"
+[(set_attr "type" "imul")
+ (set_attr "mode" "DI")]
+)
+
+(define_insn "msubdiusiusi4"
+  [(set (match_operand:DI 0 "register_operand" "=r")
+        (minus:DI (match_operand:DI 3 "register_operand" "0")
+		  (mult:DI (zero_extend:DI (match_operand:SI 1 "register_operand" "r"))
+                           (zero_extend:DI (match_operand:SI 2 "register_operand" "r")))
+	)
+   )
+  ]
+"((Pulp_Cpu==PULP_GAP9) && !TARGET_MASK_NOMAC && Has_64Int)"
+"p.msuu.d \t%0,%1,%2\t# mac 32x32 in 64 instruction"
+[(set_attr "type" "imul")
+ (set_attr "mode" "DI")]
+)
 
 ;;
 ;;  ....................
@@ -2739,11 +2909,16 @@
 ;; but SImode versions exist for combine.
 
 (define_insn "<optab><mode>3"
-  [(set (match_operand:X                0 "register_operand" "=r,r")
-	(any_bitwise:X (match_operand:X 1 "register_operand" "%r,r")
-		       (match_operand:X 2 "arith_operand"    " r,I")))]
+  [(set (match_operand:X64                  0 "register_operand"        "=r,r")
+	(any_bitwise:X64 (match_operand:X64 1 "register_operand"        "%r,r")
+		         (match_operand:X64 2 "arith_operand_short_imm" " r,I")))]
   ""
-  "<insn>\t%0,%1,%2"
+  {
+	if (Has_64Int) {
+  		if (which_alternative == 0) return "<insn><X64:Int64>\t%0,%1,%2";
+ 		else return "<insn>i<X64:Int64>\t%0,%1,%2";
+	} else return "<insn><X64:Int64>\t%0,%1,%2";
+  }
   [(set_attr "type" "logical")
    (set_attr "mode" "<MODE>")])
 
@@ -2899,7 +3074,30 @@
   [(set_attr "move_type" "andi,load")
    (set_attr "mode" "<SUPERQI:MODE>")])
 
+;; Gap9 64b zero extensions
+(define_insn "zero_extend_qidi2"
+  [(set (match_operand:DI 0 "register_operand" "=r") (zero_extend:DI (match_operand:QI 1 "register_operand" "r")))]
+  "!TARGET_64BIT && Has_64Int"
+  "p.extbz.d\t%0,%1"
+  [(set_attr "move_type" "move")
+   (set_attr "mode" "DI")]
+)
 
+(define_insn "zero_extend_hidi2"
+  [(set (match_operand:DI 0 "register_operand" "=r") (zero_extend:DI (match_operand:HI 1 "register_operand" "r")))]
+  "!TARGET_64BIT && Has_64Int"
+  "p.exthz.d\t%0,%1"
+  [(set_attr "move_type" "move")
+   (set_attr "mode" "DI")]
+)
+
+(define_insn "zero_extend_sidi2"
+  [(set (match_operand:DI 0 "register_operand" "=r") (zero_extend:DI (match_operand:SI 1 "register_operand" "r")))]
+  "!TARGET_64BIT && Has_64Int"
+  "p.extwz.d\t%0,%1"
+  [(set_attr "move_type" "move")
+   (set_attr "mode" "DI")]
+)
 
 ;;
 ;;  ....................
@@ -2991,6 +3189,31 @@
   "fcvt.h.ah\t%0,%1"
   [(set_attr "type" "fcvt")
    (set_attr "mode" "HF")])
+
+;; Gap9 64b sign extensions
+(define_insn "sign_extend_qidi2"
+  [(set (match_operand:DI 0 "register_operand" "=r") (sign_extend:DI (match_operand:QI 1 "register_operand" "r")))]
+  "!TARGET_64BIT && Has_64Int"
+  "p.extsz.d\t%0,%1"
+  [(set_attr "move_type" "move")
+   (set_attr "mode" "DI")]
+)
+
+(define_insn "sign_extend_hidi2"
+  [(set (match_operand:DI 0 "register_operand" "=r") (sign_extend:DI (match_operand:HI 1 "register_operand" "r")))]
+  "!TARGET_64BIT && Has_64Int"
+  "p.extsz.d\t%0,%1"
+  [(set_attr "move_type" "move")
+   (set_attr "mode" "DI")]
+)
+
+(define_insn "sign_extend_sidi2"
+  [(set (match_operand:DI 0 "register_operand" "=r") (sign_extend:DI (match_operand:SI 1 "register_operand" "r")))]
+  "!TARGET_64BIT && Has_64Int"
+  "p.extsz.d\t%0,%1"
+  [(set_attr "move_type" "move")
+   (set_attr "mode" "DI")]
+)
 
 ;;
 ;;  ....................
@@ -4151,17 +4374,37 @@
    (set_attr "mode" "SI")])
 
 (define_insn "<optab>di3"
-  [(set (match_operand:DI 0 "register_operand"     "= r")
+  [(set (match_operand:DI 0 "register_operand"             "= r")
 	(any_shift:DI
-	    (match_operand:DI 1 "register_operand" "  r")
-	    (match_operand:DI 2 "arith_operand"    " rI")))]
-  "TARGET_64BIT"
+	    (match_operand:DI 1 "register_operand"         "  r")
+	    (match_operand:DI 2 "arith_operand_short_uimm" " rI")))]
+  "TARGET_64BIT || Has_64Int"
 {
   if (GET_CODE (operands[2]) == CONST_INT)
     operands[2] = GEN_INT (INTVAL (operands[2])
 			   & (GET_MODE_BITSIZE (DImode) - 1));
+  if (Has_64Int) {
+	if (GET_CODE (operands[2]) == CONST_INT) return "<insn>i.d\t%0,%1,%2";
+  	else return "<insn>.d\t%0,%1,%2";
+  } else return "<insn>\t%0,%1,%2";
+}
+  [(set_attr "type" "shift")
+   (set_attr "mode" "DI")])
 
-  return "<insn>\t%0,%1,%2";
+(define_insn "<optab>sidi3"
+  [(set (match_operand:DI 0 "register_operand"             "= r")
+	(any_shift:DI
+	    (match_operand:DI 1 "register_operand"         "  r")
+	    (sign_extend:DI (match_operand:SI 2 "arith_operand_short_uimm" " rI"))))]
+  "TARGET_64BIT || Has_64Int"
+{
+  if (GET_CODE (operands[2]) == CONST_INT)
+    operands[2] = GEN_INT (INTVAL (operands[2])
+			   & (GET_MODE_BITSIZE (DImode) - 1));
+  if (Has_64Int) {
+	if (GET_CODE (operands[2]) == CONST_INT) return "<insn>i.d\t%0,%1,%2";
+  	else return "<insn>.d\t%0,%1,%2";
+  } else return "<insn>\t%0,%1,%2";
 }
   [(set_attr "type" "shift")
    (set_attr "mode" "DI")])
@@ -4206,7 +4449,6 @@
 (define_mode_attr int_vec_size          [(V2HF "h") (V2OHF "h") (V2HI "h") (V4QI "b")])
 (define_mode_attr int_vec_type          [(V2HF "v2hi") (V2OHF "v2hi") (V2HI "v2hi") (V4QI "v4qi")])
 (define_mode_attr int_vec_mode          [(V2HF "V2HI") (V2OHF "V2HI") (V2HI "V2HI") (V4QI "V4QI")])
-
 
 (define_mode_attr vec_scalar            [(V2HF "SF") (V2OHF "SF") (V2HI "SI")  (V4QI "SI")])
 (define_mode_attr vec_scalar_int        [(V2HI "SI") (V4QI "SI")])
@@ -4268,7 +4510,6 @@
 )
 
 ;; Float vector move
-
 (define_expand "mov<VMODEFLOAT:mode>"
   [(set (match_operand:VMODEFLOAT 0 "")
         (match_operand:VMODEFLOAT 1 ""))]
@@ -4453,6 +4694,46 @@
 [(set_attr "type" "move")
  (set_attr "mode" "SF")]
 )
+
+;; Vector Packing
+
+;; (define_expand "vec_pack_hf_hf_v2hf"
+;;   [(set (match_operand:V2HF 0 "register_operand" "=f")
+;;         (vec_concat:V2HF
+;; 		(match_operand:HF 1 "")
+;; 		(match_operand:HF 2 "")
+;; 	)
+;;    )
+;;   ]
+;;   "TARGET_HARD_FLOAT && Has_F16"
+;;   {
+;; 	rtx R0 = gen_reg_rtx(HFmode);
+;; 	rtx R1 = gen_reg_rtx(HFmode);
+;; 	emit_insn(gen_movhf(R0, operands[1]));
+;; 	emit_insn(gen_movhf(R1, operands[2]));
+;; 	emit_insn(gen_vec_pack_v2hf(operands[0], R0, R1));
+;; 	// DONE;
+;;   }
+;; )
+
+;; (define_expand "vec_pack_ohf_ohf_v2ohf"
+;;   [(set (match_operand:V2OHF 0 "register_operand" "=f")
+;;         (vec_concat:V2OHF
+;; 		(match_operand:OHF 1 "")
+;; 		(match_operand:OHF 2 "")
+;; 	)
+;;    )
+;;   ]
+;;   "TARGET_HARD_FLOAT && Has_F16ALT"
+;;   {
+;; 	rtx R0 = gen_reg_rtx(OHFmode);
+;; 	rtx R1 = gen_reg_rtx(OHFmode);
+;; 	emit_insn(gen_movhf(R0, operands[1]));
+;; 	emit_insn(gen_movhf(R1, operands[2]));
+;; 	emit_insn(gen_vec_pack_v2ohf(operands[0], R0, R1));
+;; 	// DONE;
+;;   }
+;; )
 
 (define_insn "vec_pack_trunc_v1sf_to_v2hf_builtin"
   [(set (match_operand:V2HF 0 "register_operand" "=xf")
@@ -4678,7 +4959,6 @@
 [(set_attr "type" "move")
  (set_attr "mode" "SI")]
 )
-
 
 (define_insn "vec_pack_v4qi_hi"
   [(set	(match_operand:V4QI 0 "register_operand" "=r")
@@ -7452,8 +7732,8 @@
 (define_expand "cbranch<mode>4"
   [(set (pc)
 	(if_then_else (match_operator 0 "comparison_operator"
-		      [(match_operand:BR 1 "register_operand")
-		       (match_operand:BR 2 "nonmemory_operand")])
+		      [(match_operand:BR64 1 "register_operand")
+		       (match_operand:BR64 2 "nonmemory_operand")])
 		      (label_ref (match_operand 3 ""))
 		      (pc)))]
   ""
@@ -7545,8 +7825,8 @@
 (define_expand "cstore<mode>4"
   [(set (match_operand:SI 0 "register_operand")
 	(match_operator:SI 1 "order_operator"
-	    [(match_operand:GPR 2 "register_operand")
-	     (match_operand:GPR 3 "nonmemory_operand")]))]
+	    [(match_operand:GPR64 2 "register_operand")
+	     (match_operand:GPR64 3 "nonmemory_operand")]))]
   ""
 {
   riscv_expand_int_scc (operands[0], GET_CODE (operands[1]), operands[2],
@@ -7589,78 +7869,96 @@
    (set_attr "mode" "<UNITMODE>")
    (set (attr "length") (const_int 12))])
 
-(define_insn "*seq_zero_<X:mode><GPR:mode>"
-  [(set (match_operand:GPR       0 "register_operand" "=r")
-	(eq:GPR (match_operand:X 1 "register_operand" " r")
+(define_insn "*seq_di<GPR:mode>"
+  [(set (match_operand:GPR        0 "register_operand" "=r")
+	(eq:GPR (match_operand:DI 1 "register_operand" " r")
+		(match_operand:DI 2 "register_operand" " r")))]
+  "(!TARGET_64BIT && Has_64Int)"
+  "p.seq.d\t%0,%1,%2"
+  [(set_attr "type" "slt")
+   (set_attr "mode" "DI")])
+
+(define_insn "*sne_di<GPR:mode>"
+  [(set (match_operand:GPR        0 "register_operand" "=r")
+	(ne:GPR (match_operand:DI 1 "register_operand" " r")
+		(match_operand:DI 2 "register_operand" " r")))]
+  "(!TARGET_64BIT && Has_64Int)"
+  "p.sne.d\t%0,%1,%2"
+  [(set_attr "type" "slt")
+   (set_attr "mode" "DI")])
+
+(define_insn "*seq_zero_<X64:mode><GPR:mode>"
+  [(set (match_operand:GPR         0 "register_operand" "=r")
+	(eq:GPR (match_operand:X64 1 "register_operand" " r")
 		(const_int 0)))]
   ""
-  "seqz\t%0,%1"
+  "seqz<X64:Int64>\t%0,%1"
   [(set_attr "type" "slt")
-   (set_attr "mode" "<X:MODE>")])
+   (set_attr "mode" "<X64:MODE>")])
 
-(define_insn "*sne_zero_<X:mode><GPR:mode>"
-  [(set (match_operand:GPR       0 "register_operand" "=r")
-	(ne:GPR (match_operand:X 1 "register_operand" " r")
+(define_insn "*sne_zero_<X64:mode><GPR:mode>"
+  [(set (match_operand:GPR         0 "register_operand" "=r")
+	(ne:GPR (match_operand:X64 1 "register_operand" " r")
 		(const_int 0)))]
   ""
-  "snez\t%0,%1"
+  "snez<X64:Int64>\t%0,%1"
   [(set_attr "type" "slt")
-   (set_attr "mode" "<X:MODE>")])
+   (set_attr "mode" "<X64:MODE>")])
 
-(define_insn "*sgt<u>_<X:mode><GPR:mode>"
-  [(set (match_operand:GPR           0 "register_operand" "= r")
-	(any_gt:GPR (match_operand:X 1 "register_operand" "  r")
-		    (match_operand:X 2 "reg_or_0_operand" " rJ")))]
+(define_insn "*sgt<u>_<X64:mode><GPR:mode>"
+  [(set (match_operand:GPR             0 "register_operand" "= r")
+	(any_gt:GPR (match_operand:X64 1 "register_operand" "  r")
+		    (match_operand:X64 2 "reg_or_0_operand" " rJ")))]
   ""
-  "sgt<u>\t%0,%1,%z2"
+  "sgt<u><X64:Int64>\t%0,%1,%z2"
   [(set_attr "type" "slt")
-   (set_attr "mode" "<X:MODE>")])
+   (set_attr "mode" "<X64:MODE>")])
 
-(define_insn "*sge<u>_<X:mode><GPR:mode>"
-  [(set (match_operand:GPR           0 "register_operand" "=r")
-	(any_ge:GPR (match_operand:X 1 "register_operand" " r")
+(define_insn "*sge<u>_<X64:mode><GPR:mode>"
+  [(set (match_operand:GPR             0 "register_operand" "=r")
+	(any_ge:GPR (match_operand:X64 1 "register_operand" " r")
 		    (const_int 1)))]
   ""
-  "slt<u>\t%0,zero,%1"
+  "slt<u><X64:Int64>\t%0,zero,%1"
   [(set_attr "type" "slt")
    (set_attr "mode" "<MODE>")])
 
-(define_insn "*slt<u>_<X:mode><GPR:mode>"
-  [(set (match_operand:GPR           0 "register_operand" "= r")
-	(any_lt:GPR (match_operand:X 1 "register_operand" "  r")
-		    (match_operand:X 2 "arith_operand"    " rI")))]
+(define_insn "*slt<u>_<X64:mode><GPR:mode>"
+  [(set (match_operand:GPR             0 "register_operand" "= r")
+	(any_lt:GPR (match_operand:X64 1 "register_operand" "  r")
+		    (match_operand:X64 2 "arith_operand"    " rI")))]
   ""
-  "slt<u>\t%0,%1,%2"
+  "slt<u><X64:Int64>\t%0,%1,%2"
   [(set_attr "type" "slt")
    (set_attr "mode" "<MODE>")])
 
-(define_insn "*sle<u>_<X:mode><GPR:mode>"
-  [(set (match_operand:GPR           0 "register_operand" "=r")
-	(any_le:GPR (match_operand:X 1 "register_operand" " r")
-		    (match_operand:X 2 "sle_operand" "")))]
+(define_insn "*sle<u>_<X64:mode><GPR:mode>"
+  [(set (match_operand:GPR             0 "register_operand" "=r")
+	(any_le:GPR (match_operand:X64 1 "register_operand" " r")
+		    (match_operand:X64 2 "sle_operand" "")))]
   ""
 {
   operands[2] = GEN_INT (INTVAL (operands[2]) + 1);
-  return "slt<u>\t%0,%1,%2";
+  return "slt<u><X64:Int64>\t%0,%1,%2";
 }
   [(set_attr "type" "slt")
    (set_attr "mode" "<MODE>")])
 
-(define_insn "*slet<u>_sisi"
+(define_insn "*slet<u>_<X64:mode>si"
   [(set (match_operand:SI 0 "register_operand" "=r")
-        (any_le:SI (match_operand:SI 1 "register_operand" "r")
-                   (match_operand:SI 2 "register_operand" "r")))]
+        (any_le:SI (match_operand:X64 1 "register_operand" "r")
+                   (match_operand:X64 2 "register_operand" "r")))]
   "((Pulp_Cpu>=PULP_V0) && !TARGET_MASK_NOSLET)"
-  "p.slet<u>\t%0,%1,%2"
+  "p.slet<u><X64:Int64>\t%0,%1,%2"
   [(set_attr "type" "slt")
    (set_attr "mode" "SI")])
 
-(define_insn "*sget<u>_sisi"
+(define_insn "*sget<u>_<X64:mode>si"
   [(set (match_operand:SI 0 "register_operand" "=r")
-        (any_ge:SI (match_operand:SI 1 "register_operand" "r")
-                   (match_operand:SI 2 "register_operand" "r")))]
+        (any_ge:SI (match_operand:X64 1 "register_operand" "r")
+                   (match_operand:X64 2 "register_operand" "r")))]
   "((Pulp_Cpu>=PULP_V0) && !TARGET_MASK_NOSLET)"
-  "p.slet<u>\t%0,%2,%1"
+  "p.slet<u><X64:Int64>\t%0,%2,%1"
   [(set_attr "type" "slt")
    (set_attr "mode" "SI")])
 
