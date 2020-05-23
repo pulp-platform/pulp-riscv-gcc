@@ -7924,11 +7924,15 @@
    (set_attr "mode" "<MODE>")])
 
 (define_insn "*slt<u>_<X64:mode><GPR:mode>"
-  [(set (match_operand:GPR             0 "register_operand" "= r")
-	(any_lt:GPR (match_operand:X64 1 "register_operand" "  r")
-		    (match_operand:X64 2 "arith_operand"    " rI")))]
+  [(set (match_operand:GPR             0 "register_operand"        "= r")
+	(any_lt:GPR (match_operand:X64 1 "register_operand"        "  r")
+		    (match_operand:X64 2 "arith_operand_short_imm" " rI")))]
   ""
-  "slt<u><X64:Int64>\t%0,%1,%2"
+  {
+	int Is64 = (GET_MODE(operands[1]) == DImode || GET_MODE(operands[2]) == DImode);
+  	if (Is64 && GET_CODE (operands[2]) == CONST_INT) return "slti<u><X64:Int64>\t%0,%1,%2";
+	else return "slt<u><X64:Int64>\t%0,%1,%2";
+  }
   [(set_attr "type" "slt")
    (set_attr "mode" "<MODE>")])
 
@@ -7938,8 +7942,10 @@
 		    (match_operand:X64 2 "sle_operand" "")))]
   ""
 {
-  operands[2] = GEN_INT (INTVAL (operands[2]) + 1);
-  return "slt<u><X64:Int64>\t%0,%1,%2";
+	int Is64 = (GET_MODE(operands[1]) == DImode || GET_MODE(operands[2]) == DImode);
+	operands[2] = GEN_INT (INTVAL (operands[2]) + 1);
+	if (Is64) return "slti<u><X64:Int64>\t%0,%1,%2";
+	else return "slt<u><X64:Int64>\t%0,%1,%2";
 }
   [(set_attr "type" "slt")
    (set_attr "mode" "<MODE>")])

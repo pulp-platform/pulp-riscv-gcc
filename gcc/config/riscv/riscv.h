@@ -529,9 +529,12 @@ enum reg_class
 }
 
 /* True if VALUE is a signed 12-bit number.  */
-
 #define SMALL_OPERAND(VALUE) \
   ((unsigned HOST_WIDE_INT) (VALUE) + IMM_REACH/2 < IMM_REACH)
+
+/* True if VALUE is a signed 5-bit number.  */
+#define SMALL64_OPERAND(VALUE) \
+  ((unsigned HOST_WIDE_INT) (VALUE) + IMM64_REACH/2 < IMM64_REACH)
 
 /* True if VALUE can be loaded into a register using LUI.  */
 
@@ -1026,8 +1029,10 @@ extern bool riscv_slow_unaligned_access;
 #define SHIFT_RS1 15
 #define SHIFT_IMM 20
 #define IMM_BITS 12
+#define IMM64_BITS 5
 
 #define IMM_REACH (1LL << IMM_BITS)
+#define IMM64_REACH (1LL << IMM64_BITS)
 #define CONST_HIGH_PART(VALUE) (((VALUE) + (IMM_REACH/2)) & ~(IMM_REACH-1))
 #define CONST_LOW_PART(VALUE) ((VALUE) - CONST_HIGH_PART (VALUE))
 

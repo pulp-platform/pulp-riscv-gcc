@@ -64,7 +64,12 @@
 
 (define_predicate "sle_operand"
   (and (match_code "const_int")
-       (match_test "SMALL_OPERAND (INTVAL (op) + 1)")))
+       (match_test "SMALL_OPERAND (INTVAL (op) + 1)"))
+{
+	if ((GET_MODE(op) == DImode) && Has_64Int) return (SMALL64_OPERAND (INTVAL (op) + 1));
+	else return true;
+}
+)
 
 (define_predicate "sleu_operand"
   (and (match_operand 0 "sle_operand")
