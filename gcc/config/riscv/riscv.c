@@ -1557,7 +1557,7 @@ riscv_legitimize_move (enum machine_mode mode, rtx dest, rtx src)
    X as an immediate operand. */
 
 static int
-riscv_immediate_operand_p (int code, HOST_WIDE_INT x)
+riscv_immediate_operand_p (int code, rtx opx, HOST_WIDE_INT x)
 {
   switch (code)
     {
@@ -1565,6 +1565,7 @@ riscv_immediate_operand_p (int code, HOST_WIDE_INT x)
     case ASHIFTRT:
     case LSHIFTRT:
       /* All shift counts are truncated to a valid constant.  */
+      if (Has_64Int && (GET_MODE(opx) == DImode) && (x<0 || x>31)) return false;
       return true;
 
     case AND:
@@ -1574,15 +1575,18 @@ riscv_immediate_operand_p (int code, HOST_WIDE_INT x)
     case LT:
     case LTU:
       /* These instructions take 12-bit signed immediates.  */
-      return SMALL_OPERAND (x);
+      if (Has_64Int && (GET_MODE(opx) == DImode)) return SMALL64_OPERAND(x);
+      else return SMALL_OPERAND (x);
 
     case LE:
       /* We add 1 to the immediate and use SLT.  */
-      return SMALL_OPERAND (x + 1);
+      if (Has_64Int && (GET_MODE(opx) == DImode)) return SMALL64_OPERAND(x+1);
+      else return SMALL_OPERAND (x + 1);
 
     case LEU:
       /* Likewise SLTU, but reject the always-true case.  */
-      return SMALL_OPERAND (x + 1) && x + 1 != 0;
+      if (Has_64Int && (GET_MODE(opx) == DImode)) return (SMALL64_OPERAND(x+1) && (x+1!=0));
+      else return SMALL_OPERAND (x + 1) && x + 1 != 0;
 
     case GE:
     case GEU:
@@ -1640,7 +1644,7 @@ riscv_rtx_costs (rtx x, machine_mode mode, int outer_code, int opno ATTRIBUTE_UN
   switch (GET_CODE (x))
     {
     case CONST_INT:
-      if (riscv_immediate_operand_p (outer_code, INTVAL (x)))
+      if (riscv_immediate_operand_p (outer_code, x, INTVAL (x)))
 	{
 	  *total = 0;
 	  return true;
@@ -1923,7 +1927,8 @@ riscv_split_doubleword_move (rtx dest, rtx src)
    /* The operation can be split into two normal moves.  Decide in
       which order to do them.  */
 	if (!Has_64Int || (!(MEM_P (dest) && auto_inc_p (XEXP (dest, 0))) && !(MEM_P (src) && auto_inc_p (XEXP (src, 0))))) {
-		if (Has_64Int && GET_CODE(dest) == REG && GET_CODE(src) == REG) {
+		// if (Has_64Int && GET_CODE(dest) == REG && (GET_CODE(src) == REG || src == const0_rtx)) {
+		if (Has_64Int && GET_CODE(dest) == REG && (GET_CODE(src) == REG || ((GET_CODE(src) == CONST_INT) && SMALL64_OPERAND(INTVAL(src))))) {
 			emit_move_insn (dest, src);
 			return;
 		}
@@ -2028,8 +2033,12 @@ riscv_output_move (rtx dest, rtx src)
   dbl_p = (GET_MODE_SIZE (mode) == 8);
 
   if (dbl_p && riscv_split_64bit_move_p (dest, src)) {
-	  if (Has_64Int && dest_code == REG && src_code == REG) return "mv.d\t%0,%1";
-	  else return "#";
+	if (Has_64Int) {
+		if (dest_code == REG && src_code == REG) return "mv.d\t%0,%1";
+		else if (dest_code == REG && (src == const0_rtx)) return "mv.d\t%0,x0";
+		else if ((dest_code == REG) && (src_code == CONST_INT) && SMALL64_OPERAND(INTVAL(src))) return "addi.d\t%0,x0,%1";
+		else return "#";
+	} else return "#";
   }
 
   if (dest_code == REG && GP_REG_P (REGNO (dest)))
@@ -2153,8 +2162,9 @@ riscv_output_move (rtx dest, rtx src)
    test CODE.  See also the *sCC patterns in riscv.md.  */
 
 static bool
-riscv_int_order_operand_ok_p (enum rtx_code code, rtx cmp1)
+riscv_int_order_operand_ok_p (enum rtx_code code, rtx cmp1, enum machine_mode mode)
 {
+	int Is64 = (Has_64Int && (mode == DImode));
   switch (code)
     {
     case GT:
@@ -2170,9 +2180,11 @@ riscv_int_order_operand_ok_p (enum rtx_code code, rtx cmp1)
       return arith_operand (cmp1, VOIDmode);
 
     case LE:
+      if (Is64) return sleint64_operand (cmp1, VOIDmode);
       return sle_operand (cmp1, VOIDmode);
 
     case LEU:
+      if (Is64) return sleuint64_operand (cmp1, VOIDmode);
       return sleu_operand (cmp1, VOIDmode);
 
     default:
@@ -2192,7 +2204,7 @@ riscv_canonicalize_int_order_test (enum rtx_code *code, rtx *cmp1,
 {
   HOST_WIDE_INT plus_one;
 
-  if (riscv_int_order_operand_ok_p (*code, *cmp1))
+  if (riscv_int_order_operand_ok_p (*code, *cmp1, mode))
     return true;
 
   if (CONST_INT_P (*cmp1))
@@ -2303,10 +2315,34 @@ riscv_emit_int_compare (enum rtx_code *code, rtx *op0, rtx *op1)
 {
 
   if (Has_64Int && (GET_MODE (*op0) == DImode)) {
-	if ((GET_CODE(*op1) == CONST_INT) && (INTVAL(*op1) < -16 || INTVAL(*op1) > 15)) *op1 = force_reg (DImode, *op1);
-     	*op0 = riscv_force_binary (word_mode, *code, *op0, *op1);
-      	*op1 = const0_rtx;
-	*code = NE;
+	int RightImm = (GET_CODE(*op1) == CONST_INT) && SMALL64_OPERAND(INTVAL(*op1));
+
+	if ((GET_CODE(*op1) == CONST_INT) && (INTVAL(*op1) < -16 || INTVAL(*op1) > 15)) {
+		*op1 = force_reg (DImode, *op1); RightImm = 0;
+
+	}
+	if (RightImm && !(*code == EQ || *code == NE)) {
+		if (!riscv_canonicalize_int_order_test (code, op1, DImode)) {
+			if (*code == GE) {
+     				*op0 = riscv_force_binary (word_mode, LT, *op0, *op1);
+      				*op1 = const0_rtx;
+				*code = EQ;
+			} else if (*code == GEU) {
+     				*op0 = riscv_force_binary (word_mode, LTU, *op0, *op1);
+      				*op1 = const0_rtx;
+				*code = EQ;
+			} else {
+				*op1 = force_reg (DImode, *op1);
+     				*op0 = riscv_force_binary (word_mode, *code, *op0, *op1);
+      				*op1 = const0_rtx;
+				*code = NE;
+			}
+		}
+	} else {
+     		*op0 = riscv_force_binary (word_mode, *code, *op0, *op1);
+      		*op1 = const0_rtx;
+		*code = NE;
+	}
       	return;
   }
 

@@ -572,10 +572,10 @@
    (set_attr "mode" "SI")])
 
 (define_insn "adddi3"
-  [(set (match_operand:DI          0 "register_operand"         "=r,r")
-	(plus:DI (match_operand:DI 1 "register_operand"         " r,r")
-		 (match_operand:DI 2 "arith_operand_short_imm"  " r,I")))]
-  "(TARGET_64BIT||Has_64Int)"
+  [(set (match_operand:DI          0 "register_operand"     "=r,r")
+	(plus:DI (match_operand:DI 1 "register_operand"     " r,r")
+		 (match_operand:DI 2 "reg_or_imm5_operand"  " r,YI")))]
+  "(!TARGET_64BIT&&Has_64Int)"
   {
 	if (Has_64Int) {
   		if (which_alternative == 0) return "add.d\t%0,%1,%2"; else return "addi.d\t%0,%1,%2";
@@ -2909,18 +2909,27 @@
 ;; but SImode versions exist for combine.
 
 (define_insn "<optab><mode>3"
-  [(set (match_operand:X64                  0 "register_operand"        "=r,r")
-	(any_bitwise:X64 (match_operand:X64 1 "register_operand"        "%r,r")
-		         (match_operand:X64 2 "arith_operand_short_imm" " r,I")))]
+  [(set (match_operand:X                0 "register_operand"  "=r,r")
+	(any_bitwise:X (match_operand:X 1 "register_operand"  "%r,r")
+		       (match_operand:X 2 "arith_operand"     " r,I")))]
   ""
   {
-	if (Has_64Int) {
-  		if (which_alternative == 0) return "<insn><X64:Int64>\t%0,%1,%2";
- 		else return "<insn>i<X64:Int64>\t%0,%1,%2";
-	} else return "<insn><X64:Int64>\t%0,%1,%2";
+	return "<insn>\t%0,%1,%2";
   }
   [(set_attr "type" "logical")
    (set_attr "mode" "<MODE>")])
+
+(define_insn "<optab>_di3"
+  [(set (match_operand:DI                 0 "register_operand"        "=r,r")
+	(any_bitwise:DI (match_operand:DI 1 "register_operand"        "%r,r")
+		        (match_operand:DI 2 "reg_or_imm5_operand"     " r,YI")))]
+  "Has_64Int&&!TARGET_64BIT"
+  {
+  	if (which_alternative == 0) return "<insn>.d\t%0,%1,%2";
+ 	else return "<insn>i.d\t%0,%1,%2";
+  }
+  [(set_attr "type" "logical")
+   (set_attr "mode" "DI")])
 
 (define_insn "*<optab>si3_internal"
   [(set (match_operand:SI                 0 "register_operand" "=r,r")
@@ -4358,10 +4367,10 @@
 ;;  ....................
 
 (define_insn "<optab>si3"
-  [(set (match_operand:SI     0 "register_operand" "= r")
+  [(set (match_operand:SI     0 "register_operand" "=r,r")
 	(any_shift:SI
-	    (match_operand:SI 1 "register_operand" "  r")
-	    (match_operand:SI 2 "arith_operand"    " rI")))]
+	    (match_operand:SI 1 "register_operand" "r,r")
+	    (match_operand:SI 2 "arith_operand"    "r,I")))]
   ""
 {
   if (GET_CODE (operands[2]) == CONST_INT)
@@ -4374,15 +4383,15 @@
    (set_attr "mode" "SI")])
 
 (define_insn "<optab>di3"
-  [(set (match_operand:DI 0 "register_operand"             "= r")
+  [(set (match_operand:DI 0 "register_operand"         "=r,r")
 	(any_shift:DI
-	    (match_operand:DI 1 "register_operand"         "  r")
-	    (match_operand:DI 2 "arith_operand_short_uimm" " rI")))]
+	    (match_operand:DI 1 "register_operand"     "r,r")
+	    (match_operand:DI 2 "reg_or_uimm5_operand" "r,YJ")))]
   "TARGET_64BIT || Has_64Int"
 {
-  if (GET_CODE (operands[2]) == CONST_INT)
-    operands[2] = GEN_INT (INTVAL (operands[2])
-			   & (GET_MODE_BITSIZE (DImode) - 1));
+  if (GET_CODE (operands[2]) == CONST_INT) {
+    	operands[2] = GEN_INT (INTVAL (operands[2]) & (GET_MODE_BITSIZE (DImode) - 1));
+  }
   if (Has_64Int) {
 	if (GET_CODE (operands[2]) == CONST_INT) return "<insn>i.d\t%0,%1,%2";
   	else return "<insn>.d\t%0,%1,%2";
@@ -4392,10 +4401,10 @@
    (set_attr "mode" "DI")])
 
 (define_insn "<optab>sidi3"
-  [(set (match_operand:DI 0 "register_operand"             "= r")
+  [(set (match_operand:DI 0 "register_operand"             "=r,r")
 	(any_shift:DI
-	    (match_operand:DI 1 "register_operand"         "  r")
-	    (sign_extend:DI (match_operand:SI 2 "arith_operand_short_uimm" " rI"))))]
+	    (match_operand:DI 1 "register_operand"         "r,r")
+	    (sign_extend:DI (match_operand:SI 2 "reg_or_uimm5_operand" " r,YJ"))))]
   "TARGET_64BIT || Has_64Int"
 {
   if (GET_CODE (operands[2]) == CONST_INT)
@@ -7923,29 +7932,50 @@
   [(set_attr "type" "slt")
    (set_attr "mode" "<MODE>")])
 
-(define_insn "*slt<u>_<X64:mode><GPR:mode>"
-  [(set (match_operand:GPR             0 "register_operand"        "= r")
-	(any_lt:GPR (match_operand:X64 1 "register_operand"        "  r")
-		    (match_operand:X64 2 "arith_operand_short_imm" " rI")))]
+(define_insn "*slt<u>_<X:mode><GPR:mode>"
+  [(set (match_operand:GPR           0 "register_operand"  "=r,r")
+	(any_lt:GPR (match_operand:X 1 "register_operand"  "r,r")
+		    (match_operand:X 2 "arith_operand"     "r,I")))]
   ""
   {
-	int Is64 = (GET_MODE(operands[1]) == DImode || GET_MODE(operands[2]) == DImode);
-  	if (Is64 && GET_CODE (operands[2]) == CONST_INT) return "slti<u><X64:Int64>\t%0,%1,%2";
-	else return "slt<u><X64:Int64>\t%0,%1,%2";
+	return "slt<u>\t%0,%1,%2";
   }
   [(set_attr "type" "slt")
    (set_attr "mode" "<MODE>")])
 
-(define_insn "*sle<u>_<X64:mode><GPR:mode>"
-  [(set (match_operand:GPR             0 "register_operand" "=r")
-	(any_le:GPR (match_operand:X64 1 "register_operand" " r")
-		    (match_operand:X64 2 "sle_operand" "")))]
+
+(define_insn "*slt<u>_di<GPR:mode>"
+  [(set (match_operand:GPR            0 "register_operand"    "=r,r")
+	(any_lt:GPR (match_operand:DI 1 "register_operand"    "r,r")
+		    (match_operand:DI 2 "reg_or_imm5_operand" "r,YI")))]
+  "(!TARGET_64BIT && Has_64Int)"
+  {
+  	if (GET_CODE (operands[2]) == CONST_INT) return "slti<u>.d\t%0,%1,%2";
+	else return "slt<u>.d\t%0,%1,%2";
+  }
+  [(set_attr "type" "slt")
+   (set_attr "mode" "<MODE>")])
+
+(define_insn "*sle<u>_<X:mode><GPR:mode>"
+  [(set (match_operand:GPR           0 "register_operand" "=r")
+	(any_le:GPR (match_operand:X 1 "register_operand" " r")
+		    (match_operand:X 2 "sle_operand" "")))]
   ""
 {
-	int Is64 = (GET_MODE(operands[1]) == DImode || GET_MODE(operands[2]) == DImode);
 	operands[2] = GEN_INT (INTVAL (operands[2]) + 1);
-	if (Is64) return "slti<u><X64:Int64>\t%0,%1,%2";
-	else return "slt<u><X64:Int64>\t%0,%1,%2";
+  	return "slt<u>\t%0,%1,%2";
+}
+  [(set_attr "type" "slt")
+   (set_attr "mode" "<MODE>")])
+
+(define_insn "*sle<u>_di<GPR:mode>"
+  [(set (match_operand:GPR            0 "register_operand" "=r")
+	(any_le:GPR (match_operand:DI 1 "register_operand" " r")
+		    (match_operand:DI 2 "sleint64_operand" "")))]
+  "(!TARGET_64BIT && Has_64Int)"
+{
+	operands[2] = GEN_INT (INTVAL (operands[2]) + 1);
+	return "slti<u>.d\t%0,%1,%2";
 }
   [(set_attr "type" "slt")
    (set_attr "mode" "<MODE>")])

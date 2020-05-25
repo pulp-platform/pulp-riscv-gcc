@@ -64,15 +64,18 @@
 
 (define_predicate "sle_operand"
   (and (match_code "const_int")
-       (match_test "SMALL_OPERAND (INTVAL (op) + 1)"))
-{
-	if ((GET_MODE(op) == DImode) && Has_64Int) return (SMALL64_OPERAND (INTVAL (op) + 1));
-	else return true;
-}
-)
+       (match_test "SMALL_OPERAND (INTVAL (op) + 1)")))
+
+(define_predicate "sleint64_operand"
+  (and (match_code "const_int")
+       (match_test "SMALL64_OPERAND (INTVAL (op) + 1)")))
 
 (define_predicate "sleu_operand"
   (and (match_operand 0 "sle_operand")
+       (match_test "INTVAL (op) + 1 != 0")))
+
+(define_predicate "sleuint64_operand"
+  (and (match_operand 0 "sleint64_operand")
        (match_test "INTVAL (op) + 1 != 0")))
 
 (define_predicate "const_0_operand"
@@ -102,8 +105,8 @@
 (define_predicate "arith_operand_short_imm"
   (ior (match_operand 0 "register_operand")
        (ior
-       		(and (match_operand 0 "const_arith_operand") (match_test "(Has_64Int==0)"))
-       		(and (match_operand 0 "reg_or_imm5_operand") (match_test "(Has_64Int!=0)"))
+       		(and (match_test "GET_MODE (op) == DImode") (and (match_operand 0 "const_arith_operand") (match_test "(Has_64Int==0)")))
+       		(and (match_test "GET_MODE (op) != DImode") (and (match_operand 0 "reg_or_imm5_operand") (match_test "(Has_64Int!=0)")))
        )
   )
 )
@@ -111,8 +114,8 @@
 (define_predicate "arith_operand_short_uimm"
   (ior (match_operand 0 "register_operand")
        (ior
-       		(and (match_operand 0 "const_arith_operand") (match_test "(Has_64Int==0)"))
-       		(and (match_operand 0 "reg_or_uimm5_operand") (match_test "(Has_64Int!=0)"))
+       		(and (match_test "GET_MODE (op) == DImode") (and (match_operand 0 "const_arith_operand") (match_test "(Has_64Int==0)")))
+       		(and (match_test "GET_MODE (op) != DImode") (and (match_operand 0 "reg_or_uimm5_operand") (match_test "(Has_64Int!=0)")))
        )
   )
 )

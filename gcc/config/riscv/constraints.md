@@ -141,6 +141,20 @@
   )
 )
 
+(define_constraint "YI"
+  "A valid imm operand in 32/64 b context"
+  (and (match_code "const_int")
+       (match_test "(Has_64Int && (INTVAL(op)>=-16) && (INTVAL(op)<=15))")
+  )
+)
+
+(define_constraint "YJ"
+  "A valid uns imm operand in 32/64 b context"
+  (and (match_code "const_int")
+       (match_test "(Has_64Int && (INTVAL(op)>=0) && (INTVAL(op)<=31))")
+  )
+)
+
 (define_constraint "vIsdc"
   "A constant vector with identical elements in [-32..31]"
    (and (match_code "const_vector")
