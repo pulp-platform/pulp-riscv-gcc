@@ -447,6 +447,7 @@ static int CheckBuiltin(int Code, int BuiltinIndex, struct ExtraBuiltinImmArg *E
 			}
 			Diag = "__builtin_pulp_binsert (Target, MaskBar, InsVal, Size, Mask, Off) expects Off,Mask,MaskBar cst, Size>0, Off>=0, (Off+Size)<=32";
 			break;
+		case CODE_FOR_load_evt_unit_fenced:
 		case CODE_FOR_load_evt_unit:
 			if (Op[1] && (GET_CODE(Op[1]) == CONST_INT)) return 1;
 			Diag = "__builtin_event_unit_read(base, offset), offset expected to be immediate value";

@@ -272,6 +272,7 @@ Currently these macros are used in 2 contexts:
 /* __GAP8 Stop */
 
   DIRECT_BUILTIN1(load_evt_unit,       	event_unit_read, RISCV_INT_FTYPE_POINTER_INT,         		pulp_v2_or_slim, CheckBuiltin)
+  DIRECT_BUILTIN1(load_evt_unit_fenced, event_unit_read_fenced, RISCV_INT_FTYPE_POINTER_INT,         		pulp_v2_or_slim, CheckBuiltin)
   DIRECT_BUILTIN1(OffsetedRead,		OffsetedRead,	RISCV_INT_FTYPE_POINTER_INT,			pulp_v2, NULL)
   DIRECT_BUILTIN1(OffsetedReadHalf,	OffsetedReadHalf,RISCV_INT_FTYPE_POINTER_INT,			pulp_v2, NULL)
   DIRECT_BUILTIN1(OffsetedReadByte,	OffsetedReadByte,RISCV_INT_FTYPE_POINTER_INT,			pulp_v2, NULL)

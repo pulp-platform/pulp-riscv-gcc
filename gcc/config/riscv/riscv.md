@@ -3578,6 +3578,34 @@
    (set_attr "mode" "SI,SI")]
 )
 
+
+(define_insn "load_evt_unit_internal"
+  [(set (match_operand:SI 0 "register_operand" "=&r,r")
+        (unspec_volatile:SI [(match_operand:SI 1 "register_operand" "r,r") (match_operand:SI 2 "nonmemory_operand" "r,i")] UNSPECV_READ_EVU)
+   )
+  ]
+  "(Pulp_Cpu>=PULP_V2 || Pulp_Cpu==PULP_SLIM)"
+  "@
+   p.elw \t%0,%2(%1)\t# Load from Event Unit
+   p.elw \t%0,%2(%1)\t# Load from Event Unit"
+  [(set_attr "type" "load,load")
+   (set_attr "mode" "SI,SI")]
+)
+
+(define_expand "load_evt_unit_fenced"
+
+  [(match_operand:SI 0 "reg_or_0_operand" "")
+   (match_operand:SI 1 "register_operand" "")
+   (match_operand:SI 2 "nonmemory_operand" "")
+  ]
+ "(Pulp_Cpu>=PULP_V2)"
+{
+	emit_insn (gen_memory_barrier());
+	emit_insn (gen_load_evt_unit_internal(operands[0], operands[1], operands[2]));
+	DONE;
+}
+)
+
 ;; Read/Write special purpose registers
 
 (define_insn "read_spr"
