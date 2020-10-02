@@ -114,6 +114,13 @@ riscv_parse_arch_string (const char *isa, int *flags, location_t loc)
                         *flags &= ~MASK_64BIT; *flags |= MASK_MUL; *flags &= ~MASK_ATOMIC;
 			riscv_abi = ABI_ILP32;
                         break;
+/* Xpulpimg extension */
+                case PULP_IMG:
+                        *flags &= ~MASK_64BIT; *flags &= ~MASK_MUL; *flags &= ~MASK_ATOMIC;
+                        riscv_abi = ABI_ILP32;
+                        if (Pulp_Cpu == PULP_NONE || Pulp_Cpu == PULP_IMG) Pulp_Cpu = PULP_IMG;
+                        else error("-Xpulpimg: pulp architecture is already defined as %s", PulpProcessorImage(Pulp_Cpu));
+                        break;
                 case PULP_V0:
                         *flags &= ~MASK_64BIT; *flags &= ~MASK_MUL; *flags &= ~MASK_ATOMIC;
 			riscv_abi = ABI_ILP32;

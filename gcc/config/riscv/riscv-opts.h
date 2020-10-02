@@ -73,6 +73,8 @@ enum Pulp_Processor_Type
 {
   PULP_NONE,
   PULP_RISCV,
+/* Xpulpimg extension */
+  PULP_IMG,
   PULP_SLIM,
   PULP_V0,
   PULP_V1,
@@ -134,7 +136,9 @@ static int Pulp_Check_Processor_Compatibility(enum Pulp_Processor_Type New_Proc,
 	static unsigned long long int Pulp_Compatible_Processors[PULP_LAST] = {
   		/* PULP_NONE */		(0),
   		/* PULP_RISCV */	((1<<PULP_RISCV)),
-		/* PULP_SLIM */		((1<<PULP_RISCV) | (1<<PULP_SLIM)),
+/* Xpulpimg extension */
+		  /* PULP_IMG */ 		((1<<PULP_RISCV) | (1<<PULP_IMG)),
+		  /* PULP_SLIM */		((1<<PULP_RISCV) | (1<<PULP_SLIM)),
   		/* PULP_V0 */		((1<<PULP_RISCV) | (1<<PULP_V0)),
   		/* PULP_V1 */		((1<<PULP_RISCV) | (1<<PULP_V1)),
   		/* PULP_V2 */		((1<<PULP_RISCV) | (1<<PULP_V2)),
@@ -190,6 +194,8 @@ static enum Pulp_Processor_Type PulpDecodeCpu(char *Text, int *Len)
 	for (i = 0; Dup[i]; i++) Dup[i] = TOLOWER (Dup[i]);
         if      (strncmp (Dup, "none", 4) == 0)   { free(Dup); if (Len) *Len = 4; return PULP_NONE; }
         else if (strncmp (Dup, "riscv", 5) == 0)  { free(Dup); if (Len) *Len = 5; return PULP_RISCV; }
+/* Xpulpimg extension */
+        else if (strncmp (Dup, "pulpimg", 7) == 0)   { free(Dup); if (Len) *Len = 7; return PULP_IMG; }
         else if (strncmp (Dup, "pulpv0", 6) == 0) { free(Dup); if (Len) *Len = 6; return PULP_V0; }
         else if (strncmp (Dup, "pulpv1", 6) == 0) { free(Dup); if (Len) *Len = 6; return PULP_V1; }
         else if (strncmp (Dup, "pulpv2", 6) == 0) { free(Dup); if (Len) *Len = 6; return PULP_V2; }
@@ -250,6 +256,8 @@ static const char *PulpProcessorImage(enum Pulp_Processor_Type Which)
         switch (Which) {
                 case PULP_NONE: return "none";
                 case PULP_RISCV: return "riscv";
+/* Xpulpimg extension */
+                case PULP_IMG: return "pulpimg";
                 case PULP_V0: return "pulpv0";
                 case PULP_V1: return "pulpv1";
                 case PULP_V2: return "pulpv2";

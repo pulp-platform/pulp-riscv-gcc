@@ -46,7 +46,9 @@ Currently these macros are used in 2 contexts:
   DIRECT_BUILTIN1(popcountsi2,          cnt,        	RISCV_INT_FTYPE_INT,             		pulp_vall, NULL)
   DIRECT_BUILTIN1(paritysi2,		parity,        	RISCV_INT_FTYPE_INT,             		pulp_vall, NULL)
 
-  DIRECT_BUILTIN1(abssi2,        	abs,        	RISCV_INT_FTYPE_INT,     			pulp_vall, NULL)
+/* Xpulpimg extension */
+  //DIRECT_BUILTIN1(abssi2,        	abs,        	RISCV_INT_FTYPE_INT,     			pulp_vall, NULL)
+  DIRECT_BUILTIN1(abssi2,        	abs,        	RISCV_INT_FTYPE_INT,     			pulp_vall_or_img, NULL)
 
   DIRECT_BUILTIN1(maddsisi4,        	mac,        	RISCV_INT_FTYPE_INT_INT_INT,     		pulp_vall, NULL)
   DIRECT_BUILTIN1(msubsisi4,        	msu,        	RISCV_INT_FTYPE_INT_INT_INT,     		pulp_vall, NULL)
@@ -64,10 +66,15 @@ Currently these macros are used in 2 contexts:
 
   DIRECT_BUILTIN1(rotrsi3,          	rotr,       	RISCV_INT_FTYPE_INT_INT,         		pulp_vall, NULL)
 
-  DIRECT_BUILTIN1(smaxsi3,          	maxsi,       	RISCV_INT_FTYPE_INT_INT,         		pulp_vall, NULL)
-  DIRECT_BUILTIN1(sminsi3,          	minsi,       	RISCV_INT_FTYPE_INT_INT,         		pulp_vall, NULL)
-  DIRECT_BUILTIN1(umaxsi3,          	maxusi,       	RISCV_INT_FTYPE_INT_INT,         		pulp_vall, NULL)
-  DIRECT_BUILTIN1(uminsi3,          	minusi,       	RISCV_INT_FTYPE_INT_INT,         		pulp_vall, NULL)
+/* Xpulpimg extension */
+  //DIRECT_BUILTIN1(smaxsi3,          	maxsi,       	RISCV_INT_FTYPE_INT_INT,         		pulp_vall, NULL)
+  DIRECT_BUILTIN1(smaxsi3,          	maxsi,       	RISCV_INT_FTYPE_INT_INT,         		pulp_vall_or_img, NULL)
+  //DIRECT_BUILTIN1(sminsi3,          	minsi,       	RISCV_INT_FTYPE_INT_INT,         		pulp_vall, NULL)
+  DIRECT_BUILTIN1(sminsi3,          	minsi,       	RISCV_INT_FTYPE_INT_INT,         		pulp_vall_or_img, NULL)
+  //DIRECT_BUILTIN1(umaxsi3,          	maxusi,       	RISCV_INT_FTYPE_INT_INT,         		pulp_vall, NULL)
+  DIRECT_BUILTIN1(umaxsi3,          	maxusi,       	RISCV_INT_FTYPE_INT_INT,         	pulp_vall_or_img, NULL)
+  //DIRECT_BUILTIN1(uminsi3,          	minusi,       	RISCV_INT_FTYPE_INT_INT,         		pulp_vall, NULL)
+  DIRECT_BUILTIN1(uminsi3,          	minusi,       	RISCV_INT_FTYPE_INT_INT,         	pulp_vall_or_img, NULL)
 
   DIRECT_BUILTIN1(addv2hi3,         	add2,       	RISCV_V2HI_FTYPE_V2HI_V2HI,      		pulp_v2, NULL)
   DIRECT_BUILTIN1(addv4qi3,         	add4,       	RISCV_V4QI_FTYPE_V4QI_V4QI,      		pulp_v2, NULL)

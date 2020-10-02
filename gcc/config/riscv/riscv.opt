@@ -78,6 +78,11 @@ Target RejectNegative Joined Var(Pulp_Chip) Enum(Pulp_Chip_Type) Init(PULP_CHIP_
 Enum
 Name(Pulp_Processor_Type) Type(enum Pulp_Processor_Type)
 
+;; Xpulpimg extension
+
+EnumValue
+Enum(Pulp_Processor_Type) String(pulpimg) Value(PULP_IMG)
+
 EnumValue
 Enum(Pulp_Processor_Type) String(pulpv0) Value(PULP_V0)
 

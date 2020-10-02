@@ -195,6 +195,14 @@ riscv_builtin_avail_pulp_v2_or_slim (void)
   return 0;
 }
 
+/* Xpulpimg extension */
+static unsigned int
+riscv_builtin_avail_pulp_vall_or_img (void)
+{
+  if (Pulp_Cpu>=PULP_V0 || Pulp_Cpu==PULP_SLIM || Pulp_Cpu==PULP_IMG) return 1;
+  return 0;
+}
+
 static int CheckBuiltin(int Code, int BuiltinIndex, struct ExtraBuiltinImmArg *ExtraImmArg, int Narg, ...);
 
 
