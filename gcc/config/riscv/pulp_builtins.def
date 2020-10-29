@@ -243,11 +243,11 @@ Currently these macros are used in 2 contexts:
   DIRECT_BUILTIN1(invsipat1,		binsert, 	RISCV_INT_FTYPE_INT_INT_INT_INT_INT,		pulp_v2, CheckBuiltin)
   DIRECT_BUILTIN1(binsert_reg_si3,	binsert_r, 	RISCV_INT_FTYPE_INT_INT_INT,			pulp_v2, NULL)
 
-  DIRECT_BUILTIN1(clip_minmax,		clip,		RISCV_INT_FTYPE_INT_INT_INT,			pulp_v2, CheckBuiltin)
-  DIRECT_BUILTIN1(clip_minmax_reg,	clip_r,		RISCV_INT_FTYPE_INT_INT,			pulp_v2, NULL)
+  DIRECT_BUILTIN1(clip_minmax,		clip,		RISCV_INT_FTYPE_INT_INT_INT,			pulp_v2_or_img, CheckBuiltin)
+  DIRECT_BUILTIN1(clip_minmax_reg,	clip_r,		RISCV_INT_FTYPE_INT_INT,			pulp_v2_or_img, NULL)
 
-  DIRECT_BUILTIN1(clipu_minmax,		clipu,		RISCV_INT_FTYPE_INT_INT_INT,			pulp_v2, CheckBuiltin)
-  DIRECT_BUILTIN1(clipu_minmax_reg,	clipu_r,	RISCV_INT_FTYPE_INT_INT,			pulp_v2, NULL)
+  DIRECT_BUILTIN1(clipu_minmax,		clipu,		RISCV_INT_FTYPE_INT_INT_INT,			pulp_v2_or_img, CheckBuiltin)
+  DIRECT_BUILTIN1(clipu_minmax_reg,	clipu_r,	RISCV_INT_FTYPE_INT_INT,			pulp_v2_or_img, NULL)
 
 /* __GAP8 Start */
   DIRECT_BUILTIN1(cplxmulsv2hi,		cplxmuls,  	RISCV_V2HI_FTYPE_V2HI_V2HI,			pulp_gap8_only, NULL)
