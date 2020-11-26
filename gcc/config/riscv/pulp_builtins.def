@@ -47,7 +47,6 @@ Currently these macros are used in 2 contexts:
   DIRECT_BUILTIN1(paritysi2,		parity,        	RISCV_INT_FTYPE_INT,             		pulp_vall, NULL)
 
 /* Xpulpimg extension */
-  //DIRECT_BUILTIN1(abssi2,        	abs,        	RISCV_INT_FTYPE_INT,     			pulp_vall, NULL)
   DIRECT_BUILTIN1(abssi2,        	abs,        	RISCV_INT_FTYPE_INT,     			pulp_vall_or_img, NULL)
 
   DIRECT_BUILTIN1(maddsisi4,        	mac,        	RISCV_INT_FTYPE_INT_INT_INT,     		pulp_vall, NULL)
@@ -67,13 +66,9 @@ Currently these macros are used in 2 contexts:
   DIRECT_BUILTIN1(rotrsi3,          	rotr,       	RISCV_INT_FTYPE_INT_INT,         		pulp_vall, NULL)
 
 /* Xpulpimg extension */
-  //DIRECT_BUILTIN1(smaxsi3,          	maxsi,       	RISCV_INT_FTYPE_INT_INT,         		pulp_vall, NULL)
   DIRECT_BUILTIN1(smaxsi3,          	maxsi,       	RISCV_INT_FTYPE_INT_INT,         		pulp_vall_or_img, NULL)
-  //DIRECT_BUILTIN1(sminsi3,          	minsi,       	RISCV_INT_FTYPE_INT_INT,         		pulp_vall, NULL)
   DIRECT_BUILTIN1(sminsi3,          	minsi,       	RISCV_INT_FTYPE_INT_INT,         		pulp_vall_or_img, NULL)
-  //DIRECT_BUILTIN1(umaxsi3,          	maxusi,       	RISCV_INT_FTYPE_INT_INT,         		pulp_vall, NULL)
   DIRECT_BUILTIN1(umaxsi3,          	maxusi,       	RISCV_INT_FTYPE_INT_INT,         	pulp_vall_or_img, NULL)
-  //DIRECT_BUILTIN1(uminsi3,          	minusi,       	RISCV_INT_FTYPE_INT_INT,         		pulp_vall, NULL)
   DIRECT_BUILTIN1(uminsi3,          	minusi,       	RISCV_INT_FTYPE_INT_INT,         	pulp_vall_or_img, NULL)
 
   DIRECT_BUILTIN1(addv2hi3,         	add2,       	RISCV_V2HI_FTYPE_V2HI_V2HI,      		pulp_v2, NULL)
@@ -243,9 +238,11 @@ Currently these macros are used in 2 contexts:
   DIRECT_BUILTIN1(invsipat1,		binsert, 	RISCV_INT_FTYPE_INT_INT_INT_INT_INT,		pulp_v2, CheckBuiltin)
   DIRECT_BUILTIN1(binsert_reg_si3,	binsert_r, 	RISCV_INT_FTYPE_INT_INT_INT,			pulp_v2, NULL)
 
+/* Xpulpimg extension */
   DIRECT_BUILTIN1(clip_minmax,		clip,		RISCV_INT_FTYPE_INT_INT_INT,			pulp_v2_or_img, CheckBuiltin)
   DIRECT_BUILTIN1(clip_minmax_reg,	clip_r,		RISCV_INT_FTYPE_INT_INT,			pulp_v2_or_img, NULL)
 
+/* Xpulpimg extension */
   DIRECT_BUILTIN1(clipu_minmax,		clipu,		RISCV_INT_FTYPE_INT_INT_INT,			pulp_v2_or_img, CheckBuiltin)
   DIRECT_BUILTIN1(clipu_minmax_reg,	clipu_r,	RISCV_INT_FTYPE_INT_INT,			pulp_v2_or_img, NULL)
 
