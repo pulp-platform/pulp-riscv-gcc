@@ -1068,7 +1068,7 @@
 (define_insn "abssi2"
   [(set (match_operand:SI 0 "register_operand" "=r")
         (abs:SI (match_operand:SI 1 "register_operand" "r")))]
-  "(Pulp_Cpu>=PULP_V0)"
+  "(Pulp_Cpu>=PULP_V0 || Pulp_Cpu==PULP_IMG)"
   "p.abs\t%0,%1"
   [(set_attr "type" "arith")
    (set_attr "mode" "SI")])
@@ -1126,7 +1126,7 @@
         )
    )
   ]
-"((Pulp_Cpu>=PULP_V0) && !TARGET_MASK_NOMINMAX)"
+"((Pulp_Cpu>=PULP_V0 || Pulp_Cpu==PULP_IMG) && !TARGET_MASK_NOMINMAX)"
 "@
  p.min \t%0,%1,%2\t# signed min
  p.min \t%0,%1,x0\t# signed min 0"
@@ -1142,7 +1142,7 @@
         )
    )
   ]
-"((Pulp_Cpu>=PULP_V0) && !TARGET_MASK_NOMINMAX)"
+"((Pulp_Cpu>=PULP_V0 || Pulp_Cpu==PULP_IMG) && !TARGET_MASK_NOMINMAX)"
 "@
  p.max \t%0,%1,%2\t# signed max
  p.max \t%0,%1,x0\t# signed max 0"
@@ -1157,7 +1157,7 @@
         )
    )
   ]
-"((Pulp_Cpu>=PULP_V0) && !TARGET_MASK_NOMINMAX)"
+"((Pulp_Cpu>=PULP_V0 || Pulp_Cpu==PULP_IMG) && !TARGET_MASK_NOMINMAX)"
 "p.minu \t%0,%1,%2\t# unsigned min"
 [(set_attr "type" "arith")
  (set_attr "mode" "SI")]
@@ -1170,7 +1170,7 @@
         )
    )
   ]
-"((Pulp_Cpu>=PULP_V0) && !TARGET_MASK_NOMINMAX)"
+"((Pulp_Cpu>=PULP_V0 || Pulp_Cpu==PULP_IMG) && !TARGET_MASK_NOMINMAX)"
 "p.maxu \t%0,%1,%2\t# signed max"
 [(set_attr "type" "arith")
  (set_attr "mode" "SI")]
@@ -2238,7 +2238,7 @@
         (smax:SI (smin:SI (match_operand:SI 1 "register_operand" "r")
                           (match_operand:SI 2 "immediate_operand" "i"))
                  (match_operand:SI 3 "immediate_operand" "i")))]
-  "(Pulp_Cpu>=PULP_V2) && !TARGET_MASK_NOCLIP && riscv_valid_clip_operands (operands[2], operands[3], 1)"
+  "(Pulp_Cpu>=PULP_V2 || Pulp_Cpu==PULP_IMG) && !TARGET_MASK_NOCLIP && riscv_valid_clip_operands (operands[2], operands[3], 1)"
   "p.clip\\t%0,%1,%B2"
 [(set_attr "type" "logical")
  (set_attr "mode" "SI")]
@@ -2249,7 +2249,7 @@
         (smin:SI (smax:SI (match_operand:SI 1 "register_operand" "r")
                           (match_operand:SI 2 "immediate_operand" "i"))
                  (match_operand:SI 3 "immediate_operand" "i")))]
-  "(Pulp_Cpu>=PULP_V2) && !TARGET_MASK_NOCLIP && riscv_valid_clip_operands (operands[3], operands[2], 1)"
+  "(Pulp_Cpu>=PULP_V2 || Pulp_Cpu==PULP_IMG) && !TARGET_MASK_NOCLIP && riscv_valid_clip_operands (operands[3], operands[2], 1)"
   "p.clip\\t%0,%1,%B3"
 [(set_attr "type" "logical")
  (set_attr "mode" "SI")]
@@ -2261,7 +2261,7 @@
 			  (neg:SI (plus:SI (match_operand:SI 2 "register_operand" "r") (const_int 1)))
 		 )
 		 (match_dup 2)))]
-  "(Pulp_Cpu>=PULP_V2) && !TARGET_MASK_NOCLIP"
+  "(Pulp_Cpu>=PULP_V2 || Pulp_Cpu==PULP_IMG) && !TARGET_MASK_NOCLIP"
   "p.clipr\\t%0,%1,%2"
 [(set_attr "type" "logical")
  (set_attr "mode" "SI")]
@@ -2274,7 +2274,7 @@
 			  (match_operand:SI 2 "register_operand" "r")
 		 )
 		 (neg:SI (plus:SI (match_dup 2) (const_int 1)))))]
-  "(Pulp_Cpu>=PULP_V2) && !TARGET_MASK_NOCLIP"
+  "(Pulp_Cpu>=PULP_V2 || Pulp_Cpu==PULP_IMG) && !TARGET_MASK_NOCLIP"
   "p.clipr\\t%0,%1,%2"
 [(set_attr "type" "logical")
  (set_attr "mode" "SI")]
@@ -2285,7 +2285,7 @@
         (smax:SI (smin:SI (match_operand:SI 1 "register_operand" "r")
                           (match_operand:SI 2 "immediate_operand" "i"))
                  (match_operand:SI 3 "immediate_operand" "i")))]
-  "(Pulp_Cpu>=PULP_V2) && !TARGET_MASK_NOCLIP && riscv_valid_clip_operands (operands[2], operands[3], 0)"
+  "(Pulp_Cpu>=PULP_V2 || Pulp_Cpu==PULP_IMG) && !TARGET_MASK_NOCLIP && riscv_valid_clip_operands (operands[2], operands[3], 0)"
   "p.clipu\\t%0,%1,%B2"
 [(set_attr "type" "logical")
  (set_attr "mode" "SI")]
@@ -2296,7 +2296,7 @@
         (smin:SI (smax:SI (match_operand:SI 1 "register_operand" "r")
                           (match_operand:SI 2 "immediate_operand" "i"))
                  (match_operand:SI 3 "immediate_operand" "i")))]
-  "(Pulp_Cpu>=PULP_V2) && !TARGET_MASK_NOCLIP && riscv_valid_clip_operands (operands[3], operands[2], 0)"
+  "(Pulp_Cpu>=PULP_V2 || Pulp_Cpu==PULP_IMG) && !TARGET_MASK_NOCLIP && riscv_valid_clip_operands (operands[3], operands[2], 0)"
   "p.clipu\\t%0,%1,%B3"
 [(set_attr "type" "logical")
  (set_attr "mode" "SI")]
@@ -2311,7 +2311,7 @@
         )
    )
   ]
-  "(Pulp_Cpu>=PULP_V2) && !TARGET_MASK_NOCLIP"
+  "(Pulp_Cpu>=PULP_V2 || Pulp_Cpu==PULP_IMG) && !TARGET_MASK_NOCLIP"
   "p.clipur\\t%0,%1,%2"
 [(set_attr "type" "logical")
  (set_attr "mode" "SI")]
@@ -2324,7 +2324,7 @@
         )
    )
   ]
-  "(Pulp_Cpu>=PULP_V2) && !TARGET_MASK_NOCLIP"
+  "(Pulp_Cpu>=PULP_V2 || Pulp_Cpu==PULP_IMG) && !TARGET_MASK_NOCLIP"
   "p.clipur\\t%0,%1,%2"
 [(set_attr "type" "logical")
  (set_attr "mode" "SI")]
@@ -2849,7 +2849,7 @@
   {
         switch (which_alternative) {
                 case 0:
-                        if ((Pulp_Cpu>=PULP_V0) && !TARGET_MASK_NOSEXT) return "p.exthz\t%0,%1";
+                        if ((Pulp_Cpu>=PULP_V0 || Pulp_Cpu==PULP_IMG) && !TARGET_MASK_NOSEXT) return "p.exthz\t%0,%1";
                         else return "#";
                 case 1:
                         if ((Pulp_Cpu>=PULP_V0) && !TARGET_MASK_NOINDREGREG) {
@@ -2923,7 +2923,7 @@
   {
         switch (which_alternative) {
                 case 0:
-                        if ((Pulp_Cpu>=PULP_V0) && !TARGET_MASK_NOSEXT) return "p.ext<SHORT_ALL:size>s\t%0,%1";
+                        if ((Pulp_Cpu>=PULP_V0 || Pulp_Cpu==PULP_IMG) && !TARGET_MASK_NOSEXT) return "p.ext<SHORT_ALL:size>s\t%0,%1";
                         else return "#";
                 case 1:
                         if ((Pulp_Cpu>=PULP_V0) && !TARGET_MASK_NOINDREGREG) {
@@ -7622,7 +7622,7 @@
   [(set (match_operand:SI 0 "register_operand" "=r")
         (any_le:SI (match_operand:SI 1 "register_operand" "r")
                    (match_operand:SI 2 "register_operand" "r")))]
-  "((Pulp_Cpu>=PULP_V0) && !TARGET_MASK_NOSLET)"
+  "((Pulp_Cpu>=PULP_V0 || Pulp_Cpu==PULP_IMG) && !TARGET_MASK_NOSLET)"
   "p.slet<u>\t%0,%1,%2"
   [(set_attr "type" "slt")
    (set_attr "mode" "SI")])
@@ -7631,7 +7631,7 @@
   [(set (match_operand:SI 0 "register_operand" "=r")
         (any_ge:SI (match_operand:SI 1 "register_operand" "r")
                    (match_operand:SI 2 "register_operand" "r")))]
-  "((Pulp_Cpu>=PULP_V0) && !TARGET_MASK_NOSLET)"
+  "((Pulp_Cpu>=PULP_V0 || Pulp_Cpu==PULP_IMG) && !TARGET_MASK_NOSLET)"
   "p.slet<u>\t%0,%2,%1"
   [(set_attr "type" "slt")
    (set_attr "mode" "SI")])
