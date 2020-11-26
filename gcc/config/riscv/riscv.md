@@ -7885,7 +7885,7 @@
   (use (match_operand:SI 2 "immediate_operand" "I,I"))
  ]
  ""
- { 
+ {
         switch (which_alternative) {
                 case 0: return Hw_Loop_Align?".align 2\n\tlp.count  \tx%2,%1\t # loop setup, lc set":"lp.count  \tx%2,%1\t # loop setup, lc set";
 		case 1: return Hw_Loop_Align?".align 2\n\tlp.counti \tx%2,%1\t # loop setup, lc set":"lp.counti \tx%2,%1\t # loop setup, lc set";
@@ -7920,7 +7920,7 @@
   (use (match_operand:SI 4 "immediate_operand" "I,I"))
  ]
  ""
-{ 
+{
         switch (which_alternative) {
   		case 0: return Hw_Loop_Align?".align 2\n\tlp.setup  \tx%4,%1,(%3)\t # loop setup, lc+le set":"lp.setup  \tx%4,%1,(%3)\t # loop setup, lc+le set";
   		case 1: return Hw_Loop_Align?".align 2\n\tlp.setupi \tx%4,%1,(%3)\t # loop setup, lc+le set":"lp.setupi \tx%4,%1,(%3)\t # loop setup, lc+le set";
@@ -8796,7 +8796,7 @@
            )
       )
     ])
-  ]   
+  ]
 "((Pulp_Cpu==PULP_NN) && !TARGET_MASK_NOVECT)"
 "pv.mlsdotup.<allint_vec_size>.%4 \t%0,%1,%2\t"
 [(set_attr "type" "arith")
@@ -8824,7 +8824,7 @@
            )
       )
     ])
-  ]   
+  ]
 "((Pulp_Cpu==PULP_NN) && !TARGET_MASK_NOVECT)"
 "pv.mlsdotusp.<allint_vec_size>.%4 \t%0,%1,%2\t"
 [(set_attr "type" "arith")
@@ -8878,7 +8878,7 @@
            )
       )
     ])
-  ]   
+  ]
 "((Pulp_Cpu==PULP_NN) && !TARGET_MASK_NOVECT)"
 "pv.mlsdotsp.<allint_vec_size>.%4 \t%0,%1,%2\t"
 [(set_attr "type" "arith")
