@@ -5539,6 +5539,15 @@ hwloop_optimize (hwloop_info loop)
       return false;
     }
 
+
+  /* Never include jumps or conditional branches inside a HW loop! */
+
+  bb=loop->head;
+  last_insn = PREV_INSN (loop->loop_end);
+  for (; last_insn != BB_HEAD (bb); last_insn = PREV_INSN (last_insn))
+      if(JUMP_P (last_insn) || any_condjump_p (last_insn)) return false;
+
+
   /* There should be an instruction before the loop_end instruction
      in the same basic block. And the instruction must not be
      - JUMP
@@ -5670,6 +5679,21 @@ hwloop_optimize (hwloop_info loop)
 		loop->length += 1;
   	}
   }
+
+
+  /* The end address of outermost loops must be at least 2 instructions
+     further the end addresses of any inner loop */
+  hwloop_info info;
+  unsigned ix;
+  for (ix = 0; loop->loops.iterate (ix, &info); ix++) {
+    if(next_real_insn (info->last_insn)  == last_insn) {
+      last_insn = emit_insn_after (gen_forced_nop (), last_insn);
+      loop->length += 1;
+      break;
+    }
+  }
+
+
   loop->last_insn = last_insn;
 
   /* The loop is good for replacement.  */
@@ -5950,6 +5974,10 @@ hwloop_optimize (hwloop_info loop)
   /* BUG RiscV, hwloop hw messes up the loop last inst and consider as last the inst right after the last
      so we emit after and not before */
   emit_label_before (loop->end_label, loop->last_insn);
+
+  /* Add flags to disable RVC instructions inside HW loops */
+  emit_insn_before (gen_disable_rvc(), BB_HEAD(loop->head));
+  emit_insn_after (gen_enable_rvc(), loop->last_insn);
 
   return true;
 }

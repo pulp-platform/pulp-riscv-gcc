@@ -111,6 +111,8 @@
 
   UNSPEC_BITREV
 
+  UNSPEC_RVC
+  UNSPEC_NORVC
 ])
 
 (define_c_enum "unspecv" [
@@ -8896,4 +8898,6 @@
 (include "marsellus1.md")
 (include "marsellus2.md")
 (include "marsellus3.md")
+(include "cv32e40p.md")
+
 
