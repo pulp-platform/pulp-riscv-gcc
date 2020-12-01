@@ -272,23 +272,27 @@ Currently these macros are used in 2 contexts:
 /* __GAP8 Stop */
 
   DIRECT_BUILTIN1(load_evt_unit,       	event_unit_read, RISCV_INT_FTYPE_POINTER_INT,         		pulp_v2_or_slim, CheckBuiltin)
-  DIRECT_BUILTIN1(OffsetedRead,		OffsetedRead,	RISCV_INT_FTYPE_POINTER_INT,			pulp_v2, NULL)
-  DIRECT_BUILTIN1(OffsetedReadHalf,	OffsetedReadHalf,RISCV_INT_FTYPE_POINTER_INT,			pulp_v2, NULL)
-  DIRECT_BUILTIN1(OffsetedReadByte,	OffsetedReadByte,RISCV_INT_FTYPE_POINTER_INT,			pulp_v2, NULL)
-  DIRECT_BUILTIN1(OffsetedReadOMP,	OffsetedReadOMP,RISCV_INT_FTYPE_POINTER_INT,			pulp_v2, NULL)
-  DIRECT_NO_TARGET_BUILTIN1(OffsetedWrite,OffsetedWrite,RISCV_VOID_FTYPE_INT_POINTER_INT,			pulp_v2, NULL)
-  DIRECT_NO_TARGET_BUILTIN1(OffsetedWriteHalf,OffsetedWriteHalf,RISCV_VOID_FTYPE_INT_POINTER_INT,			pulp_v2, NULL)
-  DIRECT_NO_TARGET_BUILTIN1(OffsetedWriteByte,OffsetedWriteByte,RISCV_VOID_FTYPE_INT_POINTER_INT,			pulp_v2, NULL)
+/* Xpulpimg extension */
+  DIRECT_BUILTIN1(OffsetedRead,		OffsetedRead,	RISCV_INT_FTYPE_POINTER_INT,			pulp_v2_or_img, NULL)
+  DIRECT_BUILTIN1(OffsetedReadHalf,	OffsetedReadHalf,RISCV_INT_FTYPE_POINTER_INT,			pulp_v2_or_img, NULL)
+  DIRECT_BUILTIN1(OffsetedReadByte,	OffsetedReadByte,RISCV_INT_FTYPE_POINTER_INT,			pulp_v2_or_img, NULL)
+  DIRECT_BUILTIN1(OffsetedReadOMP,	OffsetedReadOMP,RISCV_INT_FTYPE_POINTER_INT,			pulp_v2_or_img, NULL)
+  DIRECT_NO_TARGET_BUILTIN1(OffsetedWrite,OffsetedWrite,RISCV_VOID_FTYPE_INT_POINTER_INT,			pulp_v2_or_img, NULL)
+  DIRECT_NO_TARGET_BUILTIN1(OffsetedWriteHalf,OffsetedWriteHalf,RISCV_VOID_FTYPE_INT_POINTER_INT,			pulp_v2_or_img, NULL)
+  DIRECT_NO_TARGET_BUILTIN1(OffsetedWriteByte,OffsetedWriteByte,RISCV_VOID_FTYPE_INT_POINTER_INT,			pulp_v2_or_img, NULL)
 
-  DIRECT_BUILTIN1(OffsetedReadNonVol,	CoreCount,	RISCV_INT_FTYPE_VOID,				pulp_vall, CheckBuiltin)
-  DIRECT_BUILTIN1(OffsetedReadNonVol_m1,CoreCount_m1,	RISCV_INT_FTYPE_VOID,				pulp_vall, CheckBuiltin)
+/* Xpulpimg extension */
+  DIRECT_BUILTIN1(OffsetedReadNonVol,	CoreCount,	RISCV_INT_FTYPE_VOID,				pulp_vall_or_img, CheckBuiltin)
+  DIRECT_BUILTIN1(OffsetedReadNonVol_m1,CoreCount_m1,	RISCV_INT_FTYPE_VOID,				pulp_vall_or_img, CheckBuiltin)
+
   DIRECT_BUILTIN1(read_spr,		CoreId,		RISCV_INT_FTYPE_VOID,				pulp_vall, CheckBuiltin)
   DIRECT_BUILTIN1(read_spr,		ClusterId,	RISCV_INT_FTYPE_VOID,				pulp_vall, CheckBuiltin)
   DIRECT_BUILTIN1(read_spr,		IsFc,		RISCV_INT_FTYPE_VOID,				pulp_vall, CheckBuiltin)
   DIRECT_BUILTIN1(read_spr,		HasFc,		RISCV_INT_FTYPE_VOID,				pulp_vall, CheckBuiltin)
 
-  DIRECT_BUILTIN1(OffsetedReadNonVol,	read_base_off,	RISCV_INT_FTYPE_POINTER_INT,			pulp_vall, NULL)
-  DIRECT_NO_TARGET_BUILTIN1(writesi, 	write_base_off,	RISCV_VOID_FTYPE_POINTER_INT_INT, 		pulp_vall, NULL)
+/* Xpulpimg extension */
+  DIRECT_BUILTIN1(OffsetedReadNonVol,	read_base_off,	RISCV_INT_FTYPE_POINTER_INT,			pulp_vall_or_img, NULL)
+  DIRECT_NO_TARGET_BUILTIN1(writesi, 	write_base_off,	RISCV_VOID_FTYPE_POINTER_INT_INT, 		pulp_vall_or_img, NULL)
 
 
   DIRECT_BUILTIN1(read_spr_vol,		spr_read_vol,	RISCV_INT_FTYPE_INT,				pulp_vall, CheckBuiltin)
@@ -302,12 +306,14 @@ Currently these macros are used in 2 contexts:
   DIRECT_BUILTIN1(read_then_spr_bit_set,read_then_spr_bit_set,	RISCV_INT_FTYPE_INT_INT, 		pulp_vall, CheckBuiltin)
   DIRECT_BUILTIN1(read_then_spr_bit_clr,read_then_spr_bit_clr,	RISCV_INT_FTYPE_INT_INT, 		pulp_vall, CheckBuiltin)
 
-  DIRECT_NO_TARGET_BUILTIN1(writesivol, write_base_off_v,RISCV_VOID_FTYPE_INT_INT_INT, 			pulp_vall, NULL)
-  DIRECT_BUILTIN1(readsivol,		read_base_off_v,RISCV_INT_FTYPE_INT_INT,			pulp_vall, NULL)
+/* Xpulpimg extension */
+  DIRECT_NO_TARGET_BUILTIN1(writesivol, write_base_off_v,RISCV_VOID_FTYPE_INT_INT_INT, 			pulp_vall_or_img, NULL)
+  DIRECT_BUILTIN1(readsivol,		read_base_off_v,RISCV_INT_FTYPE_INT_INT,			pulp_vall_or_img, NULL)
 
   DIRECT_NO_TARGET_BUILTIN1(pulp_omp_barrier, 		pulp_GOMP_barrier,		RISCV_VOID_FTYPE_VOID,	pulp_v2, NULL)
   DIRECT_NO_TARGET_BUILTIN1(pulp_omp_critical_start, 	pulp_GOMP_critical_start,	RISCV_VOID_FTYPE_VOID,	pulp_v2, NULL)
-  DIRECT_NO_TARGET_BUILTIN1(pulp_omp_critical_end, 	pulp_GOMP_critical_end,		RISCV_VOID_FTYPE_VOID,	pulp_v2, NULL)
+/* Xpulpimg extension */
+  DIRECT_NO_TARGET_BUILTIN1(pulp_omp_critical_end, 	pulp_GOMP_critical_end,		RISCV_VOID_FTYPE_VOID,	pulp_v2_or_img, NULL)
 
 /* Gap9 */
   DIRECT_BUILTIN1(cplxmulsv2hi2,    	cplxmuls2,  	RISCV_V2HI_FTYPE_V2HI_V2HI,		pulp_gap9, NULL)

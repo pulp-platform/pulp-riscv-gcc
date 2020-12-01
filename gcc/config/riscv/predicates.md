@@ -144,7 +144,7 @@
 (define_predicate "nonimmediate_operand_exclude_post"
   (match_operand 0 "nonimmediate_operand")
 {
-   return (!riscv_filter_pulp_operand(op, !(Pulp_Cpu>=PULP_V0)));
+   return (!riscv_filter_pulp_operand(op, !(Pulp_Cpu>=PULP_V0 || Pulp_Cpu==PULP_IMG)));
 }
 )
 

@@ -367,7 +367,7 @@ static const struct riscv_tune_info optimize_size_tune_info = {
 
 /* A table describing all the processors GCC knows about.  */
 static const struct riscv_cpu_info riscv_cpu_info_table[] = {
-  { "marsellus0", marsellus0, &rocket_tune_info },	
+  { "marsellus0", marsellus0, &rocket_tune_info },
   { "marsellus1", marsellus1, &rocket_tune_info },
   { "marsellus2", marsellus2, &rocket_tune_info },
   { "marsellus3", marsellus3, &rocket_tune_info },
@@ -849,7 +849,7 @@ riscv_classify_address (struct riscv_address_info *info, rtx x,
       info->reg = XEXP (x, 0);
       info->offset = XEXP (x, 1);
 
-      if (((Pulp_Cpu>=PULP_V0) && !TARGET_MASK_NOINDREGREG && (GET_MODE_SIZE (mode) <= UNITS_PER_WORD) ) &&
+      if (((Pulp_Cpu>=PULP_V0 || Pulp_Cpu==PULP_IMG) && !TARGET_MASK_NOINDREGREG && (GET_MODE_SIZE (mode) <= UNITS_PER_WORD) ) &&
           !((TARGET_HARD_FLOAT &&!TARGET_FPREGS_ON_GRREGS) && (IsFloatMode(mode))) &&
           ((GET_CODE(info->offset) == REG) || (GET_CODE(info->offset) == SUBREG))) {
                 info->type = ADDRESS_REG_REG;
@@ -1870,7 +1870,7 @@ riscv_address_cost (rtx addr, enum machine_mode mode,
   int n = 1;
 
   if (riscv_address_insns (addr, mode, false)) {
-    if ((Pulp_Cpu>=PULP_V0) && !TARGET_MASK_NOPOSTMOD) {
+    if ((Pulp_Cpu>=PULP_V0 || Pulp_Cpu==PULP_IMG) && !TARGET_MASK_NOPOSTMOD) {
         if (TARGET_MASK_NOFINDUCT) {
                 riscv_classify_address (&addr_info, addr, mode, false);
                 /* Discourage *reg(reg) since this pattern decrease induction attractiviry */
@@ -2011,7 +2011,7 @@ riscv_output_move (rtx dest, rtx src)
         int Prefix=0;
 
         riscv_classify_address (&addr, XEXP (src, 0), word_mode, true);
-        if ((Pulp_Cpu>=PULP_V0) && !TARGET_MASK_NOINDREGREG) {
+        if ((Pulp_Cpu>=PULP_V0 || Pulp_Cpu==PULP_IMG) && !TARGET_MASK_NOINDREGREG) {
                 if (addr.type == ADDRESS_REG_REG) Prefix = 1;
         }
 	if (addr.type == ADDRESS_REG_POST_INC || addr.type == ADDRESS_REG_POST_DEC || addr.type == ADDRESS_REG_POST_MODIFY) Prefix = 1;
@@ -2081,7 +2081,7 @@ riscv_output_move (rtx dest, rtx src)
         int Prefix=0;
 
         riscv_classify_address (&addr, XEXP (dest, 0), word_mode, true);
-        if ((Pulp_Cpu>=PULP_V0) && !TARGET_MASK_NOINDREGREG) {
+        if ((Pulp_Cpu>=PULP_V0 || Pulp_Cpu==PULP_IMG) && !TARGET_MASK_NOINDREGREG) {
                 if (addr.type == ADDRESS_REG_REG) Prefix = 1;
         }
 	if (addr.type == ADDRESS_REG_POST_INC || addr.type == ADDRESS_REG_POST_DEC || addr.type == ADDRESS_REG_POST_MODIFY) Prefix = 1;
@@ -2326,7 +2326,7 @@ riscv_emit_int_compare (enum rtx_code *code, rtx *op0, rtx *op1)
 
   *op0 = force_reg (word_mode, *op0);
   if (*op1 != const0_rtx) {
-     if (!((Pulp_Cpu>=PULP_V2) && (*code == EQ || *code == NE) && (GET_CODE(*op1) == CONST_INT) && (INTVAL(*op1) >= -16) && (INTVAL(*op1) <= 15))) 
+     if (!((Pulp_Cpu>=PULP_V2) && (*code == EQ || *code == NE) && (GET_CODE(*op1) == CONST_INT) && (INTVAL(*op1) >= -16) && (INTVAL(*op1) <= 15)))
     	*op1 = force_reg (word_mode, *op1);
   }
 }
@@ -3951,7 +3951,7 @@ riscv_save_reg_p (unsigned int regno, unsigned int is_it)
                        || (regno == HARD_FRAME_POINTER_REGNUM
                            && frame_pointer_needed);
   // bool it_rel = is_it && df_regs_ever_live_p(regno) && scan_reg_definitions(regno);
-  bool it_rel = is_it && df_regs_ever_live_p(regno); 
+  bool it_rel = is_it && df_regs_ever_live_p(regno);
   /*
   if ((call_saved && might_clobber)
          || (regno == RETURN_ADDR_REGNUM && crtl->calls_eh_return)
@@ -4606,7 +4606,7 @@ riscv_set_current_function (tree decl)
         	for (i=1; i<32; i++) if (call_used_regs[i]) fprintf(stderr, " %d", i);
 		fprintf(stderr, "\n");
 	}
-	
+
 }
 
 
@@ -5428,9 +5428,9 @@ hwloop_optimize (hwloop_info loop)
 	fprintf(dump_file, "head         : bb%d\n", loop->head->index);
 	fprintf(dump_file, "incoming_src : bb%d\n", loop->incoming_src?loop->incoming_src->index:-5555);
 	fprintf(dump_file, "incoming_dest: bb%d\n", loop->incoming_dest?loop->incoming_dest->index:-5555);
-	for (i = 0; vec_safe_iterate(loop->incoming, i, &e); i++) 
+	for (i = 0; vec_safe_iterate(loop->incoming, i, &e); i++)
 		fprintf(dump_file, " Incoming: src= bb%4d, dest= bb%4d, Edge is: %s\n", e->src->index, e->dest->index, (e->flags & EDGE_FALLTHRU)?"Fall Through":"Branch");
-	
+
   }
   if (loop->depth > MAX_LOOP_DEPTH)
     {
@@ -5732,7 +5732,7 @@ hwloop_optimize (hwloop_info loop)
 							single_def_iter = NULL; break;
 						}
 					}
-					
+
 				}
 			if (!single_def_iter) {
 				if (dump_file) {
@@ -5828,7 +5828,7 @@ hwloop_optimize (hwloop_info loop)
 	} else {
 		/* Use short form:
 			lp.counti level, end_label, iter_reg
-			
+
 			immediate(iter_reg) and 0 <= imm_value <= 2047 and loop->length <= 31
 				we can use lp.counti level, loop_end, imm_value
 		*/
@@ -6035,7 +6035,7 @@ static void riscv_patch_generated_code()
 {
 	/* Look for pattern
 				1) set RegW = Mem()
-				2) JumpCond	
+				2) JumpCond
 		FallThrough:	3) Call RegR
 
 		With RegR = RegW, if found insert a nop after  1)
@@ -6069,7 +6069,7 @@ static void riscv_patch_generated_code()
 			}
 		}
 		if (!TargetBB) continue;
-		
+
 		end = BB_END(TargetBB);
       		for (insn = BB_HEAD(TargetBB); ; insn = NEXT_INSN (insn)) {
 			if ((!DEBUG_INSN_P (insn)&&!NOTE_P(insn)) || (insn == end)) break;
@@ -6085,8 +6085,8 @@ static void riscv_patch_generated_code()
 		if (REGNO(RegW) != REGNO(RegR)) continue;
 
 		prev_insn = emit_insn_after (gen_forced_nop (), prev_insn);
-		
-		
+
+
 	}
 
 }
