@@ -667,7 +667,7 @@
   [(set (match_operand:SI          0 "register_operand" "=r")
 	(mult:SI (match_operand:SI 1 "register_operand" " r")
 		 (match_operand:SI 2 "register_operand" " r")))]
-  "(Pulp_Cpu>=PULP_V0) || TARGET_MUL || (Pulp_Cpu==PULP_SLIM)"
+  "(Pulp_Cpu>=PULP_V0) || TARGET_MUL || (Pulp_Cpu==PULP_SLIM) || Pulp_Cpu==PULP_IMG"
   {
         if (TARGET_64BIT) return "mulw\t%0,%1,%2";
         else if (Pulp_Cpu) return "p.mul\t%0,%1,%2";
@@ -783,7 +783,7 @@
 		   (match_operand:SI 1 "register_operand" " r"))
 		 (any_extend:DI
 		   (match_operand:SI 2 "register_operand" " r"))))]
-  "(TARGET_MUL||(Pulp_Cpu>=PULP_V2)||(Pulp_Cpu==PULP_SLIM)) && !TARGET_64BIT"
+  "(TARGET_MUL||(Pulp_Cpu>=PULP_V2)||(Pulp_Cpu==PULP_SLIM)||(Pulp_Cpu==PULP_IMG)) && !TARGET_64BIT"
 {
   rtx temp = gen_reg_rtx (SImode);
   emit_insn (gen_mulsi3 (temp, operands[1], operands[2]));
@@ -802,7 +802,7 @@
 		     (any_extend:DI
 		       (match_operand:SI 2 "register_operand" " r")))
 	    (const_int 32))))]
-  "(TARGET_MUL||(Pulp_Cpu>=PULP_V2)||(Pulp_Cpu==PULP_SLIM)) && !TARGET_64BIT"
+  "(TARGET_MUL||(Pulp_Cpu>=PULP_V2)||(Pulp_Cpu==PULP_SLIM)||(Pulp_Cpu==PULP_IMG)) && !TARGET_64BIT"
   {
         if (Pulp_Cpu) return "p.mulh<u>\t%0,%1,%2";
         else return "mulh<u>\t%0,%1,%2";
@@ -817,7 +817,7 @@
 		   (match_operand:SI 1 "register_operand" " r"))
 		 (sign_extend:DI
 		   (match_operand:SI 2 "register_operand" " r"))))]
-  "(TARGET_MUL||(Pulp_Cpu>=PULP_V2)||(Pulp_Cpu==PULP_SLIM)) && !TARGET_64BIT"
+  "(TARGET_MUL||(Pulp_Cpu>=PULP_V2)||(Pulp_Cpu==PULP_SLIM)||(Pulp_Cpu==PULP_IMG)) && !TARGET_64BIT"
 {
   rtx temp = gen_reg_rtx (SImode);
   emit_insn (gen_mulsi3 (temp, operands[1], operands[2]));
@@ -836,7 +836,7 @@
 		     (sign_extend:DI
 		       (match_operand:SI 2 "register_operand" " r")))
 	    (const_int 32))))]
-  "(TARGET_MUL||(Pulp_Cpu>=PULP_V2)||(Pulp_Cpu==PULP_SLIM)) && !TARGET_64BIT"
+  "(TARGET_MUL||(Pulp_Cpu>=PULP_V2)||(Pulp_Cpu==PULP_SLIM)||(Pulp_Cpu==PULP_IMG)) && !TARGET_64BIT"
   {
         if (Pulp_Cpu) return "p.mulhsu\t%0,%2,%1";
         else return "mulhsu\t%0,%2,%1";
@@ -856,7 +856,7 @@
   [(set (match_operand:SI             0 "register_operand" "=r")
 	(any_div:SI (match_operand:SI 1 "register_operand" " r")
 		    (match_operand:SI 2 "register_operand" " r")))]
-  "(TARGET_DIV || ((Pulp_Cpu >= PULP_V2)||(Pulp_Cpu==PULP_SLIM)))"
+  "(TARGET_DIV || ((Pulp_Cpu >= PULP_V2)||(Pulp_Cpu==PULP_SLIM)||(Pulp_Cpu==PULP_IMG)))"
   { return TARGET_64BIT ? "<insn>w\t%0,%1,%2" : Pulp_Cpu?"p.<insn>\t%0,%1,%2":"<insn>\t%0,%1,%2"; }
 
   [(set_attr "type" "idiv")
