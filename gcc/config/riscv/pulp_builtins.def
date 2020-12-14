@@ -48,8 +48,8 @@ Currently these macros are used in 2 contexts:
 
   DIRECT_BUILTIN1(abssi2,        	abs,        	RISCV_INT_FTYPE_INT,     			pulp_vall_or_img, NULL)
 
-  DIRECT_BUILTIN1(maddsisi4,        	mac,        	RISCV_INT_FTYPE_INT_INT_INT,     		pulp_vall, NULL)
-  DIRECT_BUILTIN1(msubsisi4,        	msu,        	RISCV_INT_FTYPE_INT_INT_INT,     		pulp_vall, NULL)
+  DIRECT_BUILTIN1(maddsisi4,        	mac,        	RISCV_INT_FTYPE_INT_INT_INT,     		pulp_vall_or_img, NULL)
+  DIRECT_BUILTIN1(msubsisi4,        	msu,        	RISCV_INT_FTYPE_INT_INT_INT,     		pulp_vall_or_img, NULL)
 
   DIRECT_BUILTIN1(macshi_si4,         	macs,       	RISCV_INT_FTYPE_SHORT_SHORT_INT, 		pulp_vall, NULL)
   DIRECT_BUILTIN1(macuhi_si4,         	macu,       	RISCV_INT_FTYPE_SHORT_SHORT_INT, 		pulp_vall, NULL)

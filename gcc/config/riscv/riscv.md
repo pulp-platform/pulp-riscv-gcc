@@ -2043,7 +2043,7 @@
                  (match_operand:SI 3 "register_operand" "r,0"))
    )
   ]
-"((Pulp_Cpu>=PULP_V0) && !TARGET_MASK_NOMAC)"
+"((Pulp_Cpu>=PULP_V0 || Pulp_Cpu==PULP_IMG) && !TARGET_MASK_NOMAC)"
 "@
  p.mac \t%0,%1,%2,%3\t# mac 32x32 in 32 instruction
  p.mac \t%0,%1,%2\t# mac 32x32 in 32 instruction"
@@ -2059,7 +2059,7 @@
 	)
    )
   ]
-"((Pulp_Cpu>=PULP_V2) && !TARGET_MASK_NOMAC)"
+"((Pulp_Cpu>=PULP_V2 || Pulp_Cpu==PULP_IMG) && !TARGET_MASK_NOMAC)"
 "p.msu \t%0,%1,%2\t# mac 32x32 in 32 instruction"
 [(set_attr "type" "imul")
  (set_attr "mode" "SI")]
