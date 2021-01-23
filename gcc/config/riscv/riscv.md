@@ -4187,7 +4187,7 @@
        (vec_duplicate:VMODEINT (match_operand:<vec_scalar_elmt> 1 "nonmemory_operand" "r,vIsdc"))
   )
  ]
-"((Pulp_Cpu>=PULP_V2) && !TARGET_MASK_NOVECT)"
+"((Pulp_Cpu>=PULP_V2 || Pulp_Cpu==PULP_IMG) && !TARGET_MASK_NOVECT)"
 "@
   pv.add.sc.<vec_size>\t%0,x0,%1 # Vector insert Scalar Reg
   pv.add.sci.<vec_size>\t%0,x0,%W1 # Vector insert Scalar Imm"
@@ -4984,7 +4984,7 @@
           (vec_duplicate:VMODEALL (match_operand:<vec_scalar_elmt> 1 "nonmemory_operand" "r,J"))
           (match_operand:VMODEALL 3 "register_operand" "0,0")
           (match_operand:SI 2 "immediate_operand" "i,i")))]
-  "((Pulp_Cpu>=PULP_V2) && !TARGET_MASK_NOVECT)"
+  "((Pulp_Cpu>=PULP_V2 || Pulp_Cpu==PULP_IMG) && !TARGET_MASK_NOVECT)"
 {
   int elt = ffs ((int) INTVAL (operands[2])) - 1;
 
@@ -5002,7 +5002,7 @@
           (vec_duplicate:VMODEALL2 (match_operand:<vec_scalar_elmt> 1 "nonmemory_operand" "r,J"))
 	  (const_vector:VMODEALL2 [(const_int 0) (const_int 0)])
           (match_operand:SI 2 "const_1_operand" "Z,Z")))]
-  "((Pulp_Cpu>=PULP_V2) && !TARGET_MASK_NOVECT)"
+  "((Pulp_Cpu>=PULP_V2 || Pulp_Cpu==PULP_IMG) && !TARGET_MASK_NOVECT)"
 {
   int elt = ffs ((int) INTVAL (operands[2])) - 1;
 
@@ -5021,7 +5021,7 @@
           (vec_duplicate:VMODEALL4 (match_operand:<vec_scalar_elmt> 1 "nonmemory_operand" "r,J"))
 	  (const_vector:VMODEALL4 [(const_int 0) (const_int 0) (const_int 0) (const_int 0)])
           (match_operand:SI 2 "const_1_operand" "Z,Z")))]
-  "((Pulp_Cpu>=PULP_V2) && !TARGET_MASK_NOVECT)"
+  "((Pulp_Cpu>=PULP_V2 || Pulp_Cpu==PULP_IMG) && !TARGET_MASK_NOVECT)"
 {
   int elt = ffs ((int) INTVAL (operands[2])) - 1;
 
@@ -5038,7 +5038,7 @@
   [(match_operand:VMODEALL 0 "register_operand" "")
    (match_operand:<vec_scalar_elmt> 1 "nonmemory_operand" "")
    (match_operand:SI 2 "immediate_operand" "")]
-  "((Pulp_Cpu>=PULP_V2) && !TARGET_MASK_NOVECT)"
+  "((Pulp_Cpu>=PULP_V2 || Pulp_Cpu==PULP_IMG) && !TARGET_MASK_NOVECT)"
 {
   HOST_WIDE_INT elem = (HOST_WIDE_INT) 1 << INTVAL (operands[2]);	/* Should always be 1 */
 
@@ -5055,7 +5055,7 @@
   [(match_operand:VMODEALL 0 "register_operand" "")
    (match_operand:<vec_scalar_elmt> 1 "nonmemory_operand" "")
    (match_operand:SI 2 "immediate_operand" "")]
-  "((Pulp_Cpu>=PULP_V2) && !TARGET_MASK_NOVECT)"
+  "((Pulp_Cpu>=PULP_V2 || Pulp_Cpu==PULP_IMG) && !TARGET_MASK_NOVECT)"
 {
   HOST_WIDE_INT elem = (HOST_WIDE_INT) 1 << INTVAL (operands[2]);
   emit_insn (gen_vec_set<mode>_internal (operands[0], operands[1], GEN_INT (elem), operands[0]));
@@ -5074,7 +5074,7 @@
         )
    )
   ]
-  "((Pulp_Cpu>=PULP_V2) && !TARGET_MASK_NOVECT)"
+  "((Pulp_Cpu>=PULP_V2 || Pulp_Cpu==PULP_IMG) && !TARGET_MASK_NOVECT)"
   "pv.extract.<vec_size>\t%0,%1,%2\t # vect extract, with sign ext"
 [(set_attr "type" "move")
  (set_attr "mode" "<SUBDI:MODE>")]
@@ -5090,7 +5090,7 @@
         )
    )
   ]
-  "((Pulp_Cpu>=PULP_V2) && !TARGET_MASK_NOVECT)"
+  "((Pulp_Cpu>=PULP_V2 || Pulp_Cpu==PULP_IMG) && !TARGET_MASK_NOVECT)"
   "pv.extractu.<vec_size>\t%0,%1,%2\t # vect extract, with zero ext"
 [(set_attr "type" "move")
  (set_attr "mode" "<SUBDI:MODE>")]
@@ -5104,7 +5104,7 @@
         )
    )
   ]
-  "((Pulp_Cpu>=PULP_V2) && !TARGET_MASK_NOVECT)"
+  "((Pulp_Cpu>=PULP_V2 || Pulp_Cpu==PULP_IMG) && !TARGET_MASK_NOVECT)"
   "pv.extract.<vec_size>\t%0,%1,%2\t # vect extract"
 [(set_attr "type" "move")
  (set_attr "mode" "SI")]
@@ -5383,7 +5383,7 @@
         )
    )
   ]
-"((Pulp_Cpu>=PULP_V2) && !TARGET_MASK_NOVECT)"
+"((Pulp_Cpu>=PULP_V2 || Pulp_Cpu==PULP_IMG) && !TARGET_MASK_NOVECT)"
 "@
   pv.<vec_op2_asm_name>.<vec_size> \t%0,%1,%2\t # Vect Op Vect
   pv.<vec_op2_asm_name>.sci.<vec_size> \t%0,%1,%W2\t # Vect Op Immediate Scalar"
@@ -5398,7 +5398,7 @@
 	)
    )
   ]
-"((Pulp_Cpu>=PULP_V2) && !TARGET_MASK_NOVECT)"
+"((Pulp_Cpu>=PULP_V2 || Pulp_Cpu==PULP_IMG) && !TARGET_MASK_NOVECT)"
 "pv.<vec_op2_asm_name>.sc.<vec_size> \t%0,%1,%2\t # Vect Op Scalar"
 [(set_attr "type" "arith")
  (set_attr "mode" "SI")]
@@ -5411,7 +5411,7 @@
 	)
    )
   ]
-"((Pulp_Cpu>=PULP_V2) && !TARGET_MASK_NOVECT)"
+"((Pulp_Cpu>=PULP_V2 || Pulp_Cpu==PULP_IMG) && !TARGET_MASK_NOVECT)"
 "pv.<vec_op2_asm_name>.sc.<vec_size> \t%0,%2,%1\t # Vect Op Scalar (swap)"
 [(set_attr "type" "arith")
  (set_attr "mode" "SI")]
@@ -5501,7 +5501,7 @@
         )
    )
   ]
-"((Pulp_Cpu>=PULP_V2) && !TARGET_MASK_NOVECT)"
+"((Pulp_Cpu>=PULP_V2 || Pulp_Cpu==PULP_IMG) && !TARGET_MASK_NOVECT)"
 "@
   pv.<vec_op2u_asm_name>.<vec_size> \t%0,%1,%2\t # VectU Op Vect
   pv.<vec_op2u_asm_name>.sci.<vec_size> \t%0,%1,%w2\t # VectU Op Immediate Scalar"
@@ -5516,7 +5516,7 @@
 	)
    )
   ]
-"((Pulp_Cpu>=PULP_V2) && !TARGET_MASK_NOVECT)"
+"((Pulp_Cpu>=PULP_V2 || Pulp_Cpu==PULP_IMG) && !TARGET_MASK_NOVECT)"
 "pv.<vec_op2u_asm_name>.sc.<vec_size> \t%0,%1,%2\t # VectU Op Scalar"
 [(set_attr "type" "arith")
  (set_attr "mode" "SI")]
@@ -5529,7 +5529,7 @@
 	)
    )
   ]
-"((Pulp_Cpu>=PULP_V2) && !TARGET_MASK_NOVECT)"
+"((Pulp_Cpu>=PULP_V2 || Pulp_Cpu==PULP_IMG) && !TARGET_MASK_NOVECT)"
 "pv.<vec_op2u_asm_name>.sc.<vec_size> \t%0,%2,%1\t # VectU Op Scalar (swap)"
 [(set_attr "type" "arith")
  (set_attr "mode" "SI")]
@@ -5543,7 +5543,7 @@
         )
    )
   ]
-"((Pulp_Cpu>=PULP_V2) && !TARGET_MASK_NOVECT)"
+"((Pulp_Cpu>=PULP_V2 || Pulp_Cpu==PULP_IMG) && !TARGET_MASK_NOVECT)"
 "@
   pv.<vec_op2s_asm_name>.<vec_size> \t%0,%1,%2\t # Vect Shift Vect
   pv.<vec_op2s_asm_name>.sci.<vec_size> \t%0,%1,%W2\t # Vect Shift Immediate Scalar"
@@ -5558,7 +5558,7 @@
 	)
    )
   ]
-"((Pulp_Cpu>=PULP_V2) && !TARGET_MASK_NOVECT)"
+"((Pulp_Cpu>=PULP_V2 || Pulp_Cpu==PULP_IMG) && !TARGET_MASK_NOVECT)"
 "pv.<vec_op2s_asm_name>.sc.<vec_size> \t%0,%1,%2\t # Vect Shift Scalar"
 [(set_attr "type" "arith")
  (set_attr "mode" "SI")]
@@ -5573,7 +5573,7 @@
 	)
    )
   ]
-"((Pulp_Cpu>=PULP_V2) && !TARGET_MASK_NOVECT)"
+"((Pulp_Cpu>=PULP_V2 || Pulp_Cpu==PULP_IMG) && !TARGET_MASK_NOVECT)"
 "@
  pv.avg.<vec_size> \t%0,%1,%2\t # Vect Avg Vect
  pv.avg.sci.<vec_size> \t%0,%1,%W2\t # Vect Avg Scalar"
@@ -5591,7 +5591,7 @@
 	)
    )
   ]
-"((Pulp_Cpu>=PULP_V2) && !TARGET_MASK_NOVECT)"
+"((Pulp_Cpu>=PULP_V2 || Pulp_Cpu==PULP_IMG) && !TARGET_MASK_NOVECT)"
 "@
  pv.avg.<vec_size> \t%0,%1,%2\t # Vect Avg Vect
  pv.avg.sci.<vec_size> \t%0,%1,%W2\t # Vect Avg Scalar"
@@ -5608,7 +5608,7 @@
 	)
    )
   ]
-"((Pulp_Cpu>=PULP_V2) && !TARGET_MASK_NOVECT)"
+"((Pulp_Cpu>=PULP_V2 || Pulp_Cpu==PULP_IMG) && !TARGET_MASK_NOVECT)"
 "pv.avg.sc.<vec_size> \t%0,%1,%2\t # Vect Avg Scalar"
 [(set_attr "type" "arith")
  (set_attr "mode" "SI")]
@@ -5623,7 +5623,7 @@
 	)
    )
   ]
-"((Pulp_Cpu>=PULP_V2) && !TARGET_MASK_NOVECT)"
+"((Pulp_Cpu>=PULP_V2 || Pulp_Cpu==PULP_IMG) && !TARGET_MASK_NOVECT)"
 "pv.avg.sc.<vec_size> \t%0,%1,%2\t # Vect Avg Scalar"
 [(set_attr "type" "arith")
  (set_attr "mode" "SI")]
@@ -5638,7 +5638,7 @@
 	)
    )
   ]
-"((Pulp_Cpu>=PULP_V2) && !TARGET_MASK_NOVECT)"
+"((Pulp_Cpu>=PULP_V2 || Pulp_Cpu==PULP_IMG) && !TARGET_MASK_NOVECT)"
 "pv.avg.sc.<vec_size> \t%0,%2,%1\t # Vect Avg Scalar (swap)"
 [(set_attr "type" "arith")
  (set_attr "mode" "SI")]
@@ -5653,7 +5653,7 @@
 	)
    )
   ]
-"((Pulp_Cpu>=PULP_V2) && !TARGET_MASK_NOVECT)"
+"((Pulp_Cpu>=PULP_V2 || Pulp_Cpu==PULP_IMG) && !TARGET_MASK_NOVECT)"
 "pv.avg.sc.<vec_size> \t%0,%2,%1\t # Vect Avg Scalar (swap)"
 [(set_attr "type" "arith")
  (set_attr "mode" "SI")]
@@ -5670,7 +5670,7 @@
 	)
    )
   ]
-"((Pulp_Cpu>=PULP_V2) && !TARGET_MASK_NOVECT)"
+"((Pulp_Cpu>=PULP_V2 || Pulp_Cpu==PULP_IMG) && !TARGET_MASK_NOVECT)"
 "@
  pv.avgu.h \t%0,%1,%2\t # Vect2 Avgu Vect
  pv.avgu.sci.h \t%0,%1,%w2\t # Vect2 Avgu Scalar"
@@ -5687,7 +5687,7 @@
 	)
    )
   ]
-"((Pulp_Cpu>=PULP_V2) && !TARGET_MASK_NOVECT)"
+"((Pulp_Cpu>=PULP_V2 || Pulp_Cpu==PULP_IMG) && !TARGET_MASK_NOVECT)"
 "@
  pv.avgu.b \t%0,%1,%2\t # Vect4 Avgu Vect
  pv.avgu.sci.b \t%0,%1,%w2\t # Vect4 Avgu Scalar"
@@ -5704,7 +5704,7 @@
 	)
    )
   ]
-"((Pulp_Cpu>=PULP_V2) && !TARGET_MASK_NOVECT)"
+"((Pulp_Cpu>=PULP_V2 || Pulp_Cpu==PULP_IMG) && !TARGET_MASK_NOVECT)"
 "pv.avgu.sc.h \t%0,%1,%2\t # Vect 2 AvgU Scalar"
 [(set_attr "type" "arith")
  (set_attr "mode" "SI")]
@@ -5719,7 +5719,7 @@
 	)
    )
   ]
-"((Pulp_Cpu>=PULP_V2) && !TARGET_MASK_NOVECT)"
+"((Pulp_Cpu>=PULP_V2 || Pulp_Cpu==PULP_IMG) && !TARGET_MASK_NOVECT)"
 "pv.avgu.sc.b \t%0,%1,%2\t # Vect 4 AvgU Scalar"
 [(set_attr "type" "arith")
  (set_attr "mode" "SI")]
@@ -5734,7 +5734,7 @@
 	)
    )
   ]
-"((Pulp_Cpu>=PULP_V2) && !TARGET_MASK_NOVECT)"
+"((Pulp_Cpu>=PULP_V2 || Pulp_Cpu==PULP_IMG) && !TARGET_MASK_NOVECT)"
 "pv.avgu.sc.h \t%0,%2,%1\t # Vect 2 AvgU Scalar (swap)"
 [(set_attr "type" "arith")
  (set_attr "mode" "SI")]
@@ -5749,7 +5749,7 @@
 	)
    )
   ]
-"((Pulp_Cpu>=PULP_V2) && !TARGET_MASK_NOVECT)"
+"((Pulp_Cpu>=PULP_V2 || Pulp_Cpu==PULP_IMG) && !TARGET_MASK_NOVECT)"
 "pv.avgu.sc.b \t%0,%2,%1\t # Vect 4 AvgU Scalar (swap)"
 [(set_attr "type" "arith")
  (set_attr "mode" "SI")]
@@ -5764,7 +5764,7 @@
         )
    )
   ]
-"((Pulp_Cpu>=PULP_V2) && !TARGET_MASK_NOVECT)"
+"((Pulp_Cpu>=PULP_V2 || Pulp_Cpu==PULP_IMG) && !TARGET_MASK_NOVECT)"
 "@
   pv.<vec_log2_asm_name>.<vec_size> \t%0,%1,%2\t # Logical Vect Op Vect
   pv.<vec_log2_asm_name>.sci.<vec_size> \t%0,%1,%W2\t # Logical Vect Op Immediate Scalar
@@ -5780,7 +5780,7 @@
 	)
    )
   ]
-"((Pulp_Cpu>=PULP_V2) && !TARGET_MASK_NOVECT)"
+"((Pulp_Cpu>=PULP_V2 || Pulp_Cpu==PULP_IMG) && !TARGET_MASK_NOVECT)"
 "pv.<vec_log2_asm_name>.sc.<vec_size> \t%0,%1,%2\t # Logical Vect Op Scalar"
 [(set_attr "type" "logical,logical")
  (set_attr "mode" "SI,SF")]
@@ -5793,7 +5793,7 @@
 	)
    )
   ]
-"((Pulp_Cpu>=PULP_V2) && !TARGET_MASK_NOVECT)"
+"((Pulp_Cpu>=PULP_V2 || Pulp_Cpu==PULP_IMG) && !TARGET_MASK_NOVECT)"
 "pv.<vec_log2_asm_name>.sc.<vec_size> \t%0,%2,%1\t # Logical Vect Op Scalar (swap)"
 [(set_attr "type" "logical,logical")
  (set_attr "mode" "SI,SF")]
@@ -5815,7 +5815,7 @@
         )
    )
   ]
-"((Pulp_Cpu>=PULP_V2) && !TARGET_MASK_NOVECT)"
+"((Pulp_Cpu>=PULP_V2 || Pulp_Cpu==PULP_IMG) && !TARGET_MASK_NOVECT)"
 "pv.abs.<vec_size> \t%0,%1\t # Vect abs"
 [(set_attr "type" "arith")
  (set_attr "mode" "SI")]
@@ -5835,7 +5835,7 @@
         )
    )
   ]
-"((Pulp_Cpu>=PULP_V2) && !TARGET_MASK_NOVECT)"
+"((Pulp_Cpu>=PULP_V2 || Pulp_Cpu==PULP_IMG) && !TARGET_MASK_NOVECT)"
 "pv.sub.<vec_size> \t%0,x0,%1\t # Vect neg"
 [(set_attr "type" "arith")
  (set_attr "mode" "SI")]
@@ -6355,7 +6355,7 @@
 	)
    )
   ]
-"((Pulp_Cpu>=PULP_V2) && !TARGET_MASK_NOVECT)"
+"((Pulp_Cpu>=PULP_V2 || Pulp_Cpu==PULP_IMG) && !TARGET_MASK_NOVECT)"
 "@
   pv.dotsp.h \t%0,%1,%2\t # Vect 2 dot product
   pv.dotsp.sci.h \t%0,%1,%W2\t # Vect/Imm 2 dot product"
@@ -6377,7 +6377,7 @@
 	)
    )
   ]
-"((Pulp_Cpu>=PULP_V2) && !TARGET_MASK_NOVECT)"
+"((Pulp_Cpu>=PULP_V2 || Pulp_Cpu==PULP_IMG) && !TARGET_MASK_NOVECT)"
 "pv.dotsp.sc.h \t%0,%1,%2\t # Vect/Scalar reg 2 signed dot product"
 [(set_attr "type" "arith")
  (set_attr "mode" "SI")]
@@ -6390,7 +6390,7 @@
 	)
    )
   ]
-"((Pulp_Cpu>=PULP_V2) && !TARGET_MASK_NOVECT)"
+"((Pulp_Cpu>=PULP_V2 || Pulp_Cpu==PULP_IMG) && !TARGET_MASK_NOVECT)"
 "pv.dotsp.sci.h \t%0,%1,1\t # Vect 2 Sum of elements (reduction)"
 [(set_attr "type" "arith")
  (set_attr "mode" "SI")]
@@ -6410,7 +6410,7 @@
 	)
    )
   ]
-"((Pulp_Cpu>=PULP_V2) && !TARGET_MASK_NOVECT)"
+"((Pulp_Cpu>=PULP_V2 || Pulp_Cpu==PULP_IMG) && !TARGET_MASK_NOVECT)"
 "@
  pv.dotup.h \t%0,%1,%2\t # Vect 2 unsigned dot product
  pv.dotup.sci.h \t%0,%1,%w2\t # Vect/Imm 2 unsigned dot product"
@@ -6432,7 +6432,7 @@
 	)
    )
   ]
-"((Pulp_Cpu>=PULP_V2) && !TARGET_MASK_NOVECT)"
+"((Pulp_Cpu>=PULP_V2 || Pulp_Cpu==PULP_IMG) && !TARGET_MASK_NOVECT)"
 "pv.dotup.sc.h \t%0,%1,%2\t # Vect/Scalar reg 2 unssigned dot product"
 [(set_attr "type" "arith")
  (set_attr "mode" "SI")]
@@ -6452,7 +6452,7 @@
 	)
    )
   ]
-"((Pulp_Cpu>=PULP_V2) && !TARGET_MASK_NOVECT)"
+"((Pulp_Cpu>=PULP_V2 || Pulp_Cpu==PULP_IMG) && !TARGET_MASK_NOVECT)"
 "@
  pv.dotusp.h \t%0,%1,%2\t # Vect 2 unsigned/signed dot product
  pv.dotusp.sci.h \t%0,%1,%W2\t # Vect/Imm 2 unsigned/signed dot product"
@@ -6474,7 +6474,7 @@
 	)
    )
   ]
-"((Pulp_Cpu>=PULP_V2) && !TARGET_MASK_NOVECT)"
+"((Pulp_Cpu>=PULP_V2 || Pulp_Cpu==PULP_IMG) && !TARGET_MASK_NOVECT)"
 "pv.dotusp.sc.h \t%0,%1,%2\t # Vect/Scalar reg 2 unsigned/signed dot product"
 [(set_attr "type" "arith")
  (set_attr "mode" "SI")]
@@ -6506,7 +6506,7 @@
 	)
    )
   ]
-"((Pulp_Cpu>=PULP_V2) && !TARGET_MASK_NOVECT)"
+"((Pulp_Cpu>=PULP_V2 || Pulp_Cpu==PULP_IMG) && !TARGET_MASK_NOVECT)"
 "@
  pv.dotsp.b \t%0,%1,%2\t # Vect 4 dot product
  pv.dotsp.sci.b \t%0,%1,%W2\t # Vect/Imm 4 dot product"
@@ -6526,7 +6526,7 @@
 	)
    )
   ]
-"((Pulp_Cpu>=PULP_V2) && !TARGET_MASK_NOVECT)"
+"((Pulp_Cpu>=PULP_V2 || Pulp_Cpu==PULP_IMG) && !TARGET_MASK_NOVECT)"
 "pv.dotsp.sci.b \t%0,%1,1\t # Vect 4 sum of elements (reduction)"
 [(set_attr "type" "arith")
  (set_attr "mode" "SI")]
@@ -6558,7 +6558,7 @@
 	)
    )
   ]
-"((Pulp_Cpu>=PULP_V2) && !TARGET_MASK_NOVECT)"
+"((Pulp_Cpu>=PULP_V2 || Pulp_Cpu==PULP_IMG) && !TARGET_MASK_NOVECT)"
 "pv.dotsp.sc.b \t%0,%1,%2\t # Vect/Scalar reg 4 dot product"
 [(set_attr "type" "arith")
  (set_attr "mode" "SI")]
@@ -6590,7 +6590,7 @@
 	)
    )
   ]
-"((Pulp_Cpu>=PULP_V2) && !TARGET_MASK_NOVECT)"
+"((Pulp_Cpu>=PULP_V2 || Pulp_Cpu==PULP_IMG) && !TARGET_MASK_NOVECT)"
 "@
  pv.dotup.b \t%0,%1,%2\t # Vect 4 unsigned dot product
  pv.dotup.sci.b \t%0,%1,%w2\t # Vect/Imm 4 unsigned dot product"
@@ -6624,7 +6624,7 @@
 	)
    )
   ]
-"((Pulp_Cpu>=PULP_V2) && !TARGET_MASK_NOVECT)"
+"((Pulp_Cpu>=PULP_V2 || Pulp_Cpu==PULP_IMG) && !TARGET_MASK_NOVECT)"
 "pv.dotup.sc.b \t%0,%1,%2\t # Vect/Scalar reg 4 unsigned dot product"
 [(set_attr "type" "arith")
  (set_attr "mode" "SI")]
@@ -6656,7 +6656,7 @@
 	)
    )
   ]
-"((Pulp_Cpu>=PULP_V2) && !TARGET_MASK_NOVECT)"
+"((Pulp_Cpu>=PULP_V2 || Pulp_Cpu==PULP_IMG) && !TARGET_MASK_NOVECT)"
 "@
  pv.dotusp.b \t%0,%1,%2\t # Vect 4 unsigned/signed dot product
  pv.dotusp.sci.b \t%0,%1,%W2\t # Vect/Imm 4 unsigned/signed dot product"
@@ -6690,7 +6690,7 @@
 	)
    )
   ]
-"((Pulp_Cpu>=PULP_V2) && !TARGET_MASK_NOVECT)"
+"((Pulp_Cpu>=PULP_V2 || Pulp_Cpu==PULP_IMG) && !TARGET_MASK_NOVECT)"
 "pv.dotusp.sc.b \t%0,%1,%2\t # Vect/Scalar reg 4 unsigned/signed dot product"
 [(set_attr "type" "arith")
  (set_attr "mode" "SI")]
@@ -6715,7 +6715,7 @@
 	)
    )
   ]
-"((Pulp_Cpu>=PULP_V2) && !TARGET_MASK_NOVECT)"
+"((Pulp_Cpu>=PULP_V2 || Pulp_Cpu==PULP_IMG) && !TARGET_MASK_NOVECT)"
 "@
  pv.sdotsp.h \t%0,%1,%2\t # Accumulation of 2 half dot products Vect/Vect
  pv.sdotsp.sci.h \t%0,%1,%W2\t # Accumulation of 2 half dot products vect/Imm"
@@ -6740,7 +6740,7 @@
 	)
    )
   ]
-"((Pulp_Cpu>=PULP_V2) && !TARGET_MASK_NOVECT)"
+"((Pulp_Cpu>=PULP_V2 || Pulp_Cpu==PULP_IMG) && !TARGET_MASK_NOVECT)"
 "pv.sdotsp.sc.h \t%0,%1,%2\t # Accumulation of Vect/Scalar reg 2 signed dot product"
 [(set_attr "type" "arith")
  (set_attr "mode" "SI")]
@@ -6763,7 +6763,7 @@
 	)
    )
   ]
-"((Pulp_Cpu>=PULP_V2) && !TARGET_MASK_NOVECT)"
+"((Pulp_Cpu>=PULP_V2 || Pulp_Cpu==PULP_IMG) && !TARGET_MASK_NOVECT)"
 "@
  pv.sdotup.h \t%0,%1,%2\t # Accumulation of 2 half unsigned dot products Vect/Vect
  pv.sdotup.sci.h \t%0,%1,%w2\t # Accumulation of 2 half unsigned dot products Vect/Imm"
@@ -6788,7 +6788,7 @@
 	)
    )
   ]
-"((Pulp_Cpu>=PULP_V2) && !TARGET_MASK_NOVECT)"
+"((Pulp_Cpu>=PULP_V2 || Pulp_Cpu==PULP_IMG) && !TARGET_MASK_NOVECT)"
 "pv.sdotup.sc.h \t%0,%1,%2\t # Accumulation of Vect/Scalar reg 2 unsigned dot product"
 [(set_attr "type" "arith")
  (set_attr "mode" "SI")]
@@ -6811,7 +6811,7 @@
 	)
    )
   ]
-"((Pulp_Cpu>=PULP_V2) && !TARGET_MASK_NOVECT)"
+"((Pulp_Cpu>=PULP_V2 || Pulp_Cpu==PULP_IMG) && !TARGET_MASK_NOVECT)"
 "@
  pv.sdotusp.h \t%0,%1,%2\t # Accumulation of 2 half unsigned/signed dot products Vect/Vect
  pv.sdotusp.sci.h \t%0,%1,%W2\t # Accumulation of 2 half unsigned/signed dot products Vect/Imm"
@@ -6836,7 +6836,7 @@
 	)
    )
   ]
-"((Pulp_Cpu>=PULP_V2) && !TARGET_MASK_NOVECT)"
+"((Pulp_Cpu>=PULP_V2 || Pulp_Cpu==PULP_IMG) && !TARGET_MASK_NOVECT)"
 "pv.sdotusp.sc.h \t%0,%1,%2\t # Accumulation of Vect/Scalar reg 2 unsigned/signed dot product"
 [(set_attr "type" "arith")
  (set_attr "mode" "SI")]
@@ -6871,7 +6871,7 @@
 	)
    )
   ]
-"((Pulp_Cpu>=PULP_V2) && !TARGET_MASK_NOVECT)"
+"((Pulp_Cpu>=PULP_V2 || Pulp_Cpu==PULP_IMG) && !TARGET_MASK_NOVECT)"
 "@
  pv.sdotsp.b \t%0,%1,%2\t # Accumulation of 4 byte dot products Vect/Vect
  pv.sdotsp.sci.b \t%0,%1,%W2\t # Accumulation of 4 byte dot products Vect/Imm"
@@ -6908,7 +6908,7 @@
 	)
    )
   ]
-"((Pulp_Cpu>=PULP_V2) && !TARGET_MASK_NOVECT)"
+"((Pulp_Cpu>=PULP_V2 || Pulp_Cpu==PULP_IMG) && !TARGET_MASK_NOVECT)"
 "pv.sdotsp.sc.b \t%0,%1,%2\t # Accumulation of Vect/Scalar reg 4 dot product"
 [(set_attr "type" "arith")
  (set_attr "mode" "SI")]
@@ -6943,7 +6943,7 @@
 	)
    )
   ]
-"((Pulp_Cpu>=PULP_V2) && !TARGET_MASK_NOVECT)"
+"((Pulp_Cpu>=PULP_V2 || Pulp_Cpu==PULP_IMG) && !TARGET_MASK_NOVECT)"
 "@
  pv.sdotup.b \t%0,%1,%2\t # Accumulation of 4 byte unsigned dot products Vect/Vect
  pv.sdotup.sci.b \t%0,%1,%w2\t # Accumulation of 4 byte unsigned dot products Vect/Imm"
@@ -6980,7 +6980,7 @@
 	)
    )
   ]
-"((Pulp_Cpu>=PULP_V2) && !TARGET_MASK_NOVECT)"
+"((Pulp_Cpu>=PULP_V2 || Pulp_Cpu==PULP_IMG) && !TARGET_MASK_NOVECT)"
 "pv.sdotup.sc.b \t%0,%1,%2\t # Accumulation of Vect/Scalar reg 4 unsigned dot product"
 [(set_attr "type" "arith")
  (set_attr "mode" "SI")]
@@ -7015,7 +7015,7 @@
 	)
    )
   ]
-"((Pulp_Cpu>=PULP_V2) && !TARGET_MASK_NOVECT)"
+"((Pulp_Cpu>=PULP_V2 || Pulp_Cpu==PULP_IMG) && !TARGET_MASK_NOVECT)"
 "@
  pv.sdotusp.b \t%0,%1,%2\t # Accumulation of 4 byte unsigned/signed dot products Vect/Vect
  pv.sdotusp.sci.b \t%0,%1,%W2\t # Accumulation of 4 byte unsigned/signed dot products Vect/Imm"
@@ -7052,7 +7052,7 @@
 	)
    )
   ]
-"((Pulp_Cpu>=PULP_V2) && !TARGET_MASK_NOVECT)"
+"((Pulp_Cpu>=PULP_V2 || Pulp_Cpu==PULP_IMG) && !TARGET_MASK_NOVECT)"
 "pv.sdotusp.sc.b \t%0,%1,%2\t # Accumulation of Vect/Scalar reg 4 unsigned/signed dot product"
 [(set_attr "type" "arith")
  (set_attr "mode" "SI")]
