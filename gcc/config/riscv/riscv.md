@@ -4731,7 +4731,7 @@
 		          ] UNSPEC_VEC_PERM2)
    )
   ]
-  "((Pulp_Cpu>=PULP_V2) && !(TARGET_MASK_NOVECT||TARGET_MASK_NOSHUFFLEPACK)  && riscv_valid_permute_operands (operands[1], operands[2], operands[3]))"
+  "((Pulp_Cpu>=PULP_V2 || Pulp_Cpu==PULP_IMG) && !(TARGET_MASK_NOVECT||TARGET_MASK_NOSHUFFLEPACK)  && riscv_valid_permute_operands (operands[1], operands[2], operands[3]))"
 {
 	switch (which_alternative) {
 		case 0:
@@ -4765,7 +4765,7 @@
 		          ] UNSPEC_VEC_PERM3)
    )
   ]
-  "((Pulp_Cpu>=PULP_V2) && !(TARGET_MASK_NOVECT||TARGET_MASK_NOSHUFFLEPACK))"
+  "((Pulp_Cpu>=PULP_V2 || Pulp_Cpu==PULP_IMG) && !(TARGET_MASK_NOVECT||TARGET_MASK_NOSHUFFLEPACK))"
   "pv.shuffle2.h\t%0,%2,%3 \t# Shuffle2, word"
 [(set_attr "type" "move")
  (set_attr "mode" "SI")]
@@ -4778,7 +4778,7 @@
 		          ] UNSPEC_VEC_PERM1)
    )
   ]
-  "((Pulp_Cpu>=PULP_V2) && !(TARGET_MASK_NOVECT||TARGET_MASK_NOSHUFFLEPACK))"
+  "((Pulp_Cpu>=PULP_V2 || Pulp_Cpu==PULP_IMG) && !(TARGET_MASK_NOVECT||TARGET_MASK_NOSHUFFLEPACK))"
 {
 	switch (which_alternative) {
 		case 0:
@@ -4842,7 +4842,7 @@
    (match_operand:VMODEALL2 2 "register_operand"    "")
    (match_operand:VMODEALL2 3 "permute_sel_operand" "")
   ]
-  "((Pulp_Cpu>=PULP_V2) && !(TARGET_MASK_NOVECT||TARGET_MASK_NOSHUFFLEPACK))"
+  "((Pulp_Cpu>=PULP_V2 || Pulp_Cpu==PULP_IMG) && !(TARGET_MASK_NOVECT||TARGET_MASK_NOSHUFFLEPACK))"
 {
 	if (rtx_equal_p(operands[1], operands[2])) {
 		emit_insn (gen_vec_permv2hi_internal2_1 (operands[0], operands[1], operands[2], operands[3]));
@@ -4873,7 +4873,7 @@
 		     ] UNSPEC_VEC_PERM2)
    )
   ]
-  "((Pulp_Cpu>=PULP_V2) && !(TARGET_MASK_NOVECT||TARGET_MASK_NOSHUFFLEPACK)  && riscv_valid_permute_operands (operands[1], operands[2], operands[3]))"
+  "((Pulp_Cpu>=PULP_V2 || Pulp_Cpu==PULP_IMG) && !(TARGET_MASK_NOVECT||TARGET_MASK_NOSHUFFLEPACK)  && riscv_valid_permute_operands (operands[1], operands[2], operands[3]))"
 {
 	switch (which_alternative) {
 		case 0:
@@ -4913,7 +4913,7 @@
 		     ] UNSPEC_VEC_PERM3)
    )
   ]
-  "((Pulp_Cpu>=PULP_V2) && !(TARGET_MASK_NOVECT||TARGET_MASK_NOSHUFFLEPACK))"
+  "((Pulp_Cpu>=PULP_V2 || Pulp_Cpu==PULP_IMG) && !(TARGET_MASK_NOVECT||TARGET_MASK_NOSHUFFLEPACK))"
   "pv.shuffle2.b\t%0,%2,%3 \t# Shuffle2, bytes"
 [(set_attr "type" "move")
  (set_attr "mode" "SI")]
@@ -4926,7 +4926,7 @@
 		     ] UNSPEC_VEC_PERM1)
    )
   ]
-  "((Pulp_Cpu>=PULP_V2) && !(TARGET_MASK_NOVECT||TARGET_MASK_NOSHUFFLEPACK))"
+  "((Pulp_Cpu>=PULP_V2 || Pulp_Cpu==PULP_IMG) && !(TARGET_MASK_NOVECT||TARGET_MASK_NOSHUFFLEPACK))"
 {
 	switch (which_alternative) {
 		case 0:
@@ -4963,7 +4963,7 @@
    (match_operand:V4QI 2 "register_operand" "")
    (match_operand:V4QI 3 "permute_sel_operand" "")
   ]
-  "((Pulp_Cpu>=PULP_V2) && !(TARGET_MASK_NOVECT||TARGET_MASK_NOSHUFFLEPACK))"
+  "((Pulp_Cpu>=PULP_V2 || Pulp_Cpu==PULP_IMG) && !(TARGET_MASK_NOVECT||TARGET_MASK_NOSHUFFLEPACK))"
 {
 	if (rtx_equal_p(operands[1], operands[2])) {
 		emit_insn (gen_vec_permv4qi_internal2_1 (operands[0], operands[1], operands[2], operands[3]));
