@@ -31,7 +31,8 @@ enum riscv_microarchitecture_type {
   marsellus0,
   marsellus1,
   marsellus2,
-  marsellus3
+  marsellus3,
+  mempool
 };
 extern enum riscv_microarchitecture_type riscv_microarchitecture;
 

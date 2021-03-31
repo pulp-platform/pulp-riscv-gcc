@@ -365,13 +365,27 @@ static const struct riscv_tune_info optimize_size_tune_info = {
   false,					/* slow_unaligned_access */
 };
 
+/* Costs to use when optimizing for size.  */
+static const struct riscv_tune_info optimize_mempool_tune_info = {
+  {COSTS_N_INSNS (1), COSTS_N_INSNS (1)}, /* fp_add */
+  {COSTS_N_INSNS (1), COSTS_N_INSNS (1)}, /* fp_mul */
+  {COSTS_N_INSNS (1), COSTS_N_INSNS (1)}, /* fp_div */
+  {COSTS_N_INSNS (3), COSTS_N_INSNS (3)}, /* int_mul */
+  {COSTS_N_INSNS (3), COSTS_N_INSNS (3)}, /* int_div */
+  1,                                      /* issue_rate */
+  1,                                      /* branch_cost */
+  10,                                     /* memory_cost */
+  true,                                   /* slow_unaligned_access */
+};
+
 /* A table describing all the processors GCC knows about.  */
 static const struct riscv_cpu_info riscv_cpu_info_table[] = {
   { "marsellus0", marsellus0, &rocket_tune_info },
   { "marsellus1", marsellus1, &rocket_tune_info },
   { "marsellus2", marsellus2, &rocket_tune_info },
   { "marsellus3", marsellus3, &rocket_tune_info },
-  { "rocket", marsellus2, &rocket_tune_info },
+  { "mempool", mempool, &optimize_mempool_tune_info },
+  { "rocket", generic, &rocket_tune_info },
   { "size", generic, &optimize_size_tune_info },
 };
 

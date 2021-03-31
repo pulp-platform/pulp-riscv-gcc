@@ -24,7 +24,7 @@
 ;; Microarchitectures we know how to tune for.
 ;; Keep this in sync with enum riscv_microarchitecture.
 (define_attr "tune"
-  "generic,marsellus0,marsellus1,marsellus2,marsellus3"
+  "generic,marsellus0,marsellus1,marsellus2,marsellus3,mempool"
   (const (symbol_ref "((enum attr_tune) riscv_microarchitecture)")))
 
 (define_automaton "pipe0")
