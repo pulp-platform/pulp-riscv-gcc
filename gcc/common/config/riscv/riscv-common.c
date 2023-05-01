@@ -154,7 +154,7 @@ riscv_parse_arch_string (const char *isa, int *flags, location_t loc)
 /* __GAP8 Stop */
                 case PULP_GAP9:
                         *flags &= ~MASK_64BIT; *flags |= MASK_MUL; *flags |= MASK_DIV; *flags &= ~MASK_ATOMIC; *flags |= MASK_HARD_FLOAT; *flags |= MASK_FPREGS_ON_GRREGS; *flags |= MASK_FDIV;
-			riscv_abi = ABI_ILP32; Has_F16ALT = 1; Has_FAUX = 1; Has_F16 = 1;
+			riscv_abi = ABI_ILP32; Has_F16ALT = 1; Has_FAUX = 1; Has_F16 = 1; Has_F8 = 1;
                         if (Pulp_Cpu == PULP_NONE || Pulp_Cpu == PULP_GAP9) Pulp_Cpu = PULP_GAP9;
                         else error("-Xgap9: pulp architecture is already defined as %s", PulpProcessorImage(Pulp_Cpu));
                         break;

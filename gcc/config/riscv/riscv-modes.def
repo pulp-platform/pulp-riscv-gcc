@@ -25,16 +25,23 @@ along with GCC; see the file COPYING3.  If not see
 FLOAT_MODE (TF, 16, ieee_quad_format);
 FLOAT_MODE (HF, 2, ieee_half_format);
 FLOAT_MODE (OHF, 2, riscv_oprecomp_half_format);
+FLOAT_MODE (QF, 1, riscv_oprecomp_byte_format);
+
 
 ADJUST_ALIGNMENT (DF, ((Pulp_DP_Format == PULP_DP_FORMAT64) ? 8 : 4));
 ADJUST_BYTESIZE (DF, ((Pulp_DP_Format == PULP_DP_FORMAT64) ? 8 : 4));
 ADJUST_FLOAT_FORMAT (DF, ((Pulp_DP_Format == PULP_DP_FORMAT64) ? &ieee_double_format : &ieee_single_format));
 
-/* Vector modes.  */
-VECTOR_MODES (INT, 4);        /*  V4QI V2HI */
-VECTOR_MODES (FLOAT, 4);      /* V2OHF V2HF */
-VECTOR_MODE  (INT, QI, 2);    /*       V2QI */
 
+/* Vector modes.  */
+VECTOR_MODES (INT, 4);        /* V4QI V2HI */
+VECTOR_MODE  (INT, QI, 2);    /* V2QI */
+
+/* OPRECOMP Additional vector modes */
+VECTOR_MODES (FLOAT, 4);      /* V4QF V2HF V2OHF */
+VECTOR_MODE  (FLOAT, QF, 8);  /* V8QF */
+VECTOR_MODE  (FLOAT, QF, 4);  /* V4QF */
+VECTOR_MODE  (FLOAT, QF, 2);  /* V2QF */
 VECTOR_MODE  (FLOAT, SF, 1);  /* V1SF */
 VECTOR_MODE  (FLOAT, SF, 2);  /* V2SF */
 VECTOR_MODE  (FLOAT, HF,  4); /* V4HF */
@@ -44,3 +51,8 @@ INT_MODE(NV, 4);
 INT_MODE(CV, 4);
 INT_MODE(HV, 4);
 INT_MODE(BV, 4);
+
+/* 64-bit vector modes */
+VECTOR_MODE  (INT, SI, 2);    /* V2SI */
+VECTOR_MODE  (INT, HI, 4);    /* V2SI */
+VECTOR_MODE  (INT, QI, 8);    /* V2SI */

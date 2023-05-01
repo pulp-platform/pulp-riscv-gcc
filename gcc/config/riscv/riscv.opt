@@ -320,6 +320,10 @@ mf16alt
 Target UInteger Var(Has_F16ALT) Init(0)
 Enable binary16alt SmallFloat type
 
+mf8
+Target UInteger Var(Has_F8) Init(0)
+Enable binary8 SmallFloat type
+
 mfvec
 Target UInteger Var(Has_FVEC) Init(0)
 Enable SmallFloat vector extensions

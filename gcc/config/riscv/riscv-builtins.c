@@ -115,14 +115,22 @@ struct riscv_builtin_description {
 AVAIL (hard_float, TARGET_HARD_FLOAT)
 
 /* for builtin pulpv2, we model vectors as opaque entities. Opaque helps to make the call style mode versatile */
-
-static tree floatHF_type_node;
-static tree floatOHF_type_node;
-
 static tree opaque_V4QI_type_node;
 static tree opaque_V2HI_type_node;
+static tree opaque_V8QI_type_node;
+static tree opaque_V4HI_type_node;
+
+static tree floatSF_type_node;
+static tree floatHF_type_node;
+static tree floatOHF_type_node;
+static tree floatQF_type_node;
+static tree opaque_V2SF_type_node;
 static tree opaque_V2HF_type_node;
 static tree opaque_V2OHF_type_node;
+static tree opaque_V4QF_type_node;
+static tree opaque_V4HF_type_node;
+static tree opaque_V4OHF_type_node;
+static tree opaque_V8QF_type_node;
 
 static unsigned int
 riscv_builtin_avail_riscv (void)
@@ -595,13 +603,27 @@ static GTY(()) int riscv_builtin_decl_index[NUM_INSN_CODES];
 #define RISCV_ATYPE_UDI unsigned_intDI_type_node
 #define RISCV_ATYPE_SF float_type_node
 #define RISCV_ATYPE_DF double_type_node
+
+#define RISCV_ATYPE_V2HI opaque_V2HI_type_node
+#define RISCV_ATYPE_V4QI opaque_V4QI_type_node
+#define RISCV_ATYPE_V4HI opaque_V4HI_type_node
+#define RISCV_ATYPE_V8QI opaque_V8QI_type_node
+
 #define RISCV_ATYPE_HF floatHF_type_node
 #define RISCV_ATYPE_OHF floatOHF_type_node
+#define RISCV_ATYPE_QF floatQF_type_node
+
+#define RISCV_ATYPE_V2SF opaque_V2SF_type_node
+#define RISCV_ATYPE_V4HF opaque_V4HF_type_node
+
 
 #define RISCV_ATYPE_V2HI opaque_V2HI_type_node
 #define RISCV_ATYPE_V2HF opaque_V2HF_type_node
+#define RISCV_ATYPE_V4OHF opaque_V4OHF_type_node
 #define RISCV_ATYPE_V2OHF opaque_V2OHF_type_node
-#define RISCV_ATYPE_V4QI opaque_V4QI_type_node
+#define RISCV_ATYPE_V8QF opaque_V8QF_type_node
+#define RISCV_ATYPE_V4QF opaque_V4QF_type_node
+
 
 /* RISCV_FTYPE_ATYPESN takes N RISCV_FTYPES-like type codes and lists
    their associated RISCV_ATYPEs.  */
@@ -708,11 +730,28 @@ riscv_init_builtins (void)
   opaque_V2HI_type_node    = build_opaque_vector_type (intHI_type_node, 2);
 
  /* Initialize the HFmode scalar and vector type.  */
+  if(TARGET_64BIT) {
+    opaque_V8QI_type_node    = build_opaque_vector_type (intQI_type_node, 8);
+    opaque_V4HI_type_node    = build_opaque_vector_type (intHI_type_node, 4);
+  }
+
+  /* OPRECOMP Define builtin type for HFmode */
+  /* Initialize the SFmode vector type.  */
+  floatSF_type_node = make_node (REAL_TYPE);
+  TYPE_PRECISION (floatSF_type_node) = GET_MODE_PRECISION (SFmode);
+  layout_type (floatSF_type_node);
+  opaque_V2SF_type_node    = build_opaque_vector_type (floatSF_type_node, 2);
+
+
+  /* Initialize the HFmode scalar and vector type.  */
   floatHF_type_node = make_node (REAL_TYPE);
   TYPE_PRECISION (floatHF_type_node) = GET_MODE_PRECISION (HFmode);
   layout_type (floatHF_type_node);
   (*lang_hooks.types.register_builtin_type) (floatHF_type_node, "float16");
   opaque_V2HF_type_node    = build_opaque_vector_type (floatHF_type_node, 2);
+  if(TARGET_64BIT)
+    opaque_V4HF_type_node    = build_opaque_vector_type (floatHF_type_node, 4);
+
 
   /* Initialize the OHFmode scalar and vector type.  */
   floatOHF_type_node = make_node (REAL_TYPE);
@@ -725,8 +764,17 @@ riscv_init_builtins (void)
   SET_TYPE_MODE (floatOHF_type_node, OHFmode);
   (*lang_hooks.types.register_builtin_type) (floatOHF_type_node, "float16alt");
   opaque_V2OHF_type_node    = build_opaque_vector_type (floatOHF_type_node, 2);
+  if(TARGET_64BIT)
+    opaque_V4OHF_type_node    = build_opaque_vector_type (floatOHF_type_node, 4);
 
-
+  /* Initialize the QFmode scalar and vector type.  */
+  floatQF_type_node = make_node (REAL_TYPE);
+  TYPE_PRECISION (floatQF_type_node) = GET_MODE_PRECISION (QFmode);
+  layout_type (floatQF_type_node);
+  (*lang_hooks.types.register_builtin_type) (floatQF_type_node, "float8");
+  opaque_V4QF_type_node    = build_opaque_vector_type (floatQF_type_node, 4);
+  if(TARGET_64BIT)
+    opaque_V8QF_type_node    = build_opaque_vector_type (floatQF_type_node, 8);
 
   /* Iterate through all of the bdesc arrays, initializing all of the
      builtin functions.  */
@@ -735,7 +783,7 @@ riscv_init_builtins (void)
       const struct riscv_builtin_description *d = &riscv_builtins[i];
       if (d->avail ()) {
 
-        /* fprintf(stderr, "Adding %s\n", d->name); fflush(stderr); */
+         // fprintf(stderr, "Adding %s\n", d->name); fflush(stderr);
                 riscv_builtin_decls[i] = add_builtin_function (d->name,
                                                                riscv_build_function_type (d->prototype),
                                                                i, BUILT_IN_MD, NULL, NULL);

@@ -4903,8 +4903,10 @@ encode_oprecomp_half (const struct real_format *fmt, long *buf,
       /* Recall that IEEE numbers are interpreted as 1.F x 2**exp,
    whereas the intermediate representation is 0.F x 2**exp.
    Which means we're off by one.  */
-      if (denormal) exp = 0;
-      else exp = REAL_EXP (r) + 127 - 1;
+      if (denormal)
+  exp = 0;
+      else
+      exp = REAL_EXP (r) + 127 - 1;
       image |= exp << 7;
       image |= sig;
       break;
@@ -4912,6 +4914,7 @@ encode_oprecomp_half (const struct real_format *fmt, long *buf,
     default:
       gcc_unreachable ();
     }
+
   buf[0] = image;
 }
 
@@ -4965,6 +4968,7 @@ decode_oprecomp_half (const struct real_format *fmt, REAL_VALUE_TYPE *r,
     }
 }
 
+
 /* OPRECOMP: Half-precision format  */
 const struct real_format riscv_oprecomp_half_format =
   {
@@ -4989,7 +4993,150 @@ const struct real_format riscv_oprecomp_half_format =
     "oprecomp_half"
   };
 
-
+
+/* OPRECOMP Support functions for quarter-precision format (byte).  */
+
+static void encode_oprecomp_byte (const struct real_format *fmt,
+        long *, const REAL_VALUE_TYPE *);
+static void decode_oprecomp_byte (const struct real_format *,
+        REAL_VALUE_TYPE *, const long *);
+
+static void
+encode_oprecomp_byte (const struct real_format *fmt, long *buf,
+        const REAL_VALUE_TYPE *r)
+{
+  unsigned long image, sig, exp;
+  unsigned long sign = r->sign;
+  bool denormal = (r->sig[SIGSZ-1] & SIG_MSB) == 0;
+
+  image = sign << 7;
+  sig = (r->sig[SIGSZ-1] >> (HOST_BITS_PER_LONG - 3)) & 0x3;
+
+  switch (r->cl)
+    {
+    case rvc_zero:
+      break;
+
+    case rvc_inf:
+      if (fmt->has_inf)
+  image |= 31 << 2;
+      else
+  image |= 0x7f;
+      break;
+
+    case rvc_nan:
+      if (fmt->has_nans)
+  {
+    if (r->canonical)
+      sig = (fmt->canonical_nan_lsbs_set ? (1 << 1) - 1 : 0);
+    if (r->signalling == fmt->qnan_msb_set)
+      sig &= ~(1 << 1);
+    else
+      sig |= 1 << 1;
+    if (sig == 0)
+      sig = 1 << 1;
+
+    image |= 31 << 2;
+    image |= sig;
+  }
+      else
+  image |= 0x7f;
+      break;
+
+    case rvc_normal:
+      /* Recall that IEEE numbers are interpreted as 1.F x 2**exp,
+   whereas the intermediate representation is 0.F x 2**exp.
+   Which means we're off by one.  */
+      if (denormal)
+        exp = 0;
+      else
+        exp = REAL_EXP (r) + 15 - 1;
+      image |= exp << 2;
+      image |= sig;
+      break;
+
+    default:
+      gcc_unreachable ();
+    }
+
+  buf[0] = image;
+}
+
+static void
+decode_oprecomp_byte (const struct real_format *fmt, REAL_VALUE_TYPE *r,
+        const long *buf)
+{
+  unsigned long image = buf[0] & 0xff;
+  bool sign = (image >> 7) & 1;
+  int exp = (image >> 2) & 0x1f;
+
+  memset (r, 0, sizeof (*r));
+  image <<= HOST_BITS_PER_LONG - 3;
+  image &= ~SIG_MSB;
+
+  if (exp == 0)
+    {
+      if (image && fmt->has_denorm)
+  {
+    r->cl = rvc_normal;
+    r->sign = sign;
+    SET_REAL_EXP (r, -14);
+    r->sig[SIGSZ-1] = image << 1;
+    normalize (r);
+  }
+      else if (fmt->has_signed_zero)
+  r->sign = sign;
+    }
+  else if (exp == 31 && (fmt->has_nans || fmt->has_inf))
+    {
+      if (image)
+  {
+    r->cl = rvc_nan;
+    r->sign = sign;
+    r->signalling = (((image >> (HOST_BITS_PER_LONG - 2)) & 1)
+         ^ fmt->qnan_msb_set);
+    r->sig[SIGSZ-1] = image;
+  }
+      else
+  {
+    r->cl = rvc_inf;
+    r->sign = sign;
+  }
+    }
+  else
+    {
+      r->cl = rvc_normal;
+      r->sign = sign;
+      SET_REAL_EXP (r, exp - 15 + 1);
+      r->sig[SIGSZ-1] = image | SIG_MSB;
+    }
+}
+
+
+/* OPRECOMP: Quarter-precision format (byte)  */
+const struct real_format riscv_oprecomp_byte_format = 
+  {
+    encode_oprecomp_byte,
+    decode_oprecomp_byte,
+    2,
+    3,
+    3,
+    -13,
+    16,
+    7,
+    7,
+    8,
+    false,
+    true,
+    true,
+    true,
+    true,
+    true,
+    true,
+    false,
+    "oprecomp_byte"
+  };
+
 /* A synthetic "format" for internal arithmetic.  It's the size of the
    internal significand minus the two bits needed for proper rounding.
    The encode and decode routines exist only to satisfy our paranoia

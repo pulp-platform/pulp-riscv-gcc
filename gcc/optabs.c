@@ -291,6 +291,11 @@ expand_widen_pattern_expr (sepops ops, rtx op0, rtx op1, rtx wide_op,
     create_convert_operand_from (&eops[op++], op1, tmode1, unsignedp);
   if (wide_op)
     create_convert_operand_from (&eops[op++], wide_op, wmode, unsignedp);
+  /* OPRECOMP GIPSY Fix to support vector unpack (V4QF -> V2OHF) */
+  if (icode == CODE_FOR_vec_unpacks_lo_v4qf && eops[0].mode == V2OHFmode)
+    icode = CODE_FOR_vec_unpacks_lo_v4qf_alt;
+  if (icode == CODE_FOR_vec_unpacks_hi_v4qf && eops[0].mode == V2OHFmode)
+    icode = CODE_FOR_vec_unpacks_hi_v4qf_alt;  
   expand_insn (icode, op, eops);
   return eops[0].value;
 }
@@ -987,10 +992,12 @@ expand_binop_directly (machine_mode mode, optab binoptab,
   machine_mode from_mode = widened_mode (mode, op0, op1);
   enum insn_code icode = find_widening_optab_handler (binoptab, mode,
 						      from_mode, 1);
-  /* OPRECOMP GIPSY Fix to support cast and pack to float16alt (2 SF -> V2OHF) */
-  // if(icode == CODE_FOR_vec_pack_trunc_v1sf && unsignedp) icode = CODE_FOR_vec_pack_trunc_v1sf_alt;
-  /* */
 
+  /* OPRECOMP GIPSY Fix to support cast and pack to float16alt (2 SF -> V2OHF) */
+  if(icode == CODE_FOR_vec_pack_trunc_v1sf && unsignedp)
+  {
+    icode = CODE_FOR_vec_pack_trunc_v1sf_alt;
+  }  
   machine_mode xmode0 = insn_data[(int) icode].operand[1].mode;
   machine_mode xmode1 = insn_data[(int) icode].operand[2].mode;
   machine_mode mode0, mode1, tmp_mode;

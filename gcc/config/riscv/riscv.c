@@ -2036,8 +2036,8 @@ riscv_output_move (rtx dest, rtx src)
       if (src_code == CONST_INT)
 	return "li\t%0,%1";
       else if (src_code == CONST_VECTOR) {
-                if (((Pulp_Cpu>=PULP_V2) && !TARGET_MASK_NOVECT) && riscv_replicated_const_vector(src, -32, 31)) {
-                        if (GET_MODE(src)==V4QImode) return "pv.add.sci.b\t%0,x0,%W1";
+                if (((Pulp_Cpu>=PULP_V2) && !TARGET_MASK_NOVECT)  && riscv_replicated_const_vector(src, -32, 31)) {
+                        if (GET_MODE(src)==V4QImode || GET_MODE(src)==V4QFmode) return "pv.add.sci.b\t%0,x0,%W1";
                         else return "pv.add.sci.h\t%0,x0,%w1";
                 } else {
                         return "li\t%0,%V1";
@@ -2511,25 +2511,29 @@ void riscv_expand_vector_init(rtx target, rtx vals)
 	for (i = 0; i < n_elts; ++i) {
 		x = copy_to_mode_reg(inner_mode, XVECEXP (vals, 0, i));
 		switch (mode) {
-			case V2HFmode:
-				if (first) emit_insn(gen_vec_set_firstv2hf(target, x, GEN_INT(i)));
-				else if (XVECEXP (vals, 0, i) != const0_rtx) emit_insn(gen_vec_setv2hf(target, x, GEN_INT(i)));
-				break;
-			case V2OHFmode:
-				if (first) emit_insn(gen_vec_set_firstv2ohf(target, x, GEN_INT(i)));
-				else if (XVECEXP (vals, 0, i) != const0_rtx) emit_insn(gen_vec_setv2ohf(target, x, GEN_INT(i)));
-				break;
-			case V2HImode:
-				if (first) emit_insn(gen_vec_set_firstv2hi(target, x, GEN_INT(i)));
-				else if (XVECEXP (vals, 0, i) != const0_rtx) emit_insn(gen_vec_setv2hi(target, x, GEN_INT(i)));
-				break;
-			case V4QImode:
-				if (first) emit_insn(gen_vec_set_firstv4qi(target, x, GEN_INT(i)));
-				else if (XVECEXP (vals, 0, i) != const0_rtx) emit_insn(gen_vec_setv4qi(target, x, GEN_INT(i)));
-				break;
-			default:
-				abort();
-		}
+             case V2HFmode:
+                if (first) emit_insn(gen_vec_set_firstv2hf(target, x, GEN_INT(i)));
+                else if (XVECEXP (vals, 0, i) != const0_rtx) emit_insn(gen_vec_setv2hf(target, x, GEN_INT(i)));
+                break;
+              case V2OHFmode:
+                if (first) emit_insn(gen_vec_set_firstv2ohf(target, x, GEN_INT(i)));
+                else if (XVECEXP (vals, 0, i) != const0_rtx) emit_insn(gen_vec_setv2ohf(target, x, GEN_INT(i)));
+                break;
+              case V4QFmode:
+                if (first) emit_insn(gen_vec_set_firstv4qf(target, x, GEN_INT(i)));
+                else if (XVECEXP (vals, 0, i) != const0_rtx) emit_insn(gen_vec_setv4qf(target, x, GEN_INT(i)));
+                break;
+              case V2HImode:
+                if (first) emit_insn(gen_vec_set_firstv2hi(target, x, GEN_INT(i)));
+                else if (XVECEXP (vals, 0, i) != const0_rtx) emit_insn(gen_vec_setv2hi(target, x, GEN_INT(i)));
+                break;
+              case V4QImode:
+                if (first) emit_insn(gen_vec_set_firstv4qi(target, x, GEN_INT(i)));
+                else if (XVECEXP (vals, 0, i) != const0_rtx) emit_insn(gen_vec_setv4qi(target, x, GEN_INT(i)));
+                break;
+              default:
+                abort();
+        }
 		first = false;
 	}
 }
@@ -2773,11 +2777,23 @@ static bool riscv_vector_mode_supported_p (enum machine_mode mode)
 {
   switch (mode)
     {
-    case V2HImode:
+    case V2SImode:
+    case V8QImode:
+    case V4HImode:
     case V4QImode:
     case V2QImode:
+    /* OPRECOMP Support for vector modes */
+    case V2SFmode:
+    case V4HFmode:
+    case V4OHFmode:
     case V2HFmode:
     case V2OHFmode:
+    //case V4HFmode:
+    //case V4OHFmode:
+    case V4QFmode:
+    case V8QFmode:
+    //case V2QFmode:
+    //case V2SFmode:
     case V1SFmode:
       return true;
     default:
@@ -2795,12 +2811,16 @@ static enum machine_mode riscv_preferred_simd_mode (enum machine_mode mode)
       return V2HImode;
     case QImode:
       return V4QImode;
+    /* OPRECOMP Support for vector modes */
     case HFmode:
-      return V2HFmode;
+      return (!TARGET_64BIT? V2HFmode: V4HFmode);
     case OHFmode:
-      return V2OHFmode;
+      return (!TARGET_64BIT? V2OHFmode: V4OHFmode);
+    case QFmode:
+      return (!TARGET_64BIT? V4QFmode: V8QFmode);
     case SFmode:
-      return V1SFmode;
+      return (!TARGET_64BIT? V1SFmode: V2SFmode);;
+
     default:
       return word_mode;
     }

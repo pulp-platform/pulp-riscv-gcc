@@ -202,7 +202,7 @@
   (const_string "unknown"))
 
 ;; Main data type used by the insn
-(define_attr "mode" "unknown,none,QI,HI,SI,DI,TI,HF,OHF,SF,DF,TF,V2HI,V4QI,V2HF,V2OHF"
+(define_attr "mode" "unknown,none,QI,HI,SI,DI,TI,QF,OHF,HF,SF,DF,TF,V4QF,V2OHF,V2HF,V1SF,V2SI,V2HI,V4HI,V4QI,V8QI,V2SF,V4HF,V4OHF,V8QF"
   (const_string "unknown"))
 
 ;; True if the main data type is twice the size of a word.
@@ -349,16 +349,19 @@
 ;; 32-bit moves for which we provide move patterns.
 (define_mode_iterator MOVE32 [SI])
 
-(define_mode_iterator MODE_PULP [V4QI V2HI (V2HF "Has_F16") (V2OHF "Has_F16ALT") (OHF "Has_F16ALT") SF SI])
+;; Support to smallfloat types
+;;(define_mode_iterator MODE_PULP [V4QI V2HI SF SI])
+(define_mode_iterator MODE_PULP [V4QI V2HI V4QF V2OHF V2HF V1SF QF OHF SF SI   (V2SI "TARGET_64BIT")  (V4HI "TARGET_64BIT")  (V8QI "TARGET_64BIT") (V2SF "TARGET_64BIT") (V4HF "TARGET_64BIT") (V4OHF "TARGET_64BIT") (V8QF "TARGET_64BIT")])
 
 ;; 64-bit modes for which we provide move patterns.
-(define_mode_iterator MOVE64 [DI DF])
+;;(define_mode_iterator MOVE64 [DI DF])
+(define_mode_iterator MOVE64 [DI DF V2SI V4HI V8QI V2SF V4HF V4OHF V8QF])
 
 ;; Iterator for sub-32-bit integer modes.
 (define_mode_iterator SHORT_ALL [QI HI])
 (define_mode_iterator SHORT [HI])
 
-(define_mode_iterator SUBDISF [QI HI (HF "(Has_F16)") (OHF "(Has_F16ALT)") SI (SF "(!TARGET_HARD_FLOAT || TARGET_FPREGS_ON_GRREGS)") V2HI (V2HF "(Has_F16)") (V2OHF "(Has_F16ALT)") V4QI])
+(define_mode_iterator SUBDISF [QI HI (HF "(Has_F16)") (OHF "(Has_F16ALT)") (QF "(Has_F8)") SI (SF "(!TARGET_HARD_FLOAT || TARGET_FPREGS_ON_GRREGS)") V2HI (V2HF "(Has_F16)") (V2OHF "(Has_F16ALT)") V4QI (V4QF "(Has_F8)")])
 (define_mode_iterator SUBDI [QI HI SI])
 
 ;; Iterator for HImode constant generation.
@@ -381,9 +384,11 @@
                             (DF "TARGET_DOUBLE_FLOAT")])
 
 (define_mode_iterator ANYF [(SF "TARGET_HARD_FLOAT")
+                            (V1SF "TARGET_HARD_FLOAT")
 			    (DF "TARGET_DOUBLE_FLOAT")
                             (HF "(TARGET_HARD_FLOAT&&Has_F16)")
-                            (OHF "(TARGET_HARD_FLOAT&&Has_F16ALT)")])
+                            (OHF "(TARGET_HARD_FLOAT&&Has_F16ALT)")
+                            (QF "(TARGET_HARD_FLOAT&&Has_F8)")])
 
 ;; Iterator for hardware-supported floating-point modes.
 (define_mode_iterator ANYFULLF [(SF "TARGET_HARD_FLOAT")
@@ -392,43 +397,45 @@
 (define_mode_iterator SCALARF [(SF "TARGET_HARD_FLOAT")
                                (DF "TARGET_DOUBLE_FLOAT")
                                (HF "(TARGET_HARD_FLOAT&&Has_F16)")
-                               (OHF "(TARGET_HARD_FLOAT&&Has_F16ALT)")])
+                               (OHF "(TARGET_HARD_FLOAT&&Has_F16ALT)")
+                               (QF "(TARGET_HARD_FLOAT&&Has_F8)")])
 
 ;; Iterator for hardware-supported small floating-point modes.
 (define_mode_iterator SMALLF [(V1SF "TARGET_HARD_FLOAT")
                               (HF "(TARGET_HARD_FLOAT&&Has_F16)")
-                              (OHF "(TARGET_HARD_FLOAT&&Has_F16ALT)")])
+                              (OHF "(TARGET_HARD_FLOAT&&Has_F16ALT)")
+                              (QF "(TARGET_HARD_FLOAT&&Has_F8)")])
 
 
-(define_mode_attr size_mem   [(V4QI "4") (V2HI "4") (V2HF "4") (V2OHF "4") (SF "4") (SI "4") (HI "2") (HF "2") (OHF "2") (QI "1")])
-(define_mode_attr size_load_store [(V4QI "w") (V2HI "w") (V2HF "w") (V2OHF "w") (SF "w") (SI "w") (QI "b") (HI "h") (HF "h") (OHF "h")])
+(define_mode_attr size_mem   [(V4QI "4") (V2HI "4") (V4QF "4") (V2OHF "4") (V2HF "4") (V1SF "4") (QF "1") (OHF "2") (HF "2") (SF "4") (SI "4") (HI "2") (QI "1") (V2SI "8") (V8QF "8") (V4OHF "8") (V4HF "8") (V2SF "8") (V4HI "8") (V8QI "8")])
+(define_mode_attr size_load_store [(V4QI "w") (V2HI "w") (V2SI "w") (V4QF "w") (V2OHF "w") (V2HF "w") (V1SF "w") (V8QF "w") (V4OHF "w") (V4HF "w") (V2SF "w") (V4HI "w")  (V4QI "w")   (QF "b") (OHF "h") (HF "h") (SF "w") (SI "w") (QI "b") (HI "h")])
 
 ;; This attribute gives the length suffix for a sign- or zero-extension
 ;; instruction.
 (define_mode_attr size [(QI "b") (HI "h")])
 
 ;; Mode attributes for loads.
-(define_mode_attr load [(QI "lb") (HI "lh") (HF "lh") (OHF "lh") (SI "lw") (DI "ld") (SF "flw") (DF "fld")])
+(define_mode_attr load [(QI "lb") (HI "lh") (SI "lw") (DI "ld") (QF "flb") (OHF "flh") (HF "flh") (SF "flw") (DF "fld")])
 
 ;; Instruction names for stores.
-(define_mode_attr store [(QI "sb") (HI "sh") (HF "sh") (OHF "sh") (SI "sw") (DI "sd") (SF "fsw") (DF "fsd")])
+(define_mode_attr store [(QI "sb") (HI "sh") (SI "sw") (DI "sd") (QF "fsb") (OHF "fsh") (HF "fsh") (SF "fsw") (DF "fsd")])
 
 ;; This attribute gives the best constraint to use for registers of
 ;; a given mode.
 (define_mode_attr reg [(SI "d") (DI "d") (CC "d")])
 
 ;; This attribute gives the format suffix for floating-point operations.
-(define_mode_attr fmt [(V1SF "s") (SF "s") (DF "d") (HF "h") (OHF "ah")])
+(define_mode_attr fmt [(QF "b") (OHF "ah") (HF "h") (V1SF "s") (SF "s") (DF "d")])
 
 ;; This attribute gives the integer suffix for floating-point conversions.
-(define_mode_attr ifmt [(SI "w") (DI "l") (V1SF "w") (V2HF "x") (V2OHF "x") ])
+(define_mode_attr ifmt [(SI "w") (DI "l") (V1SF "w") (V2HF "x") (V2OHF "x") (V4QF "x")])
 
 ;; This attribute gives the format suffix for atomic memory operations.
 (define_mode_attr amo [(SI "w") (DI "d")])
 
 ;; This attribute gives the upper-case mode name for one unit of a
 ;; floating-point mode.
-(define_mode_attr UNITMODE [(V1SF "V1SF") (HF "HF") (OHF "OHF") (SF "SF") (DF "DF")])
+(define_mode_attr UNITMODE [(V1SF "V1SF")(QF "QF") (OHF "OHF") (HF "HF") (SF "SF") (DF "DF")])
 
 ;; This attribute gives the integer mode that has half the size of
 ;; the controlling mode.
@@ -436,7 +443,7 @@
 
 (define_mode_attr LDSTMODE [(SI "SI") (HI "HI") (QI "QI")])
 
-(define_mode_attr LDSTINDMODE [(V4QI "V4QI") (V2HI "V2HI") (V2HF "V2HF") (V2OHF "V2OHF") (SF "SF") (SI "SI") (HI "HI") (HF "HF") (OHF "OHF") (QI "QI")])
+(define_mode_attr LDSTINDMODE [(V4QI "V4QI") (V2HI "V2HI") (V2SI "V2SI") (V4QF "V4QF") (V2OHF "V2OHF") (V2HF "V2HF") (QF "QF") (OHF "OHF") (HF "HF") (SF "SF") (SI "SI") (HI "HI") (QI "QI")])
 
 ;; Iterator and attributes for floating-point rounding instructions.
 (define_int_iterator RINT [UNSPEC_LRINT UNSPEC_LROUND])
@@ -1016,7 +1023,7 @@
           (float_extend:SF (match_operand:SMALLF 2 "register_operand" "xf"))
         )
   )]
-  "TARGET_HARD_FLOAT && Has_FAUX && (<MODE>mode == OHFmode && Has_F16ALT)"
+  "TARGET_HARD_FLOAT && Has_FAUX && ((<MODE>mode == QFmode && Has_F8) || (<MODE>mode == HFmode && Has_F16) || (<MODE>mode == OHFmode && Has_F16ALT))"
   "fmulex.s.<fmt>\t%0,%1,%2"
   [(set_attr "type" "fmadd")
    (set_attr "mode" "SF")])
@@ -1029,7 +1036,7 @@
                 (match_operand:SMALLF 2 "register_operand" "xf")
                 (match_dup 0))
   )]
-  "TARGET_HARD_FLOAT && Has_FAUX && (<MODE>mode == OHFmode && Has_F16ALT)"
+  "TARGET_HARD_FLOAT && Has_FAUX && ((<MODE>mode == QFmode && Has_F8) || (<MODE>mode == HFmode && Has_F16) || (<MODE>mode == OHFmode && Has_F16ALT))"
   "fmacex.s.<fmt>\t%0,%1,%2"
   [(set_attr "type" "fmadd")
    (set_attr "mode" "SF")])
@@ -1041,7 +1048,7 @@
                 (match_operand:SMALLF 2 "register_operand" " ")
                 (match_operand:SF     3 "register_operand" " "))
   )]
-  "TARGET_HARD_FLOAT && Has_FAUX && (<MODE>mode == OHFmode && Has_F16ALT)"
+  "TARGET_HARD_FLOAT && Has_FAUX && ((<MODE>mode == QFmode && Has_F8) || (<MODE>mode == HFmode && Has_F16) || (<MODE>mode == OHFmode && Has_F16ALT))"
   {
     emit_insn(gen_movsf(operands[0], operands[3]));
     emit_insn(gen_madd<SMALLF:mode>sf3_internal(operands[0], operands[1], operands[2]));
@@ -2797,8 +2804,16 @@
   (float_truncate:OHF (match_operand:DF 1 "register_operand" "f")))]
   "TARGET_DOUBLE_FLOAT && Has_F16ALT"
   { return TARGET_MAP_DOUBLE_TO_FLOAT? "fcvt.ah.s\t%0,%1": "fcvt.ah.d\t%0,%1"; }
+  [(set_attr "type" "fcvt")  
+   (set_attr "mode" "OHF")])   
+
+(define_insn "truncdfqf2"
+  [(set (match_operand:QF 0 "register_operand" "=xf")
+  (float_truncate:QF (match_operand:DF 1 "register_operand" "f")))]
+  "TARGET_DOUBLE_FLOAT && Has_F8"
+  { return TARGET_MAP_DOUBLE_TO_FLOAT? "fcvt.b.s\t%0,%1": "fcvt.b.d\t%0,%1"; }
   [(set_attr "type" "fcvt")
-   (set_attr "mode" "OHF")])
+   (set_attr "mode" "QF")])
 
 (define_insn "truncsfhf2"
   [(set (match_operand:HF 0 "register_operand" "=xf")
@@ -2813,8 +2828,34 @@
   (float_truncate:OHF (match_operand:SF 1 "register_operand" "f")))]
   "TARGET_HARD_FLOAT && Has_F16ALT"
   "fcvt.ah.s\t%0,%1"
-  [(set_attr "type" "fcvt")
+  [(set_attr "type" "fcvt")  
    (set_attr "mode" "OHF")])
+
+(define_insn "truncsfqf2"
+  [(set (match_operand:QF 0 "register_operand" "=xf")
+  (float_truncate:QF (match_operand:SF 1 "register_operand" "f")))]
+  "TARGET_HARD_FLOAT && Has_F8"
+  "fcvt.b.s\t%0,%1"
+  [(set_attr "type" "fcvt")
+   (set_attr "mode" "QF")])
+
+(define_insn "trunchfqf2"
+  [(set (match_operand:QF 0 "register_operand" "=xf")
+  (float_truncate:QF (match_operand:HF 1 "register_operand" "xf")))]
+  "TARGET_HARD_FLOAT && Has_F8 && Has_F16"
+  "fcvt.b.h\t%0,%1"
+  [(set_attr "type" "fcvt")  
+   (set_attr "mode" "QF")])
+
+
+(define_insn "truncohfqf2"
+  [(set (match_operand:QF 0 "register_operand" "=xf")
+  (float_truncate:QF (match_operand:OHF 1 "register_operand" "xf")))]
+  "TARGET_HARD_FLOAT && Has_F8 && Has_F16ALT"
+  "fcvt.b.ah\t%0,%1"
+  [(set_attr "type" "fcvt")   
+   (set_attr "mode" "QF")])
+
 
 ;;
 ;;  ....................
@@ -2956,21 +2997,14 @@
   [(set_attr "type" "fcvt")
    (set_attr "mode" "DF")])
 
-(define_insn "extendhfsf2"
-  [(set (match_operand:SF 0 "register_operand" "=f")
-  (float_extend:SF (match_operand:HF 1 "register_operand" "xf")))]
-  "TARGET_HARD_FLOAT && Has_F16"
-  "fcvt.s.h\t%0,%1"
+;; OPRECOMP - Extend HF to DF
+(define_insn "extendhfdf2"
+  [(set (match_operand:DF 0 "register_operand" "=f")
+  (float_extend:DF (match_operand:HF 1 "register_operand" "xf")))]
+  "TARGET_DOUBLE_FLOAT && Has_F16"
+  { return TARGET_MAP_DOUBLE_TO_FLOAT? "fcvt.s.h\t%0,%1":""; }
   [(set_attr "type" "fcvt")
-   (set_attr "mode" "SF")])
-
-(define_insn "extendohfsf2"
-  [(set (match_operand:SF 0 "register_operand" "=f")
-  (float_extend:SF (match_operand:OHF 1 "register_operand" "xf")))]
-  "TARGET_HARD_FLOAT && Has_F16ALT"
-  "fcvt.s.ah\t%0,%1"
-  [(set_attr "type" "fcvt")
-   (set_attr "mode" "SF")])
+   (set_attr "mode" "DF")])
 
 (define_insn "extendhfohf2"
   [(set (match_operand:OHF 0 "register_operand" "=xf")
@@ -2980,13 +3014,70 @@
   [(set_attr "type" "fcvt")
    (set_attr "mode" "OHF")])
 
+(define_insn "extendohfdf2"
+  [(set (match_operand:DF 0 "register_operand" "=f")
+  (float_extend:DF (match_operand:OHF 1 "register_operand" "xf")))]
+  "TARGET_DOUBLE_FLOAT && Has_F16ALT"
+  { return TARGET_MAP_DOUBLE_TO_FLOAT? "fcvt.s.ah\t%0,%1":"fcvt.d.ah\t%0,%1"; }
+  [(set_attr "type" "fcvt")
+   (set_attr "mode" "DF")])   
+
 (define_insn "extendohfhf2"
   [(set (match_operand:HF 0 "register_operand" "=xf")
   (float:HF (match_operand:OHF 1 "register_operand" "xf")))]
   "TARGET_HARD_FLOAT && Has_F16 && Has_F16ALT"
   "fcvt.h.ah\t%0,%1"
   [(set_attr "type" "fcvt")
-   (set_attr "mode" "HF")])
+   (set_attr "mode" "HF")])      
+
+(define_insn "extendqfdf2"
+  [(set (match_operand:DF 0 "register_operand" "=f")
+  (float_extend:DF (match_operand:QF 1 "register_operand" "xf")))]
+  "TARGET_DOUBLE_FLOAT && Has_F8"
+  { return TARGET_MAP_DOUBLE_TO_FLOAT? "fcvt.s.b\t%0,%1":"fcvt.d.b\t%0,%1"; }
+  [(set_attr "type" "fcvt")
+   (set_attr "mode" "DF")])
+
+(define_insn "extendqfsf2"
+  [(set (match_operand:SF 0 "register_operand" "=f")
+  (float_extend:SF (match_operand:QF 1 "register_operand" "xf")))]
+  "TARGET_HARD_FLOAT && Has_F8"
+  "fcvt.s.b\t%0,%1"
+  [(set_attr "type" "fcvt")  
+   (set_attr "mode" "SF")])
+
+(define_insn "extendqfhf2"
+  [(set (match_operand:HF 0 "register_operand" "=xf")
+  (float_extend:HF (match_operand:QF 1 "register_operand" "xf")))]
+  "TARGET_HARD_FLOAT && Has_F8 && Has_F16"
+  "fcvt.h.b\t%0,%1"
+  [(set_attr "type" "fcvt")  
+   (set_attr "mode" "HF")])   
+
+(define_insn "extendqfohf2"
+  [(set (match_operand:OHF 0 "register_operand" "=xf")
+  (float_extend:OHF (match_operand:QF 1 "register_operand" "xf")))]
+  "TARGET_HARD_FLOAT && Has_F8 && Has_F16ALT"
+  "fcvt.ah.b\t%0,%1"
+  [(set_attr "type" "fcvt")
+   (set_attr "mode" "OHF")])   
+
+(define_insn "extendohfsf2"
+  [(set (match_operand:SF 0 "register_operand" "=f")
+  (float_extend:SF (match_operand:OHF 1 "register_operand" "xf")))]
+  "TARGET_HARD_FLOAT && Has_F16ALT"
+  "fcvt.s.ah\t%0,%1"
+  [(set_attr "type" "fcvt")
+   (set_attr "mode" "SF")])
+
+(define_insn "extendhfsf2"
+  [(set (match_operand:SF 0 "register_operand" "=f")
+  (float_extend:SF (match_operand:HF 1 "register_operand" "xf")))]
+  "TARGET_HARD_FLOAT && Has_F16"
+  "fcvt.s.h\t%0,%1"
+  [(set_attr "type" "fcvt")   
+   (set_attr "mode" "SF")])
+
 
 ;;
 ;;  ....................
@@ -3804,6 +3895,29 @@
   [(set_attr "move_type" "move,const,load,load,store,store,mtc,fpload,mfc,fpstore")
    (set_attr "mode" "SI")])
 
+
+;; 64-bit v2si vector moves
+
+(define_expand "movv2si"
+  [(set (match_operand:V2SI 0 "")
+        (match_operand:V2SI 1 ""))]
+  ""
+{
+  if (riscv_legitimize_move (V2SImode, operands[0], operands[1]))
+    DONE;
+})
+
+(define_insn "movv2si_internal"
+  [(set (match_operand:V2SI 0 "nonimmediate_operand" "=r,r,r,m")
+        (match_operand:V2SI 1 "move_operand" "r,T,m,rJ"))]
+  "(register_operand (operands[0], V2SImode) || reg_or_0_operand (operands[1], V2SImode)) &&
+    !riscv_filter_pulp_operand(operands[0], !(Pulp_Cpu>=PULP_V0)) &&
+    !riscv_filter_pulp_operand(operands[1], !(Pulp_Cpu>=PULP_V0))"
+  { return riscv_output_move (operands[0], operands[1]); }
+  [(set_attr "move_type" "move,const,load,store")
+   (set_attr "mode" "V2SI")])
+
+
 ;; 32-bit v2hi vector moves
 
 (define_expand "movv2hi"
@@ -3824,6 +3938,29 @@
   { return riscv_output_move (operands[0], operands[1]); }
   [(set_attr "move_type" "move,const,load,store")
    (set_attr "mode" "V2HI")])
+
+
+;; 64-bit v4hi vector moves
+
+(define_expand "movv4hi"
+  [(set (match_operand:V4HI 0 "")
+        (match_operand:V4HI 1 ""))]
+  ""
+{
+  if (riscv_legitimize_move (V4HImode, operands[0], operands[1]))
+    DONE;
+})
+
+(define_insn "movv4hi_internal"
+  [(set (match_operand:V4HI 0 "nonimmediate_operand" "=r,r,r,m")
+        (match_operand:V4HI 1 "move_operand" "r,T,m,rJ"))]
+  "(register_operand (operands[0], V4HImode) || reg_or_0_operand (operands[1], V4HImode)) &&
+    !riscv_filter_pulp_operand(operands[0], !(Pulp_Cpu>=PULP_V0)) &&
+    !riscv_filter_pulp_operand(operands[1], !(Pulp_Cpu>=PULP_V0))"
+  { return riscv_output_move (operands[0], operands[1]); }
+  [(set_attr "move_type" "move,const,load,store")
+   (set_attr "mode" "V4HI")])
+
 
 ;; 32-bit v4qi vector moves
 
@@ -3846,10 +3983,32 @@
   [(set_attr "move_type" "move,const,load,store")
    (set_attr "mode" "V4QI")])
 
+;; 64-bit v8qi vector moves
+
+(define_expand "movv8qi"
+  [(set (match_operand:V8QI 0 "")
+        (match_operand:V8QI 1 ""))]
+  ""
+{
+  if (riscv_legitimize_move (V8QImode, operands[0], operands[1]))
+    DONE;
+})
+
+(define_insn "movv8qi_internal"
+  [(set (match_operand:V8QI 0 "nonimmediate_operand" "=r,r,r,m")
+        (match_operand:V8QI 1 "move_operand" "r,T,m,rJ"))]
+  "(register_operand (operands[0], V8QImode) || reg_or_0_operand (operands[1], V8QImode)) &&
+    !riscv_filter_pulp_operand(operands[0], !(Pulp_Cpu>=PULP_V0)) &&
+    !riscv_filter_pulp_operand(operands[1], !(Pulp_Cpu>=PULP_V0))"
+  { return riscv_output_move (operands[0], operands[1]); }
+  [(set_attr "move_type" "move,const,load,store")
+   (set_attr "mode" "V8QI")])
+
+
 (define_expand "movmisalign<mode>"
  [(set (match_operand:MODE_PULP 0 "nonimmediate_operand" "")
        (match_operand:MODE_PULP 1 "general_operand" ""))]
- ""
+ "!TARGET_64BIT"
 {
   emit_move_insn (operands[0], operands[1]);
   DONE;
@@ -3921,17 +4080,18 @@
   [(set_attr "move_type" "move,const,load,store,mtc,mfc")
    (set_attr "mode" "QI")])
 
-;; 16-bit floating point moves
 
-(define_expand "movhf"
-  [(set (match_operand:HF 0 "")
-        (match_operand:HF 1 ""))]
+;; 8-bit floating point moves
+(define_expand "movqf"
+  [(set (match_operand:QF 0 "")
+  (match_operand:QF 1 ""))]
   ""
 {
-  if (riscv_legitimize_move (HFmode, operands[0], operands[1]))
+  if (riscv_legitimize_move (QFmode, operands[0], operands[1]))
     DONE;
 })
 
+;; 16-bit floating point moves
 (define_expand "movohf"
   [(set (match_operand:OHF 0 "")
         (match_operand:OHF 1 ""))]
@@ -3941,25 +4101,106 @@
     DONE;
 })
 
-(define_insn "*movhf_hardfloat_x"
-  [(set (match_operand:HF 0 "nonimmediate_operand" "=xf,xf,xf,m,m")
-        (match_operand:HF 1 "move_operand" "xf,G,m,xf,G"))]
-  "Has_F16
-   && (register_operand (operands[0], HFmode)
-       || reg_or_0_operand (operands[1], HFmode))"
+;; OPRECOMP - 16-bit floating point moves
+(define_expand "movhf"
+  [(set (match_operand:HF 0 "")
+        (match_operand:HF 1 ""))]
+  ""
+{
+  if (riscv_legitimize_move (HFmode, operands[0], operands[1]))
+    DONE;
+})
+
+;; OPRECOMP Moves
+(define_insn "*movqf_hardfloat"
+ [(set (match_operand:QF 0 "nonimmediate_operand" "=xf,xf,xf,m,m,*xf,*r,*r,*r,*m")
+ (match_operand:QF 1 "move_operand" "xf,G,m,xf,G,*r,*xf,*G*r,*m,*r"))]
+ "TARGET_HARD_FLOAT && Has_F8
+  && (register_operand (operands[0], QFmode)
+      || reg_or_0_operand (operands[1], QFmode))"
+ { return riscv_output_move (operands[0], operands[1]); }
+ [(set_attr "move_type" "fmove,mtc,fpload,fpstore,store,mtc,mfc,move,load,store")
+  (set_attr "mode" "QF")])
+
+
+(define_insn "*movqf_softfloat"
+  [(set (match_operand:QF 0 "nonimmediate_operand" "=r,r,m")
+  (match_operand:QF 1 "move_operand" "Gr,m,r"))]
+  "!TARGET_HARD_FLOAT && Has_F8
+   && (register_operand (operands[0], QFmode)
+       || reg_or_0_operand (operands[1], QFmode)) &&
+   !((GET_CODE(operands[0]) == MEM)  && XEXP(operands[0], 0) &&
+       (GET_CODE(XEXP(operands[0], 0)) == POST_INC ||
+        GET_CODE(XEXP(operands[0], 0)) == POST_DEC ||
+        GET_CODE(XEXP(operands[0], 0)) == POST_MODIFY)) &&
+   !((GET_CODE(operands[1]) == MEM)  && XEXP(operands[1], 0) &&
+       (GET_CODE(XEXP(operands[1], 0)) == POST_INC ||
+        GET_CODE(XEXP(operands[1], 0)) == POST_DEC ||
+        GET_CODE(XEXP(operands[1], 0)) == POST_MODIFY))"
   { return riscv_output_move (operands[0], operands[1]); }
-  [(set_attr "move_type" "fmove,mtc,fpload,fpstore,store")
+  [(set_attr "move_type" "move,load,store")
+   (set_attr "mode" "QF")])
+
+
+;; OPRECOMP Moves
+(define_insn "*movohf_hardfloat"
+  [(set (match_operand:OHF 0 "nonimmediate_operand" "=xf,xf,xf,m,m,*xf,*r,*r,*r,*m")
+       (match_operand:OHF 1 "move_operand" "xf,G,m,xf,G,*r,*xf,*G*r,*m,*r"))]
+  "TARGET_HARD_FLOAT && Has_F16ALT
+  && (register_operand (operands[0], OHFmode)
+      || reg_or_0_operand (operands[1], OHFmode))"
+  { return riscv_output_move (operands[0], operands[1]); }
+  [(set_attr "move_type" "fmove,mtc,fpload,fpstore,store,mtc,mfc,move,load,store")
+(set_attr "mode" "OHF")])
+
+(define_insn "*movohf_softfloat"
+  [(set (match_operand:OHF 0 "nonimmediate_operand" "=r,r,m")
+        (match_operand:OHF 1 "move_operand" "Gr,m,r"))]
+  "!TARGET_HARD_FLOAT && Has_F16ALT
+   && (register_operand (operands[0], OHFmode)
+       || reg_or_0_operand (operands[1], OHFmode)) &&
+   !((GET_CODE(operands[0]) == MEM)  && XEXP(operands[0], 0) &&
+       (GET_CODE(XEXP(operands[0], 0)) == POST_INC ||
+        GET_CODE(XEXP(operands[0], 0)) == POST_DEC ||
+        GET_CODE(XEXP(operands[0], 0)) == POST_MODIFY)) &&
+   !((GET_CODE(operands[1]) == MEM)  && XEXP(operands[1], 0) &&
+       (GET_CODE(XEXP(operands[1], 0)) == POST_INC ||
+        GET_CODE(XEXP(operands[1], 0)) == POST_DEC ||
+        GET_CODE(XEXP(operands[1], 0)) == POST_MODIFY))"
+  { return riscv_output_move (operands[0], operands[1]); }
+  [(set_attr "move_type" "move,load,store")
+   (set_attr "mode" "OHF")])
+
+
+;; OPRECOMP Moves
+(define_insn "*movhf_hardfloat_f"
+  [(set (match_operand:HF 0 "nonimmediate_operand" "=f,f,f, m,m,*f,*r,   *r,*r,*m")
+       (match_operand:HF 1 "move_operand"          "f, G, m,f,G, *r,*f,*G*r,*m,*r"))]
+  "TARGET_HARD_FLOAT && Has_F16
+  && (register_operand (operands[0], HFmode)
+      || reg_or_0_operand (operands[1], HFmode))"
+  { return riscv_output_move (operands[0], operands[1]); }
+  [(set_attr "move_type" "fmove,mtc,fpload,fpstore,store,mtc,mfc,move,load,store")
+  (set_attr "mode" "HF")])
+
+(define_insn "*movhf_softfloat"
+  [(set (match_operand:HF 0 "nonimmediate_operand" "=r,r,m")
+        (match_operand:HF 1 "move_operand" "Gr,m,r"))]
+  "!TARGET_HARD_FLOAT && Has_F16
+   && (register_operand (operands[0], HFmode)
+       || reg_or_0_operand (operands[1], HFmode)) &&
+   !((GET_CODE(operands[0]) == MEM)  && XEXP(operands[0], 0) &&
+       (GET_CODE(XEXP(operands[0], 0)) == POST_INC ||
+        GET_CODE(XEXP(operands[0], 0)) == POST_DEC ||
+        GET_CODE(XEXP(operands[0], 0)) == POST_MODIFY)) &&
+   !((GET_CODE(operands[1]) == MEM)  && XEXP(operands[1], 0) &&
+       (GET_CODE(XEXP(operands[1], 0)) == POST_INC ||
+        GET_CODE(XEXP(operands[1], 0)) == POST_DEC ||
+        GET_CODE(XEXP(operands[1], 0)) == POST_MODIFY))"
+  { return riscv_output_move (operands[0], operands[1]); }
+  [(set_attr "move_type" "move,load,store")
    (set_attr "mode" "HF")])
 
-(define_insn "*movohf_hardfloat_x"
-  [(set (match_operand:OHF 0 "nonimmediate_operand" "=xf,xf,xf,m,m")
-        (match_operand:OHF 1 "move_operand" "xf,G,m,xf,G"))]
-  "Has_F16ALT
-   && (register_operand (operands[0], OHFmode)
-       || reg_or_0_operand (operands[1], OHFmode))"
-  { return riscv_output_move (operands[0], operands[1]); }
-  [(set_attr "move_type" "fmove,mtc,fpload,fpstore,store")
-   (set_attr "mode" "OHF")])
 
 
 ;; 32-bit floating point moves
@@ -3975,7 +4216,7 @@
 
 (define_insn "*movsf_hardfloat"
   [(set (match_operand:SF 0 "nonimmediate_operand" "=f,f,f,m,m,*f,*r,  *r,*r,*m")
-	(match_operand:SF 1 "move_operand"         " f,G,m,f,G,*r,*f,*G*r,*m,*r"))]
+	(match_operand:SF 1 "move_operand"               " f,G,m,f,G,*r,*f,*G*r,*m,*r"))]
   "TARGET_HARD_FLOAT
    && (register_operand (operands[0], SFmode)
        || reg_or_0_operand (operands[1], SFmode))"
@@ -4015,14 +4256,14 @@
 ;; In RV32, we lack fmv.x.d and fmv.d.x.  Go through memory instead.
 ;; (However, we can still use fcvt.d.w to zero a floating-point register.)
 (define_insn "*movdf_hardfloat_rv32"
-  [(set (match_operand:DF 0 "nonimmediate_operand" "=f,f,f,m,m,  *r,*r,*m")
-	(match_operand:DF 1 "move_operand"         " f,G,m,f,G,*r*G,*m,*r"))]
+  [(set (match_operand:DF 0 "nonimmediate_operand" "=f,f,f,m,m")
+  (match_operand:DF 1 "move_operand"               " f,G,m,f,G"))]
   "!TARGET_64BIT && TARGET_DOUBLE_FLOAT
-   && (register_operand (operands[0], DFmode)
-       || reg_or_0_operand (operands[1], DFmode))"
+  && (register_operand (operands[0], DFmode)
+      || reg_or_0_operand (operands[1], DFmode))"
   { return riscv_output_move (operands[0], operands[1]); }
-  [(set_attr "move_type" "fmove,mtc,fpload,fpstore,store,move,load,store")
-   (set_attr "mode" "DF")])
+  [(set_attr "move_type" "fmove,mtc,fpload,fpstore,store")
+  (set_attr "mode" "DF")])
 
 (define_insn "*movdf_hardfloat_rv64"
   [(set (match_operand:DF 0 "nonimmediate_operand" "=f,f,f,m,m,*f,*r,  *r,*r,*m")
@@ -4156,29 +4397,32 @@
 ;;
 ;;  ....................
 
-(define_mode_iterator VMODEINT          [V2HI V4QI])
-(define_mode_iterator VMODEFLOAT        [(V2HF "Has_F16") (V2OHF "Has_F16ALT")])
+;; OPRECOMP Added smallfloat vector modes
 
-(define_mode_iterator VMODEINT2         [V2HI])
-(define_mode_iterator VMODEINT4         [V4QI])
-(define_mode_iterator VMODEFLOAT2       [(V2HF "Has_F16") (V2OHF "Has_F16ALT")])
+(define_mode_iterator VMODEINT          [(V2SI "TARGET_64BIT") (V4HI "TARGET_64BIT") (V8QI "TARGET_64BIT") V2HI V4QI])
+(define_mode_iterator VMODEINT2         [(V2SI "TARGET_64BIT") V2HI])
+(define_mode_iterator VMODEINT4         [(V4HI "TARGET_64BIT") V4QI])
+(define_mode_iterator VMODEINT8         [(V8QI "TARGET_64BIT")])
+(define_mode_iterator VMODEFLOAT        [V4QF V2OHF V2HF (V2SF "TARGET_64BIT") (V4HF "TARGET_64BIT") (V4OHF "TARGET_64BIT") (V8QF "TARGET_64BIT")])
+(define_mode_iterator VMODEFLOAT2       [V2OHF V2HF (V2SF "TARGET_64BIT")])
+(define_mode_iterator VMODEFLOAT4       [V4QF (V4HF "TARGET_64BIT") (V4OHF "TARGET_64BIT")])
+(define_mode_iterator VMODEFLOAT8       [(V8QF "TARGET_64BIT")])
+(define_mode_iterator VMODEALL          [V4QF V2OHF V2HF V2HI (V2SI "TARGET_64BIT") (V4HI "TARGET_64BIT") (V8QI "TARGET_64BIT") V4QI (V2SF "TARGET_64BIT") (V4HF "TARGET_64BIT") (V4OHF "TARGET_64BIT") (V8QF "TARGET_64BIT")])
+(define_mode_iterator VMODEALL4         [(V4HI "TARGET_64BIT") V4QI V4QF (V4HF "TARGET_64BIT") (V4OHF "TARGET_64BIT")])
+(define_mode_iterator VMODEALL2         [V2OHF V2HF V2HI (V2SI "TARGET_64BIT") (V2SF "TARGET_64BIT")])
+(define_mode_iterator VMODEALL8         [(V8QI "TARGET_64BIT") (V8QF "TARGET_64BIT")])
 
-(define_mode_iterator VMODEALL          [(V2HF "Has_F16") (V2OHF "Has_F16ALT") V2HI V4QI])
-(define_mode_iterator VMODEALL4         [V4QI])
-(define_mode_iterator VMODEALL2         [(V2HF "Has_F16") (V2OHF "Has_F16ALT")  V2HI])
+(define_mode_attr VINT                  [(V2SI "V2SI") (V2HI "V2HI") (V4QI "V4QI") (V4HI "V4HI") (V8QI "V8QI")])
+(define_mode_attr vec_type              [(V4QF "v4qf") (V2OHF "v2ohf") (V2HF "v2hf") (V8QF "v8qf") (V4OHF "v4ohf") (V4HF "v4hf") (V2SF "v2sf") (V2HI "v2hi") (V2SI "v2si") (V4QI "v4qi") (V4HI "v4hi") (V8QI "v8qi")])
+(define_mode_attr vec_size              [(V4QF "b")  (V2OHF "ah")  (V2HF "h") (V8QF "b") (V4OHF "ah") (V4HF "h") (V2SF "s")  (V2HI "h")  (V4QI "b") (V2SI "w") (V4HI "h")  (V8QI "b")])
+(define_mode_attr int_vec_size          [(V4QF "b")  (V2OHF "ah")  (V2HF "h") (V8QF "b") (V4OHF "ah") (V4HF "h") (V2SF "s")  (V2HI "h") (V2SI "w")    (V4QI "b")  (V4HI "h")  (V8QI "b")])
+(define_mode_attr int_vec_type          [(V4QF "v4qi") (V2OHF "v2hi") (V2HF "v2hi") (V8QF "v8qi") (V4OHF "v4hi") (V4HF "v4hi") (V2SF "v2si") (V2HI "v2hi") (V2SI "v2si") (V4QI "v4qi") (V4HI "v4hi") (V8QI "v8qi")])
+(define_mode_attr int_vec_mode          [(V4QF "V4QI") (V2OHF "V2HI") (V2HF "V2HI") (V8QF "V8QI") (V4OHF "V4HI") (V4HF "V4HI") (V2SF "V2SI") (V2HI "V2HI") (V2SI "V2SI") (V4QI "V4QI") (V4HI "V4HI") (V8QI "V8QI")])
+(define_mode_attr vec_downsize          [(V4QF "V2QF") (V2OHF "OHF") (V2HF "HF") (V8QF "V4QF") (V4OHF "V2OHF") (V4HF "V2HF") (V2SF "SF") (V2HI "HI") (V2SI "SI") (V4QI "V2QI") (V4HI "V2HI") (V8QI "V4QI")])
 
-(define_mode_attr VINT                  [(V2HI "V2HI") (V4QI "V4QI")])
-(define_mode_attr vec_type              [(V2HF "v2hf") (V2OHF "v2ohf") (V2HI "v2hi") (V4QI "v4qi")])
-(define_mode_attr vec_size              [(V2HF "h") (V2OHF "h") (V2HI "h") (V4QI "b")])
-(define_mode_attr float_vec_size        [(V2HF "h") (V2OHF "ah") (V2HI "h") (V4QI "b")])
-(define_mode_attr int_vec_size          [(V2HF "h") (V2OHF "h") (V2HI "h") (V4QI "b")])
-(define_mode_attr int_vec_type          [(V2HF "v2hi") (V2OHF "v2hi") (V2HI "v2hi") (V4QI "v4qi")])
-(define_mode_attr int_vec_mode          [(V2HF "V2HI") (V2OHF "V2HI") (V2HI "V2HI") (V4QI "V4QI")])
-
-
-(define_mode_attr vec_scalar            [(V2HF "SF") (V2OHF "SF") (V2HI "SI")  (V4QI "SI")])
-(define_mode_attr vec_scalar_int        [(V2HI "SI") (V4QI "SI")])
-(define_mode_attr vec_scalar_elmt       [(V2HF "HF") (V2OHF "OHF") (V2HI "HI")  (V4QI "QI")])
+(define_mode_attr vec_scalar            [(V4QF "SF")  (V2OHF "SF")  (V2HF "SF") (V8QF "DF") (V4OHF "DF") (V4HF "DF") (V2SF "DF")  (V2HI "SI") (V4QI "SI")  (V2SI "SI") (V4HI "SI")  (V8QI "SI")])
+(define_mode_attr vec_scalar_int        [(V2HI "SI")  (V4QI "SI") (V2SI "SI") (V4HI "SI")  (V8QI "SI")])
+(define_mode_attr vec_scalar_elmt       [(V4QF "QF")  (V2OHF "OHF")  (V2HF "HF") (V8QF "QF") (V4OHF "OHF")  (V4HF "HF") (V2SF "SF")  (V2HI "HI") (V2SI "SI")  (V4QI "QI") (V4HI "HI") (V8QI "QI")])
 
 ;; Vector Init
 
@@ -4246,6 +4490,15 @@
     DONE;
 })
 
+;;(define_expand "movv2sf"
+;;  [(set (match_operand:V2SF 0 "")
+;;  (match_operand:V2SF 1 ""))]
+;;  ""
+;;{
+;;  if (riscv_legitimize_move (V2SFmode, operands[0], operands[1]))
+;;    DONE;
+;;})
+
 (define_expand "movv1sf"
   [(set (match_operand:V1SF 0 "")
   (match_operand:V1SF 1 ""))]
@@ -4255,13 +4508,45 @@
     DONE;
 })
 
+;;(define_expand "movv4hf"
+;;  [(set (match_operand:V4HF 0 "")
+;;  (match_operand:V4HF 1 ""))]
+;;  ""
+;;{
+;;  if (riscv_legitimize_move (V4HFmode, operands[0], operands[1]))
+;;    DONE;
+;;})
+
+
 (define_insn "mov<VMODEFLOAT:mode>_internal"
   [(set (match_operand:VMODEFLOAT 0 "nonimmediate_operand"    "=xf,    xf, xf, m,    m, xf, r,       *r, *r, *m")
               (match_operand:VMODEFLOAT 1 "move_operand"          " xf, vIzzz,  m,xf,vIzzz,  r, xf,*r*vIzzz, *m, *r"))]
   "TARGET_HARD_FLOAT && (register_operand (operands[0], <MODE>mode) || reg_or_0_operand (operands[1], <MODE>mode))"
   { return riscv_output_move (operands[0], operands[1]); }
   [(set_attr "move_type" "fmove,mtc,fpload,fpstore,store,mtc,mfc,move,load,store")
-   (set_attr "mode" "SF,SF,SF,SF,SF,SF,SF,SF,SF,SF")])
+   (set_attr "mode" "SF,SF,SF,SF,SF,SF,SF,SF,SF,SF")])   
+
+;; TODO CHECK 32BIT CASE
+
+;;(define_insn "movv4hf_internal"
+;; [(set (match_operand:V4HF 0 "nonimmediate_operand" "=xf,xf,xf, m,m,*xf,*r,   *r,*r,*m")
+;; (match_operand:V4HF 1 "move_operand" "xf, vIzzz, m,xf,vIzzz, *r,*xf,*r*vIzzz,*m,*r"))]
+;; "(register_operand (operands[0], V4HFmode) || reg_or_0_operand (operands[1], V4HFmode)) &&
+;;   !riscv_filter_pulp_operand(operands[0], !(Pulp_Cpu>=PULP_V0)) &&
+;;   !riscv_filter_pulp_operand(operands[1], !(Pulp_Cpu>=PULP_V0))"
+;; "#"
+;; [(set_attr "move_type" "fmove,mtc,fpload,fpstore,store,mtc,mfc,move,load,store")
+;;  (set_attr "mode" "SF,SF,SF,SF,SF,SF,SF,SF,SF,SF")])
+
+;;(define_insn "movv2sf_internal"
+;;  [(set (match_operand:V2SF 0 "nonimmediate_operand" "=f,f,f,m,m,*f,*r,  *r,*r,*m")
+;;  (match_operand:V2SF 1 "move_operand" " f,vIzzz,m,f,vIzzz,*r,*f,*r*vIzzz,*m,*r"))]
+;;  "(register_operand (operands[0], V2SFmode) || reg_or_0_operand (operands[1], V2SFmode)) &&
+;;    !riscv_filter_pulp_operand(operands[0], !(Pulp_Cpu>=PULP_V0)) &&
+;;    !riscv_filter_pulp_operand(operands[1], !(Pulp_Cpu>=PULP_V0))"
+;;   "#"
+;;  [(set_attr "move_type" "fmove,mtc,fpload,fpstore,store,mtc,mfc,move,load,store")
+;;   (set_attr "mode" "SF,SF,SF,SF,SF,SF,SF,SF,SF,SF")])
 
 (define_insn "movv1sf_internal"
   [(set (match_operand:V1SF 0 "nonimmediate_operand" "=f,f,f,m,m,*f,*r,  *r,*r,*m")
@@ -4290,13 +4575,28 @@
   [(set_attr "type" "fcvt")
    (set_attr "mode" "V2HF")])
 
-;; Float vector conversions
+(define_insn "extendv4hfv4ohf2"
+  [(set (match_operand:V4OHF 0 "register_operand" "=xf")
+  (float:V4OHF (match_operand:V4HF 1 "register_operand" "xf")))]
+  "TARGET_HARD_FLOAT && Has_F16 && Has_F16ALT && TARGET_64BIT"
+  "vfcvt.ah.h\t%0,%1"
+  [(set_attr "type" "fcvt")
+   (set_attr "mode" "V4OHF")])
+
+(define_insn "extendv4ohfv4hf2"
+  [(set (match_operand:V4HF 0 "register_operand" "=xf")
+  (float:V4HF (match_operand:V4OHF 1 "register_operand" "xf")))]
+  "TARGET_HARD_FLOAT && Has_F16 && Has_F16ALT && TARGET_64BIT"
+  "vfcvt.h.ah\t%0,%1"
+  [(set_attr "type" "fcvt")
+   (set_attr "mode" "V4HF")])
+;; OPRECOMP Vector convertions
 
 (define_insn "float<VMODEFLOAT:int_vec_type><VMODEFLOAT:vec_type>2_internal"
   [(set (match_operand:VMODEFLOAT 0 "register_operand" "=xf")
         (float:VMODEFLOAT (match_operand:<VMODEFLOAT:int_vec_mode> 1 "register_operand" "r")))]
   "TARGET_HARD_FLOAT"
-  "vfcvt.<VMODEFLOAT:float_vec_size>.<VMODEFLOAT:ifmt>\t%0,%1"
+  "vfcvt.<VMODEFLOAT:vec_size>.<VMODEFLOAT:ifmt>\t%0,%1"
   [(set_attr "type" "fcvt")]
 )
 
@@ -4320,7 +4620,7 @@
   [(set (match_operand:VMODEFLOAT 0 "register_operand" "=xf")
         (unsigned_float:VMODEFLOAT (match_operand:<VMODEFLOAT:int_vec_mode> 1 "register_operand" "r")))]
   "TARGET_HARD_FLOAT"
-  "vfcvt.<VMODEFLOAT:float_vec_size>.<VMODEFLOAT:ifmt>u\t%0,%1"
+  "vfcvt.<VMODEFLOAT:vec_size>.<VMODEFLOAT:ifmt>u\t%0,%1"
   [(set_attr "type" "fcvt")]
  )
 
@@ -4345,7 +4645,7 @@
   [(set (match_operand:<VMODEFLOAT:int_vec_mode> 0 "register_operand" "=r")
         (fix:<VMODEFLOAT:int_vec_mode> (match_operand:VMODEFLOAT 1 "register_operand" "xf")))]
   "TARGET_HARD_FLOAT"
-  "vfcvt.<VMODEFLOAT:ifmt>.<VMODEFLOAT:float_vec_size>\t%0,%1"
+  "vfcvt.<VMODEFLOAT:ifmt>.<VMODEFLOAT:vec_size>\t%0,%1"
   [(set_attr "type" "fcvt")]
  )
 
@@ -4369,7 +4669,7 @@
   [(set (match_operand:<VMODEFLOAT:int_vec_mode> 0 "register_operand" "=r")
         (unsigned_fix:<VMODEFLOAT:int_vec_mode> (match_operand:VMODEFLOAT 1 "register_operand" "xf")))]
   "TARGET_HARD_FLOAT"
-  "vfcvt.<VMODEFLOAT:ifmt>u.<VMODEFLOAT:float_vec_size>\t%0,%1"
+  "vfcvt.<VMODEFLOAT:ifmt>u.<VMODEFLOAT:vec_size>\t%0,%1"
   [(set_attr "type" "fcvt")]
  )
 
@@ -4467,6 +4767,228 @@
   "vfcpka.ah.s \t%0,%1,%2 \t"
 [(set_attr "type" "fcvt")
  (set_attr "mode" "SF")]
+)
+
+;; 4 SF -> V4QF
+(define_insn "vec_pack_trunc_v1sf_internal"
+  [(set (match_operand:V4QF 0 "register_operand" "=xf")
+    (vec_concat:V4QF
+      (vec_concat:V2QF
+        (float_truncate:QF (match_operand:V1SF 1 "register_operand" "f"))
+        (float_truncate:QF (match_operand:V1SF 2 "register_operand" "f")))
+      (vec_concat:V2QF
+        (float_truncate:QF (match_operand:V1SF 3 "register_operand" "f"))
+        (float_truncate:QF (match_operand:V1SF 4 "register_operand" "f")))
+    )
+   )
+  ]
+  "TARGET_HARD_FLOAT && Has_F8"
+  "vfcpka.b.s \t%0,%1,%2\t\;vfcpkb.b.s \t%0,%3,%4\t"
+[(set_attr "type" "move")
+ (set_attr "mode" "HF")]
+)
+
+(define_insn "vec_pack_trunc_v1sf_to_v4qf_builtin"
+  [(set (match_operand:V4QF 0 "register_operand" "=xf")
+    (vec_concat:V4QF
+      (vec_concat:V2QF
+        (float_truncate:QF (match_operand:SF 1 "register_operand" "f"))
+        (float_truncate:QF (match_operand:SF 2 "register_operand" "f")))
+      (vec_concat:V2QF
+        (float_truncate:QF (match_operand:SF 3 "register_operand" "f"))
+        (float_truncate:QF (match_operand:SF 4 "register_operand" "f")))
+    )
+   )
+  ]
+  "TARGET_HARD_FLOAT && Has_F8"
+  "vfcpka.b.s \t%0,%1,%2\t\;vfcpkb.b.s \t%0,%3,%4\t"
+[(set_attr "type" "move")
+ (set_attr "mode" "HF")]
+)
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; [OPRECOMP] VECTORIAL CAST OPERATIONS
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;; 2 V2HF -> V4QF
+(define_expand "vec_pack_trunc_v2hf"
+  [(set (match_operand:V4QF 0 "register_operand" "=xf")
+  (vec_concat:V4QF
+    (float_truncate:V2QF (match_operand:V2HF 1 "register_operand" "xf"))
+    (float_truncate:V2QF (match_operand:V2HF 2 "register_operand" "xf"))
+  )
+   )
+  ]
+  "TARGET_HARD_FLOAT && Has_F8 && Has_F16"
+  {
+    rtx RegVal = gen_reg_rtx (SImode);
+    emit_insn(gen_rtx_SET (RegVal, gen_rtx_CONST_INT(SImode, 16)));
+    rtx Temp1 = gen_reg_rtx (V4QFmode);
+    rtx Temp2 = gen_reg_rtx (V4QFmode);
+    emit_insn(gen_vec_pack_trunc_v2hf_low(operands[0], operands[2]));
+    emit_insn(gen_movv4qf_internal(Temp1, operands[0]));
+    emit_insn(gen_lshrimmv4qf(Temp1, Temp1, RegVal));
+    emit_insn(gen_vec_pack_trunc_v2hf_low(operands[0], operands[1]));
+    emit_insn(gen_movv4qf_internal(Temp2, operands[0]));
+    emit_insn(gen_orv4qf(Temp1, Temp1, Temp2));
+    emit_insn(gen_movv4qf_internal(operands[0], Temp1));
+    DONE;
+  }
+)
+
+(define_insn "vec_pack_trunc_v2hf_low"
+  [(set (match_operand:V4QF 0 "register_operand" "=xf")
+     (vec_merge:V4QF
+       (vec_concat:V4QF
+         (float_truncate:V2QF (match_operand:V2HF 1 "register_operand" "xf"))
+         (vec_concat:V2QF
+           (const_int 0)
+           (const_int 0)
+         )
+       )
+       (match_dup 0)
+       (const_int 6)       
+      )
+   )
+  ]
+  "TARGET_HARD_FLOAT && Has_F8 && Has_F16"
+  "vfcvt.b.h \t%0,%1\t"
+[(set_attr "type" "move")
+ (set_attr "mode" "HF")]  
+)
+
+;; 2 V2OHF -> V4QF
+(define_expand "vec_pack_trunc_v2ohf"
+  [(set (match_operand:V4QF 0 "register_operand" "=&xf")
+  (vec_concat:V4QF
+    (float_truncate:V2QF (match_operand:V2OHF 1 "register_operand" "xf"))
+    (float_truncate:V2QF (match_operand:V2OHF 2 "register_operand" "xf"))
+  )
+   )
+  ]
+  "TARGET_HARD_FLOAT && Has_F8 && Has_F16ALT"
+  {
+    rtx RegVal = gen_reg_rtx (SImode);
+    emit_insn(gen_rtx_SET (RegVal, gen_rtx_CONST_INT(SImode, 16)));
+    rtx Temp1 = gen_reg_rtx (V4QFmode);
+    rtx Temp2 = gen_reg_rtx (V4QFmode);
+    emit_insn(gen_vec_pack_trunc_v2ohf_low(operands[0], operands[2]));
+    emit_insn(gen_movv4qf_internal(Temp1, operands[0]));
+    emit_insn(gen_lshrimmv4qf(Temp1, Temp1, RegVal));
+    emit_insn(gen_vec_pack_trunc_v2ohf_low(operands[0], operands[1]));
+    emit_insn(gen_movv4qf_internal(Temp2, operands[0]));
+    emit_insn(gen_orv4qf(Temp1, Temp1, Temp2));
+    emit_insn(gen_movv4qf_internal(operands[0], Temp1));
+    DONE;
+  }
+)
+
+(define_insn "vec_pack_trunc_v2ohf_low"
+  [(set (match_operand:V4QF 0 "register_operand" "=xf")
+     (vec_merge:V4QF
+       (vec_concat:V4QF
+         (float_truncate:V2QF (match_operand:V2OHF 1 "register_operand" "xf"))
+         (vec_concat:V2QF
+           (const_int 0)
+           (const_int 0)
+         )
+       )
+       (match_dup 0)
+       (const_int 6)       
+      )
+   )
+  ]
+  "TARGET_HARD_FLOAT && Has_F8 && Has_F16ALT"
+  "vfcvt.b.ah \t%0,%1\t"
+[(set_attr "type" "move")
+ (set_attr "mode" "HF")]  
+)
+
+
+;; V4QF -> V2HF (high)
+(define_expand "vec_unpacks_hi_v4qf"
+  [(set (match_operand:V2HF 0 "register_operand" "=xf")
+        (float_extend:V2HF
+            (vec_select:V2QF
+              (match_operand:V4QF 1 "register_operand" "xf")
+              (parallel [(const_int 2) (const_int 3)])
+            )
+          )
+   )
+  ]
+  "TARGET_HARD_FLOAT && Has_F8 && Has_F16"
+  {
+    rtx RegTMP = gen_reg_rtx (V4QFmode);
+    rtx ShiftVal = gen_reg_rtx (SImode);
+    rtx Temp = gen_reg_rtx (V4QFmode);
+    emit_insn(gen_rtx_SET (ShiftVal, gen_rtx_CONST_INT(SImode, 16)));
+    emit_insn(gen_movv4qf_internal(Temp, operands[1]));
+    emit_insn(gen_lshrimmv4qf(Temp, Temp, ShiftVal));
+    emit_insn(gen_movv4qf_internal(RegTMP, Temp));
+    emit_insn(gen_vec_unpacks_lo_v4qf(operands[0], RegTMP));
+    DONE;
+  }
+)
+
+;; V4QF -> V2HF (low)
+(define_insn "vec_unpacks_lo_v4qf"
+  [(set (match_operand:V2HF 0 "register_operand" "=xf")
+        (float_extend:V2HF
+            (vec_select:V2QF
+              (match_operand:V4QF 1 "register_operand" "xf")
+              (parallel [(const_int 0) (const_int 1)])
+            )
+          )
+   )
+  ]
+  "TARGET_HARD_FLOAT && Has_F8 && Has_F16"
+  "vfcvt.h.b \t%0,%1 \t"
+[(set_attr "type" "move")
+ (set_attr "mode" "HF")]
+)
+
+
+;; V4QF -> V2OHF (high)
+(define_expand "vec_unpacks_hi_v4qf_alt"
+  [(set (match_operand:V2OHF 0 "register_operand" "=xf")
+        (float_extend:V2OHF
+            (vec_select:V2QF
+              (match_operand:V4QF 1 "register_operand" "xf")
+              (parallel [(const_int 2) (const_int 3)])
+            )
+          )
+   )
+  ]
+  "TARGET_HARD_FLOAT && Has_F8 && Has_F16ALT"
+  {
+    rtx RegTMP = gen_reg_rtx (V4QFmode);
+    rtx ShiftVal = gen_reg_rtx (SImode);
+    rtx Temp = gen_reg_rtx (V4QFmode);
+    emit_insn(gen_rtx_SET (ShiftVal, gen_rtx_CONST_INT(SImode, 16)));
+    emit_insn(gen_movv4qf_internal(Temp, operands[1]));
+    emit_insn(gen_lshrimmv4qf(Temp, Temp, ShiftVal));
+    emit_insn(gen_movv4qf_internal(RegTMP, Temp));
+    emit_insn(gen_vec_unpacks_lo_v4qf_alt(operands[0], RegTMP));
+    DONE;
+  }
+)
+
+;; V4QF -> V2OHF (low)
+(define_insn "vec_unpacks_lo_v4qf_alt"
+  [(set (match_operand:V2OHF 0 "register_operand" "=xf")
+        (float_extend:V2OHF
+            (vec_select:V2QF
+              (match_operand:V4QF 1 "register_operand" "xf")
+              (parallel [(const_int 0) (const_int 1)])
+            )
+          )
+   )
+  ]
+  "TARGET_HARD_FLOAT && Has_F8 && Has_F16ALT"
+  "vfcvt.ah.b \t%0,%1 \t"
+[(set_attr "type" "move")
+ (set_attr "mode" "OHF")]
 )
 
 
@@ -4609,17 +5131,17 @@
  (set_attr "mode" "SI")]
 )
 
-(define_insn "vec_pack_v4qi_lo"
-  [(set (match_operand:V4QI 0 "register_operand" "=r")
-	(vec_merge:V4QI
-		(vec_concat:V4QI
-			(vec_concat:V2QI
-				(match_operand:QI 1 "register_operand" "r")
-				(match_operand:QI 2 "register_operand" "r")
+(define_insn "vec_pack_<VMODEALL4:mode>_lo"
+  [(set (match_operand:VMODEALL4 0 "register_operand" "=r")
+	(vec_merge:VMODEALL4
+		(vec_concat:VMODEALL4
+			(vec_concat:<vec_downsize>
+				(match_operand:<vec_scalar_elmt>  1 "register_operand" "r")
+				(match_operand:<vec_scalar_elmt>  2 "register_operand" "r")
 			)
-			(const_vector:V2QI [(const_int 0) (const_int 0)])
+			(const_vector:<vec_downsize> [(const_int 0) (const_int 0)])
 		)
-          	(match_operand:V4QI 3 "register_operand" "0")
+          	(match_operand:VMODEALL4 3 "register_operand" "0")
 		(const_int 3)
 	)
    )
@@ -4630,17 +5152,17 @@
  (set_attr "mode" "SI")]
 )
 
-(define_insn "vec_pack_v4qi_lo_first"
-  [(set (match_operand:V4QI 0 "register_operand" "=r")
-	(vec_merge:V4QI
-		(vec_concat:V4QI
-			(vec_concat:V2QI
-				(match_operand:QI 1 "register_operand" "r")
-				(match_operand:QI 2 "register_operand" "r")
+(define_insn "vec_pack_<VMODEALL4:mode>_lo_first"
+  [(set (match_operand:VMODEALL4 0 "register_operand" "=r")
+	(vec_merge:VMODEALL4
+		(vec_concat:VMODEALL4
+			(vec_concat:<vec_downsize>
+				(match_operand:<vec_scalar_elmt> 1 "register_operand" "r")
+				(match_operand:<vec_scalar_elmt> 2 "register_operand" "r")
 			)
-			(const_vector:V2QI [(const_int 0) (const_int 0)])
+			(const_vector:<vec_downsize> [(const_int 0) (const_int 0)])
 		)
-	  	(const_vector:V4QI [(const_int 0) (const_int 0) (const_int 0) (const_int 0)])
+	  	(const_vector:VMODEALL4 [(const_int 0) (const_int 0) (const_int 0) (const_int 0)])
 		(const_int 3)
 	)
    )
@@ -4652,17 +5174,17 @@
 )
 
 
-(define_insn "vec_pack_v4qi_hi"
-  [(set	(match_operand:V4QI 0 "register_operand" "=r")
-	(vec_merge:V4QI
-		(vec_concat:V4QI
-			(const_vector:V2QI [(const_int 0) (const_int 0)])
-			(vec_concat:V2QI
-				(match_operand:QI 1 "register_operand" "r")
-				(match_operand:QI 2 "register_operand" "r")
+(define_insn "vec_pack_<VMODEALL4:mode>_hi"
+  [(set	(match_operand:VMODEALL4 0 "register_operand" "=r")
+	(vec_merge:VMODEALL4
+		(vec_concat:VMODEALL4
+			(const_vector:<vec_downsize> [(const_int 0) (const_int 0)])
+			(vec_concat:<vec_downsize>
+				(match_operand:<vec_scalar_elmt> 1 "register_operand" "r")
+				(match_operand:<vec_scalar_elmt> 2 "register_operand" "r")
 			)
 		)
-          	(match_operand:V4QI 3 "register_operand" "0")
+          	(match_operand:VMODEALL4 3 "register_operand" "0")
 		(const_int 12)
 	)
    )
@@ -4673,26 +5195,26 @@
  (set_attr "mode" "SI")]
 )
 
-;;(define_insn "vec_pack_v4qi_hi_first"
-;;  [(set	(match_operand:V4QI 0 "register_operand" "=r")
-;;	(vec_merge:V4QI
-;;		(vec_concat:V4QI
-;;			(const_vector:V2QI [(const_int 0) (const_int 0)])
-;;			(vec_concat:V2QI
-;;				(match_operand:QI 1 "register_operand" "r")
-;;				(match_operand:QI 2 "register_operand" "r")
-;;			)
-;;		)
-;;	  	(const_vector:V4QI [(const_int 0) (const_int 0) (const_int 0) (const_int 0)])
-;;		(const_int 12)
-;;	)
-;;   )
-;;  ]
-;;  "((Pulp_Cpu>=PULP_V2) && !(TARGET_MASK_NOVECT||TARGET_MASK_NOSHUFFLEPACK))"
-;;  "pv.packhi.b \t%0,%2,%1 \t# Vector pack of 2 bytes (first), high part"
-;;[(set_attr "type" "move")
-;; (set_attr "mode" "SI")]
-;;)
+(define_insn "vec_pack_<VMODEALL4:mode>_hi_first"
+  [(set	(match_operand:VMODEALL4 0 "register_operand" "=r")
+	(vec_merge:VMODEALL4
+		(vec_concat:VMODEALL4
+			(const_vector:<vec_downsize> [(const_int 0) (const_int 0)])
+			(vec_concat:<vec_downsize>
+				(match_operand:<vec_scalar_elmt> 1 "register_operand" "r")
+				(match_operand:<vec_scalar_elmt> 2 "register_operand" "r")
+			)
+		)
+	  	(const_vector:VMODEALL4 [(const_int 0) (const_int 0) (const_int 0) (const_int 0)])
+		(const_int 12)
+	)
+   )
+  ]
+  "((Pulp_Cpu>=PULP_V2) && !(TARGET_MASK_NOVECT||TARGET_MASK_NOSHUFFLEPACK))"
+  "pv.packhi.b \t%0,%2,%1 \t# Vector pack of 2 bytes (first), high part"
+[(set_attr "type" "move")
+ (set_attr "mode" "SI")]
+)
 
 
 (define_expand "vec_pack_v4qi"
@@ -4720,6 +5242,30 @@
 */
   DONE;
 })
+
+
+(define_expand "vec_pack_v4qf"
+  [(match_operand:V4QF 0 "register_operand" "")
+   (match_operand:QF 1 "register_operand" "")
+   (match_operand:QF 2 "register_operand" "")
+   (match_operand:QF 3 "register_operand" "")
+   (match_operand:QF 4 "register_operand" "")
+  ]
+  "((Pulp_Cpu>=PULP_V2) && !(TARGET_MASK_NOVECT||TARGET_MASK_NOSHUFFLEPACK) )"
+{
+        rtx R0 = gen_reg_rtx(QFmode);
+        rtx R1 = gen_reg_rtx(QFmode);
+        rtx R2 = gen_reg_rtx(QFmode);
+        rtx R3 = gen_reg_rtx(QFmode);
+        emit_insn(gen_movqf(R0, operands[1]));
+        emit_insn(gen_movqf(R1, operands[2]));
+        emit_insn(gen_movqf(R2, operands[3]));
+        emit_insn(gen_movqf(R3, operands[4]));
+        emit_insn (gen_vec_pack_v4qf_lo_first(operands[0], R0, R1));
+        emit_insn (gen_vec_pack_v4qf_hi      (operands[0], R2, R3, operands[0]));
+  DONE;
+})
+
 
 ;; Vector permutation
 
@@ -4979,29 +5525,53 @@
 ;; Vector Insert
 
 (define_insn "vec_set<VMODEALL:mode>_internal"
-  [(set (match_operand:VMODEALL 0 "register_operand" "=r,r")
+  [(set (match_operand:VMODEALL 0 "register_operand" "=r,r,r")
         (vec_merge:VMODEALL
-          (vec_duplicate:VMODEALL (match_operand:<vec_scalar_elmt> 1 "nonmemory_operand" "r,J"))
-          (match_operand:VMODEALL 3 "register_operand" "0,0")
-          (match_operand:SI 2 "immediate_operand" "i,i")))]
+          (vec_duplicate:VMODEALL (match_operand:<vec_scalar_elmt> 1 "nonmemory_operand" "r,J,vIzzz"))
+          (match_operand:VMODEALL 3 "register_operand" "0,0,0")
+          (match_operand:SI 2 "immediate_operand" "i,i,i")
+        )
+  )]
   "((Pulp_Cpu>=PULP_V2) && !TARGET_MASK_NOVECT)"
 {
   int elt = ffs ((int) INTVAL (operands[2])) - 1;
 
   operands[2] = GEN_INT (elt);
-  if (which_alternative == 0) return "pv.insert.<vec_size>\t%0,%1,%2\t # Vect insert";
-  else return "pv.insert.<vec_size>\t%0,x0,%2\t # Vect insert 0";
+  if (which_alternative == 0) return "pv.insert.<int_vec_size>\t%0,%1,%2\t # Vect insert";
+  else return "pv.insert.<int_vec_size>\t%0,x0,%2\t # Vect insert 0";
+}
+[(set_attr "type" "move,move,move")
+ (set_attr "mode" "SI,SI,SF")]
+)
+
+(define_expand "vec_set<VMODEFLOAT:mode>_internal_f"
+  [(set (match_operand:VMODEFLOAT 0 "register_operand" "")
+        (vec_merge:VMODEFLOAT
+          (vec_duplicate:VMODEFLOAT (match_operand:<vec_scalar_elmt> 1 "nonmemory_operand" ""))
+          (match_operand:VMODEFLOAT 3 "register_operand" "")
+          (match_operand:SI 2 "immediate_operand" "")
+        )
+  )]
+  "(Pulp_Cpu>=PULP_V2) && !TARGET_MASK_NOVECT  && !TARGET_FPREGS_ON_GRREGS"
+{
+   rtx TempVect = gen_reg_rtx (<MODE>mode);
+   rtx TempElem = gen_reg_rtx (<vec_scalar_elmt>mode);
+   emit_insn(gen_mov<mode>_internal(TempVect, operands[0]));
+   emit_insn(gen_mov<mode>_internal(TempElem, operands[1]));
+   emit_insn (gen_vec_set<mode>_internal (TempVect, TempElem, operands[2], TempVect));
+   emit_insn(gen_mov<mode>_internal(operands[0], TempVect));
+   DONE;
 }
 [(set_attr "type" "move,move")
  (set_attr "mode" "SI,SI")]
 )
 
 (define_insn "vec_set_first<VMODEALL2:mode>_internal"
-  [(set (match_operand:VMODEALL2 0 "register_operand" "=r,r")
+  [(set (match_operand:VMODEALL2 0 "register_operand" "=r,r,r")
         (vec_merge:VMODEALL2
-          (vec_duplicate:VMODEALL2 (match_operand:<vec_scalar_elmt> 1 "nonmemory_operand" "r,J"))
+          (vec_duplicate:VMODEALL2 (match_operand:<vec_scalar_elmt> 1 "nonmemory_operand" "r,J,vIzzz"))
 	  (const_vector:VMODEALL2 [(const_int 0) (const_int 0)])
-          (match_operand:SI 2 "const_1_operand" "Z,Z")))]
+          (match_operand:SI 2 "const_1_operand" "Z,Z,Z")))]
   "((Pulp_Cpu>=PULP_V2) && !TARGET_MASK_NOVECT)"
 {
   int elt = ffs ((int) INTVAL (operands[2])) - 1;
@@ -5011,16 +5581,16 @@
 	return "p.exthz \t%0,%1\t # Vect first insert half, pos 0";
   } else return "add\t%0,x0,%2\t # Vect first insert half 0, pos 0";
 }
-[(set_attr "type" "move,move")
- (set_attr "mode" "SI,SI")]
+[(set_attr "type" "move,move,move")
+ (set_attr "mode" "SI,SI,SF")]
 )
 
 (define_insn "vec_set_first<VMODEALL4:mode>_internal"
-  [(set (match_operand:VMODEALL4 0 "register_operand" "=r,r")
+  [(set (match_operand:VMODEALL4 0 "register_operand" "=r,r,r")
         (vec_merge:VMODEALL4
-          (vec_duplicate:VMODEALL4 (match_operand:<vec_scalar_elmt> 1 "nonmemory_operand" "r,J"))
+          (vec_duplicate:VMODEALL4 (match_operand:<vec_scalar_elmt> 1 "nonmemory_operand" "r,J,vIzzz"))
 	  (const_vector:VMODEALL4 [(const_int 0) (const_int 0) (const_int 0) (const_int 0)])
-          (match_operand:SI 2 "const_1_operand" "Z,Z")))]
+          (match_operand:SI 2 "const_1_operand" "Z,Z,Z")))]
   "((Pulp_Cpu>=PULP_V2) && !TARGET_MASK_NOVECT)"
 {
   int elt = ffs ((int) INTVAL (operands[2])) - 1;
@@ -5030,12 +5600,86 @@
 	return "and\t%0,%1,0xff\t # Vect first insert byte, pos 0";
   } else return "add\t%0,x0,%2\t # Vect first insert, pos 0";
 }
-[(set_attr "type" "move,move")
- (set_attr "mode" "SI,SI")]
+[(set_attr "type" "move,move,move")
+ (set_attr "mode" "SI,SI,SF")]
 )
 
-(define_expand "vec_set_first<VMODEALL:mode>"
-  [(match_operand:VMODEALL 0 "register_operand" "")
+(define_insn "vec_set_first<VMODEALL8:mode>_internal"
+  [(set (match_operand:VMODEALL8 0 "register_operand" "=r,r,r")
+        (vec_merge:VMODEALL8
+          (vec_duplicate:VMODEALL8 (match_operand:<vec_scalar_elmt> 1 "nonmemory_operand" "r,J,vIzzz"))
+	  (const_vector:VMODEALL8 [(const_int 0) (const_int 0) (const_int 0) (const_int 0) (const_int 0) (const_int 0) (const_int 0) (const_int 0)])
+          (match_operand:SI 2 "const_1_operand" "Z,Z,Z")))]
+  "((Pulp_Cpu>=PULP_V2) && !TARGET_MASK_NOVECT && TARGET_64BIT)"
+{
+  int elt = ffs ((int) INTVAL (operands[2])) - 1;
+
+  operands[2] = GEN_INT (elt);
+  if (which_alternative == 0) {
+	return "and\t%0,%1,0xff\t # Vect first insert byte, pos 0";
+  } else return "add\t%0,x0,%2\t # Vect first insert, pos 0";
+}
+[(set_attr "type" "move,move,move")
+ (set_attr "mode" "SI,SI,SF")]
+)
+
+(define_expand "vec_set_first<VMODEFLOAT2:mode>_internal_f"
+  [(set (match_operand:VMODEFLOAT2 0 "register_operand" " ")
+        (vec_merge:VMODEFLOAT2
+          (vec_duplicate:VMODEFLOAT2 (match_operand:<vec_scalar_elmt> 1 "nonmemory_operand" " "))
+	  (const_vector:VMODEFLOAT2 [(const_int 0) (const_int 0)])
+          (match_operand:SI 2 "const_1_operand" " ")))]
+  "((Pulp_Cpu>=PULP_V2) && !TARGET_MASK_NOVECT)"
+  {
+     rtx TempVect = gen_reg_rtx (<MODE>mode);
+     rtx TempElem = gen_reg_rtx (<vec_scalar_elmt>mode);
+     emit_insn(gen_mov<mode>_internal(TempVect, operands[0]));
+     emit_insn(gen_mov<mode>_internal(TempElem, operands[1]));
+     emit_insn (gen_vec_set_first<mode>_internal (TempVect, TempElem, operands[2]));
+     emit_insn(gen_mov<mode>_internal(operands[0], TempVect));
+     DONE;
+  }
+)
+
+(define_expand "vec_set_first<VMODEFLOAT4:mode>_internal_f"
+  [(set (match_operand:VMODEFLOAT4 0 "register_operand" " ")
+        (vec_merge:VMODEFLOAT4
+          (vec_duplicate:VMODEFLOAT4 (match_operand:<vec_scalar_elmt> 1 "nonmemory_operand" " "))
+	  (const_vector:VMODEFLOAT4 [(const_int 0) (const_int 0) (const_int 0) (const_int 0)])
+          (match_operand:SI 2 "const_1_operand" " ")))]
+  "((Pulp_Cpu>=PULP_V2) && !TARGET_MASK_NOVECT)"
+  {
+     rtx TempVect = gen_reg_rtx (<MODE>mode);
+     rtx TempElem = gen_reg_rtx (<vec_scalar_elmt>mode);
+     emit_insn(gen_mov<mode>_internal(TempVect, operands[0]));
+     emit_insn(gen_mov<mode>_internal(TempElem, operands[1]));
+     emit_insn (gen_vec_set_first<mode>_internal (TempVect, TempElem, operands[2]));
+     emit_insn(gen_mov<mode>_internal(operands[0], TempVect));
+     DONE;
+  }
+)
+
+(define_expand "vec_set_first<VMODEFLOAT8:mode>_internal_f"
+  [(set (match_operand:VMODEFLOAT8 0 "register_operand" " ")
+        (vec_merge:VMODEFLOAT8
+          (vec_duplicate:VMODEFLOAT8 (match_operand:<vec_scalar_elmt> 1 "nonmemory_operand" " "))
+	  (const_vector:VMODEFLOAT8 [(const_int 0) (const_int 0) (const_int 0) (const_int 0) (const_int 0) (const_int 0) (const_int 0) (const_int 0)])
+          (match_operand:SI 2 "const_1_operand" " ")))]
+  "((Pulp_Cpu>=PULP_V2) && !TARGET_MASK_NOVECT && TARGET_64BIT)"
+  {
+     rtx TempVect = gen_reg_rtx (<MODE>mode);
+     rtx TempElem = gen_reg_rtx (<vec_scalar_elmt>mode);
+     emit_insn(gen_mov<mode>_internal(TempVect, operands[0]));
+     emit_insn(gen_mov<mode>_internal(TempElem, operands[1]));
+     emit_insn (gen_vec_set_first<mode>_internal (TempVect, TempElem, operands[2]));
+     emit_insn(gen_mov<mode>_internal(operands[0], TempVect));
+     DONE;
+  }
+)
+
+
+(define_expand "vec_set_first<VMODEINT:mode>"
+  [(match_operand:VMODEINT 0 "register_operand" "")
    (match_operand:<vec_scalar_elmt> 1 "nonmemory_operand" "")
    (match_operand:SI 2 "immediate_operand" "")]
   "((Pulp_Cpu>=PULP_V2) && !TARGET_MASK_NOVECT)"
@@ -5046,13 +5690,43 @@
 	rtx Vect_Zero[4] = {const0_rtx, const0_rtx, const0_rtx, const0_rtx};
 	rtx zero_vect = gen_rtx_CONST_VECTOR (<MODE>mode, gen_rtvec_v (GET_MODE_NUNITS(<MODE>mode), Vect_Zero));
 	emit_insn(gen_mov<mode>_internal(operands[0], zero_vect));
-  	emit_insn (gen_vec_set<mode>_internal (operands[0], operands[1], GEN_INT (elem), operands[0]));
-  } else emit_insn (gen_vec_set_first<mode>_internal (operands[0], operands[1], GEN_INT (elem)));
+    emit_insn (gen_vec_set<mode>_internal (operands[0], operands[1], GEN_INT (elem), operands[0]));
+  } else
+    emit_insn (gen_vec_set_first<mode>_internal (operands[0], operands[1], GEN_INT (elem)));
   DONE;
 })
 
-(define_expand "vec_set<VMODEALL:mode>"
-  [(match_operand:VMODEALL 0 "register_operand" "")
+(define_expand "vec_set_first<VMODEFLOAT:mode>"
+  [(match_operand:VMODEFLOAT 0 "register_operand" "")
+   (match_operand:<vec_scalar_elmt> 1 "nonmemory_operand" "")
+   (match_operand:SI 2 "immediate_operand" "")]
+  "((Pulp_Cpu>=PULP_V2) && !TARGET_MASK_NOVECT)"
+{
+  HOST_WIDE_INT elem = (HOST_WIDE_INT) 1 << INTVAL (operands[2]);	/* Should always be 1 */
+
+  if ((GET_CODE (operands[1]) == CONST_INT) && (INTVAL(operands[1]) != 0)) {
+	rtx Vect_Zero[4] = {const0_rtx, const0_rtx, const0_rtx, const0_rtx};
+	rtx zero_vect = gen_rtx_CONST_VECTOR (<MODE>mode, gen_rtvec_v (GET_MODE_NUNITS(<MODE>mode), Vect_Zero));
+	emit_insn(gen_mov<mode>_internal(operands[0], zero_vect));
+    emit_insn (gen_vec_set<mode>_internal (operands[0], operands[1], GEN_INT (elem), operands[0]));
+  } else
+    emit_insn (gen_vec_set_first<mode>_internal (operands[0], operands[1], GEN_INT (elem)));
+  DONE;
+})
+
+(define_expand "vec_set<VMODEINT:mode>"
+  [(match_operand:VMODEINT 0 "register_operand" "")
+   (match_operand:<vec_scalar_elmt> 1 "nonmemory_operand" "")
+   (match_operand:SI 2 "immediate_operand" "")]
+  "((Pulp_Cpu>=PULP_V2) && !TARGET_MASK_NOVECT)"
+{
+  HOST_WIDE_INT elem = (HOST_WIDE_INT) 1 << INTVAL (operands[2]);
+  emit_insn (gen_vec_set<mode>_internal (operands[0], operands[1], GEN_INT (elem), operands[0]));
+  DONE;
+})
+
+(define_expand "vec_set<VMODEFLOAT:mode>"
+  [(match_operand:VMODEFLOAT 0 "register_operand" "")
    (match_operand:<vec_scalar_elmt> 1 "nonmemory_operand" "")
    (match_operand:SI 2 "immediate_operand" "")]
   "((Pulp_Cpu>=PULP_V2) && !TARGET_MASK_NOVECT)"
@@ -5064,11 +5738,11 @@
 
 ;; Vector Extract
 
-(define_insn "vec_extract_sext_<SUBDI:mode>_<VMODEALL:mode>"
+(define_insn "vec_extract_sext_<SUBDI:mode>_<VMODEINT:mode>"
   [(set (match_operand:SUBDI 0 "register_operand" "=r")
         (sign_extend:SUBDI
           (vec_select:<vec_scalar_elmt>
-             (match_operand:VMODEALL 1 "register_operand" "r")
+             (match_operand:VMODEINT 1 "register_operand" "r")
              (parallel [(match_operand:SI 2 "immediate_operand" "i")])
           )
         )
@@ -5080,11 +5754,11 @@
  (set_attr "mode" "<SUBDI:MODE>")]
 )
 
-(define_insn "vec_extract_zext_<SUBDI:mode>_<VMODEALL:mode>"
+(define_insn "vec_extract_zext_<SUBDI:mode>_<VMODEINT:mode>"
   [(set (match_operand:SUBDI 0 "register_operand" "=r")
         (zero_extend:SUBDI
           (vec_select:<vec_scalar_elmt>
-             (match_operand:VMODEALL 1 "register_operand" "r")
+             (match_operand:VMODEINT 1 "register_operand" "r")
              (parallel [(match_operand:SI 2 "immediate_operand" "i")])
           )
         )
@@ -5096,10 +5770,10 @@
  (set_attr "mode" "<SUBDI:MODE>")]
 )
 
-(define_insn "vec_extract<VMODEALL:mode>"
+(define_insn "vec_extract<VMODEINT:mode>"
   [(set (match_operand:<vec_scalar_elmt> 0 "register_operand" "=r")
         (vec_select:<vec_scalar_elmt>
-           (match_operand:VMODEALL 1 "register_operand" "r")
+           (match_operand:VMODEINT 1 "register_operand" "r")
            (parallel [(match_operand:SI 2 "immediate_operand" "i")])
         )
    )
@@ -5110,21 +5784,49 @@
  (set_attr "mode" "SI")]
 )
 
+(define_insn "vec_extract<VMODEFLOAT:mode>_internal"
+  [(set (match_operand:<vec_scalar_elmt> 0 "register_operand" "=r")
+        (vec_select:<vec_scalar_elmt>
+           (match_operand:VMODEFLOAT 1 "register_operand" "r")
+           (parallel [(match_operand:SI 2 "immediate_operand" "i")])
+        )
+   )
+  ]
+  "((Pulp_Cpu>=PULP_V2) && !TARGET_MASK_NOVECT)"
+  "pv.extract.<vec_size>\t%0,%1,%2\t # vect extract"
+[(set_attr "type" "move")
+ (set_attr "mode" "SI")]
+)
+
+(define_expand "vec_extract<VMODEFLOAT:mode>"
+  [(set (match_operand:<vec_scalar_elmt> 0 "register_operand" "")
+        (vec_select:<vec_scalar_elmt>
+           (match_operand:VMODEFLOAT 1 "register_operand" "")
+           (parallel [(match_operand:SI 2 "immediate_operand" "")])
+        )
+   )
+  ]
+  "((Pulp_Cpu>=PULP_V2) && !TARGET_MASK_NOVECT)"
+{
+     emit_insn (gen_vec_extract<mode>_internal (operands[0], operands[1], operands[2]));
+     DONE;
+})
+
 ;; Diadic Instructions
 
 (define_code_iterator vec_op2      	[plus minus smin smax])
-(define_code_iterator vec_op2_float    	[plus minus smin smax mult])
+(define_code_iterator vec_op2_float    	[plus minus div smin smax mult])
 (define_code_iterator vec_op2u      	[umin umax])
 (define_code_iterator vec_op2s     	[lshiftrt ashiftrt ashift])
 (define_code_iterator vec_log2     	[and ior xor])
 
 
-(define_code_attr vec_op2_name      	[(plus "add") (minus "sub") (smin "smin") (smax "smax") (mult "mul")])
+(define_code_attr vec_op2_name      	[(plus "add") (minus "sub") (smin "smin") (smax "smax") (mult "mul") (div "div")])
 (define_code_attr vec_op2u_name      	[(umin "umin") (umax "umax")])
 (define_code_attr vec_op2s_name     	[(lshiftrt "vlshr") (ashiftrt "vashr") (ashift "vashl")])
 (define_code_attr vec_log2_name    	[(and "and") (ior "ior") (xor "exor")])
 
-(define_code_attr vec_op2_asm_name 	[(plus "add") (minus "sub") (smin "min") (smax "max") (mult "mul")])
+(define_code_attr vec_op2_asm_name 	[(plus "add") (minus "sub") (smin "min") (smax "max") (mult "mul") (div "div")])
 (define_code_attr vec_op2u_asm_name 	[(umin "minu") (umax "maxu")])
 (define_code_attr vec_op2s_asm_name 	[(lshiftrt "srl") (ashiftrt "sra") (ashift "sll")])
 (define_code_attr vec_log2_asm_name 	[(and "and") (ior "or") (xor "xor")])
@@ -5359,7 +6061,7 @@
    )
   ]
  "TARGET_HARD_FLOAT && (Has_F16 || Has_F16ALT)"
-"vf<vec_op2_asm_name>.<float_vec_size> \t%0,%1,%2\t # FVect Op FVect"
+"vf<vec_op2_asm_name>.<vec_size> \t%0,%1,%2\t # FVect Op FVect"
 [(set_attr "type" "fmadd")
  (set_attr "mode" "<VMODEFLOAT:MODE>")]
 )
@@ -5370,8 +6072,8 @@
                                   (vec_duplicate:VMODEFLOAT (match_operand:<vec_scalar_elmt> 2 "register_operand" "xf"))
               )
    )]
- "TARGET_HARD_FLOAT && (Has_F16 || Has_F16ALT)"
-"vf<vec_op2_asm_name>.r.<float_vec_size> \t%0,%1,%2\t # FVect Op Scalar"
+ "TARGET_HARD_FLOAT && (Has_F8 || Has_F16 || Has_F16ALT)"
+"vf<vec_op2_asm_name>.r.<vec_size> \t%0,%1,%2\t # FVect Op Scalar"
 [(set_attr "type" "fmadd")
  (set_attr "mode" "SF")]
 )
@@ -5425,8 +6127,8 @@
                        (match_dup                0)
         )
  )]
- "TARGET_HARD_FLOAT && (Has_F16 || Has_F16ALT)"
- "vfmac.<float_vec_size>\t%0,%1,%2"
+ "TARGET_HARD_FLOAT && (Has_F8 || Has_F16 || Has_F16ALT)"
+ "vfmac.<vec_size>\t%0,%1,%2"
  [(set_attr "type" "fmadd")
   (set_attr "mode" "<VMODEFLOAT:MODE>")])
 
@@ -5452,8 +6154,8 @@
 ;;        (fma:VMODEFLOAT (match_operand:VMODEFLOAT 1 "register_operand" " xf")
 ;;                        (match_operand:VMODEFLOAT 2 "register_operand" " xf")
 ;;                        (neg:VMODEFLOAT (match_dup 0))))]
-;;  "TARGET_HARD_FLOAT && (Has_F16 || Has_F16ALT)"
-;;  "vfmre.<float_vec_size>\t%0,%1,%2"
+;;  "TARGET_HARD_FLOAT && (Has_F8 || Has_F16 || Has_F16ALT)"
+;;  "vfmre.<vec_size>\t%0,%1,%2"
 ;;  [(set_attr "type" "fmadd")
 ;;   (set_attr "mode" "<VMODEFLOAT:MODE>")])
 
@@ -5463,7 +6165,7 @@
 ;;        (fma:VMODEFLOAT (match_operand:VMODEFLOAT                 1 "register_operand" " ")
 ;;                        (match_operand:VMODEFLOAT                 2 "register_operand" " ")
 ;;                        (neg:VMODEFLOAT (match_operand:VMODEFLOAT 3 "register_operand" " "))))]
-;;  "TARGET_HARD_FLOAT && (Has_F16 || Has_F16ALT)"
+;;  "TARGET_HARD_FLOAT && (Has_F8 || Has_F16 || Has_F16ALT)"
 ;;  {
 ;;    emit_insn(gen_mov<VMODEFLOAT:mode>(operands[0], operands[3]));
 ;;    emit_insn(gen_fms<VMODEFLOAT:mode>3_internal(operands[0], operands[1], operands[2]));
@@ -5476,8 +6178,8 @@
         (fma:VMODEFLOAT (match_operand:VMODEFLOAT                 1 "register_operand" " xf")
                         (match_operand:VMODEFLOAT                 2 "register_operand" " xf")
 			(neg:VMODEFLOAT (match_operand:VMODEFLOAT 3 "register_operand" " 0"))))]
-  "TARGET_HARD_FLOAT && (Has_F16 || Has_F16ALT)"
-  "vfmre.<float_vec_size>\t%0,%1,%2"
+  "TARGET_HARD_FLOAT && (Has_F8 || Has_F16 || Has_F16ALT)"
+  "vfmre.<vec_size>\t%0,%1,%2"
   [(set_attr "type" "fmadd")
    (set_attr "mode" "<VMODEFLOAT:MODE>")])
 
@@ -5488,8 +6190,8 @@
   (unspec:VMODEFLOAT [(match_operand:VMODEFLOAT 1 "register_operand" " xf")
           (match_operand:VMODEFLOAT 2 "register_operand" " xf")]
          UNSPEC_COPYSIGN))]
-  "TARGET_HARD_FLOAT &&  (Has_F16 || Has_F16ALT)"
-  "vfsgnj.<float_vec_size>\t%0,%1,%2"
+  "TARGET_HARD_FLOAT &&  (Has_F8 || Has_F16 || Has_F16ALT)"
+  "vfsgnj.<vec_size>\t%0,%1,%2"
   [(set_attr "type" "fadd")
    (set_attr "mode" "<VMODEFLOAT:MODE>")])
 
@@ -5597,6 +6299,36 @@
  pv.avg.sci.<vec_size> \t%0,%1,%W2\t # Vect Avg Scalar"
 [(set_attr "type" "arith,arith")
  (set_attr "mode" "SI,SI")]
+)
+
+(define_insn "avg<VMODEFLOAT2:mode>3"
+  [(set (match_operand:VMODEFLOAT2 0 "register_operand" "=xf")
+	(ashiftrt:VMODEFLOAT2
+		(plus:VMODEFLOAT2 (match_operand:VMODEFLOAT2 1 "register_operand" "xf")
+			        (match_operand:VMODEFLOAT2 2 "nonmemory_operand" "xf"))
+	   	(const_vector:VMODEFLOAT2 [(const_int 1) (const_int 1)])
+	)
+   )
+  ]
+  "TARGET_HARD_FLOAT && ((<MODE>mode == V4QFmode && Has_F8) || (<MODE>mode == V2HFmode && Has_F16) || (<MODE>mode == V2OHFmode && Has_F16ALT))"
+  "vfavg.<vec_size> \t%0,%1,%2\t # Vect Avg Vect"
+  [(set_attr "type" "arith")
+   (set_attr "mode" "SF")]
+)
+
+(define_insn "avg<VMODEFLOAT4:mode>3"
+  [(set (match_operand:VMODEFLOAT4 0 "register_operand" "=xf")
+	(ashiftrt:VMODEFLOAT4
+		(plus:VMODEFLOAT4 (match_operand:VMODEFLOAT4 1 "register_operand" "xf")
+			        (match_operand:VMODEFLOAT4 2 "nonmemory_operand" "xf"))
+	   	(const_vector:VMODEFLOAT4 [(const_int 1) (const_int 1) (const_int 1) (const_int 1)])
+	)
+   )
+  ]
+  "TARGET_HARD_FLOAT && ((<MODE>mode == V4QFmode && Has_F8) || (<MODE>mode == V2HFmode && Has_F16) || (<MODE>mode == V2OHFmode && Has_F16ALT))"
+  "vfavg.<vec_size> \t%0,%1,%2\t # Vect Avg Vect"
+  [(set_attr "type" "arith")
+   (set_attr "mode" "SF")]
 )
 
 (define_insn "avgsc<VMODEINT2:mode>3"
@@ -5799,12 +6531,21 @@
  (set_attr "mode" "SI,SF")]
 )
 
+;; OPRECOMP Square root
+(define_insn "sqrt<VMODEFLOAT:mode>2"
+  [(set (match_operand:VMODEFLOAT       0 "register_operand" "=xf")
+	(sqrt:VMODEFLOAT (match_operand:VMODEFLOAT  1 "register_operand" " xf")))]
+  "TARGET_HARD_FLOAT && ((<MODE>mode == V4QFmode && Has_F8) || (<MODE>mode == V2HFmode && Has_F16) || (<MODE>mode == V2OHFmode && Has_F16ALT))"
+  "vfsqrt.<vec_size>\t%0,%1"
+  [(set_attr "type" "fsqrt")
+   (set_attr "mode" "SF")])
+
 ;; Unary instructions
 
 (define_insn "abs<VMODEFLOAT:mode>2"
   [(set (match_operand:VMODEFLOAT 0 "register_operand" "=xf")
   (abs:VMODEFLOAT (match_operand:VMODEFLOAT 1 "register_operand" "xf")))]
-  "TARGET_HARD_FLOAT && ((<MODE>mode == V2HFmode && Has_F16) || (<MODE>mode == V2OHFmode && Has_F16ALT))"
+  "TARGET_HARD_FLOAT && ((<MODE>mode == V4QFmode && Has_F8) || (<MODE>mode == V2HFmode && Has_F16) || (<MODE>mode == V2OHFmode && Has_F16ALT))"
   "vfabs.<vec_size>\t%0,%1"
   [(set_attr "type" "fadd")
    (set_attr "mode" "SF")])
@@ -7058,6 +7799,263 @@
  (set_attr "mode" "SI")]
 )
 
+
+;; OPRECOMP Dot products with accumulation
+
+(define_insn "dotpv2hf"
+  [(set (match_operand:HF 0 "register_operand" "=xf")
+    (plus:HF
+      (mult:HF
+        (vec_select:HF (match_operand:V2HF 1 "register_operand" "xf") (parallel [(const_int 0)]))
+        (vec_select:HF (match_operand:V2HF 2 "nonmemory_operand" "xf") (parallel [(const_int 0)]))
+      )
+      (mult:HF
+        (vec_select:HF (match_dup 1) (parallel [(const_int 1)]))
+        (vec_select:HF (match_dup 2) (parallel [(const_int 1)]))
+      )
+    )
+   )
+  ]
+""
+"vfdotp.h \t%0,%1,%2\t"
+[(set_attr "type" "arith")
+ (set_attr "mode" "SF")]
+)
+
+(define_insn "dotpv2ohf"
+  [(set (match_operand:OHF 0 "register_operand" "=xf")
+    (plus:OHF
+      (mult:OHF
+        (vec_select:OHF (match_operand:V2OHF 1 "register_operand" "xf") (parallel [(const_int 0)]))
+        (vec_select:OHF (match_operand:V2OHF 2 "nonmemory_operand" "xf") (parallel [(const_int 0)]))
+      )
+      (mult:OHF
+        (vec_select:OHF (match_dup 1) (parallel [(const_int 1)]))
+        (vec_select:OHF (match_dup 2) (parallel [(const_int 1)]))
+      )
+    )
+   )
+  ]
+""
+"vfdotp.ah \t%0,%1,%2\t"
+[(set_attr "type" "arith")
+ (set_attr "mode" "SF")]
+)
+
+(define_insn "dotpv4qf"
+  [(set (match_operand:QF 0 "register_operand" "=xf")
+     (plus:QF
+        (plus:QF
+          (mult:QF
+            (vec_select:QF (match_operand:V4QF 1 "register_operand" "xf") (parallel [(const_int 0)]))
+            (vec_select:QF (match_operand:V4QF 2 "nonmemory_operand" "xf") (parallel [(const_int 0)]))
+          )
+          (mult:QF
+            (vec_select:QF (match_dup 1) (parallel [(const_int 1)]))
+            (vec_select:QF (match_dup 2) (parallel [(const_int 1)]))
+          )
+        )
+        (plus:QF
+          (mult:QF
+            (vec_select:QF (match_dup 1) (parallel [(const_int 2)]))
+            (vec_select:QF (match_dup 1) (parallel [(const_int 2)]))
+          )
+          (mult:QF
+            (vec_select:QF (match_dup 1) (parallel [(const_int 3)]))
+            (vec_select:QF (match_dup 2) (parallel [(const_int 3)]))
+          )
+        )    
+     )    
+   )
+  ]
+""
+"vfdotp.b \t%0,%1,%2\t"
+[(set_attr "type" "arith")
+ (set_attr "mode" "SF")]
+)
+
+(define_insn "dotpexv2sf"
+  [(set (match_operand:DF 0 "register_operand" "=f")
+    (plus:DF
+      (mult:DF
+        (float_extend:DF (vec_select:SF (match_operand:V2SF 1 "register_operand" "xf") (parallel [(const_int 0)])))
+        (float_extend:DF (vec_select:SF (match_operand:V2SF 2 "nonmemory_operand" "xf") (parallel [(const_int 0)])))
+      )
+      (mult:DF
+        (float_extend:DF (vec_select:SF (match_dup 1) (parallel [(const_int 1)])))
+        (float_extend:DF (vec_select:SF (match_dup 2) (parallel [(const_int 1)])))
+      )
+    )
+   )
+  ]
+"TARGET_64BIT"
+"vfdotpex.s \t%0,%1,%2\t"
+[(set_attr "type" "arith")
+ (set_attr "mode" "DF")]
+)
+
+
+(define_insn "dotpexv2hf"
+  [(set (match_operand:SF 0 "register_operand" "=f")
+    (plus:SF
+      (mult:SF
+        (float_extend:SF (vec_select:HF (match_operand:V2HF 1 "register_operand" "xf") (parallel [(const_int 0)])))
+        (float_extend:SF (vec_select:HF (match_operand:V2HF 2 "nonmemory_operand" "xf") (parallel [(const_int 0)])))
+      )
+      (mult:SF
+        (float_extend:SF (vec_select:HF (match_dup 1) (parallel [(const_int 1)])))
+        (float_extend:SF (vec_select:HF (match_dup 2) (parallel [(const_int 1)])))
+      )
+    )
+   )
+  ]
+""
+"vfdotpex.h \t%0,%1,%2\t"
+[(set_attr "type" "arith")
+ (set_attr "mode" "SF")]
+)
+
+(define_insn "dotpexv2ohf"
+  [(set (match_operand:SF 0 "register_operand" "+f")
+    (plus:SF
+      (mult:SF
+        (float_extend:SF (vec_select:OHF (match_operand:V2OHF 1 "register_operand" "xf") (parallel [(const_int 0)])))
+        (float_extend:SF (vec_select:OHF (match_operand:V2OHF 2 "nonmemory_operand" "xf") (parallel [(const_int 0)])))
+      )
+      (mult:SF
+        (float_extend:SF (vec_select:OHF (match_dup 1) (parallel [(const_int 1)])))
+        (float_extend:SF (vec_select:OHF (match_dup 2) (parallel [(const_int 1)])))
+      )
+    )
+   )
+  ]
+""
+"vfdotpex.ah \t%0,%1,%2\t"
+[(set_attr "type" "arith")
+ (set_attr "mode" "SF")]
+)
+
+(define_insn "dotpexv4qf"
+  [(set (match_operand:SF 0 "register_operand" "+f")
+    (plus:SF
+        (plus:SF
+          (mult:SF
+            (float_extend:SF (vec_select:QF (match_operand:V4QF 1 "register_operand" "xf") (parallel [(const_int 0)])))
+            (float_extend:SF (vec_select:QF (match_operand:V4QF 2 "nonmemory_operand" "xf") (parallel [(const_int 0)])))
+          )
+          (mult:SF
+            (float_extend:SF (vec_select:QF (match_dup 1) (parallel [(const_int 1)])))
+            (float_extend:SF (vec_select:QF (match_dup 2) (parallel [(const_int 1)])))
+          )
+        )
+        (plus:SF
+          (mult:SF
+            (float_extend:SF (vec_select:QF (match_dup 1) (parallel [(const_int 2)])))
+            (float_extend:SF (vec_select:QF (match_dup 2) (parallel [(const_int 2)])))
+          )
+          (mult:SF
+            (float_extend:SF (vec_select:QF (match_dup 1) (parallel [(const_int 3)])))
+            (float_extend:SF (vec_select:QF (match_dup 2) (parallel [(const_int 3)])))
+          )
+        )
+     )
+    )
+  ]
+""
+"vfdotpex.b \t%0,%1,%2\t"
+[(set_attr "type" "arith")
+ (set_attr "mode" "SF")]
+)
+
+
+(define_insn "dotpexv4hf"
+  [(set (match_operand:DF 0 "register_operand" "=f")
+    (plus:DF
+      (mult:DF
+        (float_extend:DF (vec_select:HF (match_operand:V4HF 1 "register_operand" "xf") (parallel [(const_int 0)])))
+        (float_extend:DF (vec_select:HF (match_operand:V4HF 2 "nonmemory_operand" "xf") (parallel [(const_int 0)])))
+      )
+      (mult:DF
+        (float_extend:DF (vec_select:HF (match_dup 1) (parallel [(const_int 1)])))
+        (float_extend:DF (vec_select:HF (match_dup 2) (parallel [(const_int 1)])))
+      )
+    )
+   )
+  ]
+"TARGET_64BIT"
+"vfdotpex.h \t%0,%1,%2\t"
+[(set_attr "type" "arith")
+ (set_attr "mode" "DF")]
+)
+
+(define_insn "dotpexv4ohf"
+  [(set (match_operand:DF 0 "register_operand" "=f")
+    (plus:DF
+      (mult:DF
+        (float_extend:DF (vec_select:OHF (match_operand:V4OHF 1 "register_operand" "xf") (parallel [(const_int 0)])))
+        (float_extend:DF (vec_select:OHF (match_operand:V4OHF 2 "nonmemory_operand" "xf") (parallel [(const_int 0)])))
+      )
+      (mult:DF
+        (float_extend:DF (vec_select:OHF (match_dup 1) (parallel [(const_int 1)])))
+        (float_extend:DF (vec_select:OHF (match_dup 2) (parallel [(const_int 1)])))
+      )
+    )
+   )
+  ]
+"TARGET_64BIT"
+"vfdotpex.ah \t%0,%1,%2\t"
+[(set_attr "type" "arith")
+ (set_attr "mode" "DF")]
+)
+
+(define_insn "dotpexv8qf"
+  [(set (match_operand:DF 0 "register_operand" "+f")
+    (plus:DF
+        (plus:DF
+          (mult:DF
+            (float_extend:DF (vec_select:QF (match_operand:V8QF 1 "register_operand" "xf") (parallel [(const_int 0)])))
+            (float_extend:DF (vec_select:QF (match_operand:V8QF 2 "nonmemory_operand" "xf") (parallel [(const_int 0)])))
+          )
+          (mult:DF
+            (float_extend:DF (vec_select:QF (match_dup 1) (parallel [(const_int 1)])))
+            (float_extend:DF (vec_select:QF (match_dup 2) (parallel [(const_int 1)])))
+          )
+        )
+        (plus:DF
+          (mult:DF
+            (float_extend:DF (vec_select:QF (match_dup 1) (parallel [(const_int 2)])))
+            (float_extend:DF (vec_select:QF (match_dup 2) (parallel [(const_int 2)])))
+          )
+          (mult:DF
+            (float_extend:DF (vec_select:QF (match_dup 1) (parallel [(const_int 3)])))
+            (float_extend:DF (vec_select:QF (match_dup 2) (parallel [(const_int 3)])))
+          )
+        )
+     )
+    )
+  ]
+"TARGET_64BIT"
+"vfdotpex.b \t%0,%1,%2\t"
+[(set_attr "type" "arith")
+ (set_attr "mode" "DF")]
+)
+
+
+(define_expand "sdot_prod<VMODEFLOAT:mode>"
+  [(match_operand:SF 0 "register_operand" " ")
+  (match_operand:VMODEFLOAT 1 "register_operand" " ")
+  (match_operand:VMODEFLOAT 2 "register_operand" " ")
+  (match_operand:SF 3 "register_operand" " ")]
+  ""
+  {
+    emit_insn(gen_dotpex<VMODEFLOAT:mode>(operands[0], operands[1], operands[2]));
+    emit_insn(gen_addsf3(operands[0], operands[0], operands[3]));
+    DONE;
+  }
+)
+
+
+
 ;;
 ;;  ....................
 ;;
@@ -7086,7 +8084,7 @@
         )
   )]
   "((Pulp_Cpu>=PULP_V2) && !TARGET_MASK_NOVECT)"
-  "vf<vec_cmp_op_name>.<VMODEFLOAT:float_vec_size>\t%0,%1,%2"
+  "vf<vec_cmp_op_name>.<VMODEFLOAT:vec_size>\t%0,%1,%2"
   [(set_attr "type" "fadd")
    (set_attr "mode" "SF")]
 )
@@ -7098,7 +8096,7 @@
         )
   )]
   "((Pulp_Cpu>=PULP_V2) && !TARGET_MASK_NOVECT)"
-  "vfeq.<VMODEFLOAT:float_vec_size>\t%0,%1,%2"
+  "vfeq.<VMODEFLOAT:vec_size>\t%0,%1,%2"
   [(set_attr "type" "fadd")
    (set_attr "mode" "SF")]
 )
@@ -7111,7 +8109,7 @@
    )
   ]
   "((Pulp_Cpu>=PULP_V2) && !TARGET_MASK_NOVECT)"
-  "vf<vec_cmp_op_name>.r.<VMODEFLOAT:float_vec_size>\t%0,%1,%2 # cmp vect/scalar op"
+  "vf<vec_cmp_op_name>.r.<VMODEFLOAT:vec_size>\t%0,%1,%2 # cmp vect/scalar op"
   [(set_attr "type" "fadd")
    (set_attr "mode" "SF")]
 )
@@ -7124,7 +8122,7 @@
    )
   ]
   "((Pulp_Cpu>=PULP_V2) && !TARGET_MASK_NOVECT)"
-  "vf<vec_cmp_swap_op_name>.r.<VMODEFLOAT:float_vec_size>\t%0,%2,%1 # cmp (swap) vect/scalar op"
+  "vf<vec_cmp_swap_op_name>.r.<VMODEFLOAT:vec_size>\t%0,%2,%1 # cmp (swap) vect/scalar op"
   [(set_attr "type" "fadd")
    (set_attr "mode" "SF")]
 )

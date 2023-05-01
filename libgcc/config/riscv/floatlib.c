@@ -21,6 +21,15 @@ double __extendohfdf2 (float16alt a1)
 }
 
 
+/* Convert float8 to double */
+double __extendqfdf2 (float8 a1)
+
+{
+        float F;
+        __asm ("fcvt.s.b %0, %1" : "=r" (F) : "r" (a1) );
+        return F;
+}
+
 /* Truncate double to half*/
 float16 __truncdfhf2 (double a1)
 
@@ -40,6 +49,17 @@ float16alt __truncdfohf2 (double a1)
 	float16alt R;
 	__asm ("fcvt.ah.s %0, %1" : "=r" (R) : "r" (F) );
 	return R;
+
+}
+
+/* Truncate double to float8 */
+float8 __truncdfqf2 (double a1)
+
+{
+        register float F = a1;
+        float8 R;
+        __asm ("fcvt.b.s %0, %1" : "=r" (R) : "r" (F) );
+        return R;
 
 }
 
