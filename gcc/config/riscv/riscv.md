@@ -6060,7 +6060,7 @@
         )
    )
   ]
- "TARGET_HARD_FLOAT && (Has_F16 || Has_F16ALT)"
+ "TARGET_HARD_FLOAT && (Has_F8 || Has_F16 || Has_F16ALT)"
 "vf<vec_op2_asm_name>.<vec_size> \t%0,%1,%2\t # FVect Op FVect"
 [(set_attr "type" "fmadd")
  (set_attr "mode" "<VMODEFLOAT:MODE>")]
@@ -6140,7 +6140,7 @@
                        (match_operand:VMODEFLOAT 2 "register_operand" " ")
                        (match_operand:VMODEFLOAT 3 "register_operand" " "))
  )]
- "TARGET_HARD_FLOAT && (Has_F16 || Has_F16ALT)"
+ "TARGET_HARD_FLOAT && (Has_F8 || Has_F16 || Has_F16ALT)"
   {
     emit_insn(gen_mov<VMODEFLOAT:mode>(operands[0], operands[3]));
     emit_insn(gen_fma<VMODEFLOAT:mode>3_internal(operands[0], operands[1], operands[2]));
@@ -6565,7 +6565,7 @@
 (define_insn "neg<VMODEFLOAT:mode>2"
   [(set (match_operand:VMODEFLOAT 0 "register_operand" "=xf")
   (neg:VMODEFLOAT (match_operand:VMODEFLOAT 1 "register_operand" "xf")))]
-  "TARGET_HARD_FLOAT && ((<MODE>mode == V2HFmode && Has_F16) || (<MODE>mode == V2OHFmode && Has_F16ALT))"
+  "TARGET_HARD_FLOAT && ((<MODE>mode == V4QFmode && Has_F8) || (<MODE>mode == V2HFmode && Has_F16) || (<MODE>mode == V2OHFmode && Has_F16ALT))"
   "vfneg.<vec_size>\t%0,%1"
   [(set_attr "type" "fadd")
    (set_attr "mode" "SF")])
