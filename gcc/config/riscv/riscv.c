@@ -352,6 +352,30 @@ static const struct riscv_tune_info rocket_tune_info = {
   true,						/* slow_unaligned_access */
 };
 
+static const struct riscv_tune_info gap8_tune_info = {
+  {COSTS_N_INSNS (4), COSTS_N_INSNS (5)},	/* fp_add */
+  {COSTS_N_INSNS (4), COSTS_N_INSNS (5)},	/* fp_mul */
+  {COSTS_N_INSNS (20), COSTS_N_INSNS (20)},	/* fp_div */
+  {COSTS_N_INSNS (1), COSTS_N_INSNS (1)},	/* int_mul */
+  {COSTS_N_INSNS (6), COSTS_N_INSNS (6)},	/* int_div */
+  1,						/* issue_rate */
+  3,						/* branch_cost */
+  5,						/* memory_cost */
+  false,					/* slow_unaligned_access */
+};
+
+static const struct riscv_tune_info gap9_tune_info = {
+  {COSTS_N_INSNS (1), COSTS_N_INSNS (1)},	/* fp_add */
+  {COSTS_N_INSNS (1), COSTS_N_INSNS (1)},	/* fp_mul */
+  {COSTS_N_INSNS (7), COSTS_N_INSNS (7)},	/* fp_div */
+  {COSTS_N_INSNS (1), COSTS_N_INSNS (1)},	/* int_mul */
+  {COSTS_N_INSNS (4), COSTS_N_INSNS (4)},	/* int_div */
+  1,						/* issue_rate */
+  3,						/* branch_cost */
+  5,						/* memory_cost */
+  false,					/* slow_unaligned_access */
+};
+
 /* Costs to use when optimizing for size.  */
 static const struct riscv_tune_info optimize_size_tune_info = {
   {COSTS_N_INSNS (1), COSTS_N_INSNS (1)},	/* fp_add */
@@ -372,6 +396,8 @@ static const struct riscv_cpu_info riscv_cpu_info_table[] = {
   { "marsellus2", marsellus2, &rocket_tune_info },
   { "marsellus3", marsellus3, &rocket_tune_info },
   { "rocket", marsellus2, &rocket_tune_info },
+  { "gap8", gap8, &gap8_tune_info },
+  { "gap9", gap9, &gap9_tune_info },
   { "size", generic, &optimize_size_tune_info },
 };
 

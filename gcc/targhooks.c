@@ -2107,4 +2107,11 @@ default_excess_precision (enum excess_precision_type ATTRIBUTE_UNUSED)
   return FLT_EVAL_METHOD_PROMOTE_TO_FLOAT;
 }
 
+/* Default implementation of TARGET_REMAPPED_BUILTIN.  */
+int default_remapped_builtin(tree exp)
+
+{
+        return -1;
+}
+
 #include "gt-targhooks.h"

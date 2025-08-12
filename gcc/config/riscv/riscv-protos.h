@@ -116,5 +116,6 @@ extern void riscv_atomic_assign_expand_fenv (tree *, tree *, tree *);
 extern rtx riscv_expand_builtin (tree, rtx, rtx, enum machine_mode, int);
 extern tree riscv_builtin_decl (unsigned int, bool);
 extern void riscv_init_builtins (void);
+extern int riscv_remapped_builtin(tree);
 
 #endif /* ! GCC_RISCV_PROTOS_H */

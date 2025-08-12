@@ -3877,7 +3877,8 @@ convert_arguments (tree typelist, vec<tree, va_gc> **values, tree fndecl,
 	    }
 	}
 
-      if (typetail && typetail != void_list_node)
+      /* if (typetail && typetail != void_list_node) EF: Not enough in case we have a builtin with void as sole argument, check is tree value is not a void_type */
+      if (typetail && typetail != void_list_node && TREE_VALUE (typetail) != void_type_node)
 	{
 	  if (complain & tf_error)
 	    error_args_num (input_location, fndecl, /*too_many_p=*/false);

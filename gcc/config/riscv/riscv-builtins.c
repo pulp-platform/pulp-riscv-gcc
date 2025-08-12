@@ -1054,12 +1054,15 @@ riscv_expand_builtin_direct (const struct riscv_builtin_description *d, int buil
 
 /* Implement TARGET_REMAPPED_BUILTIN */
 
-static int
+int
 riscv_remapped_builtin(tree exp)
 
 {
+	/*
         tree fndecl = get_callee_fndecl (exp);
         enum built_in_function fcode = DECL_FUNCTION_CODE (fndecl);
+	*/
+        enum built_in_function fcode = DECL_FUNCTION_CODE (exp);
 
         if (TARGET_MASK_OPEN_NATIVE) {
                 fcode = (enum built_in_function) GetRemappedGompBuiltin(fcode, ARRAY_SIZE (riscv_builtins));

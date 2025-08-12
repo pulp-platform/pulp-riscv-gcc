@@ -264,4 +264,6 @@ extern unsigned int default_min_arithmetic_precision (void);
 extern enum flt_eval_method
 default_excess_precision (enum excess_precision_type ATTRIBUTE_UNUSED);
 
+extern int default_remapped_builtin(tree exp);	/* GWT only */
+
 #endif /* GCC_TARGHOOKS_H */

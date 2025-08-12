@@ -2419,7 +2419,18 @@ containing a simplified expression for the call's result.  If\n\
  tree, (tree fndecl, int n_args, tree *argp, bool ignore),
  hook_tree_tree_int_treep_bool_null)
 
-/* Fold a target-specific builtin to a valid GIMPLE tree.  */
+/* Remap a non target builtin by a target builtin. GWT ONLY */
+DEFHOOK
+(remapped_builtin,
+"Replace a standard builtin with a target one. Signature must be\n\
+identical for proper operation. Target builtin was set up by\n\
+@samp{TARGET_INIT_BUILTINS}.  @var{exp} is the standard builtin tree\n\
+The target uses a lookup table to capture the binding between standard and\n\
+target builtin. If a remapping is found a target builtin index is returned.\n\
+If no remapping is not found -1 is returned.",
+ int, (tree exp),
+ default_remapped_builtin)
+
 DEFHOOK
 (gimple_fold_builtin,
  "Fold a call to a machine specific built-in function that was set up\n\
