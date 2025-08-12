@@ -3148,6 +3148,15 @@
    (set_attr "mode" "OHF")]
 )
 
+(define_insn "fix_truncqf<GPR:mode>2"
+  [(set (match_operand:GPR 0 "register_operand" "=r")
+        (fix:GPR (match_operand:QF 1 "register_operand" "xf")))]
+  "TARGET_HARD_FLOAT && Has_F8"
+   "fcvt.<GPR:ifmt>.b\t%0,%1,rtz"
+  [(set_attr "type" "fcvt")
+   (set_attr "mode" "QF")]
+)
+
 (define_insn "fix_trunchf<GPR:mode>2"
   [(set (match_operand:GPR 0 "register_operand" "=r")
         (fix:GPR (match_operand:HF 1 "register_operand" "xf")))]
@@ -3204,6 +3213,15 @@
    (set_attr "mode" "HF")]
 )
 
+(define_insn "fixuns_truncqf<GPR:mode>2"
+ [(set (match_operand:GPR 0 "register_operand" "=r")
+       (unsigned_fix:GPR (match_operand:QF 1 "register_operand" "xf")))]
+ "TARGET_HARD_FLOAT && Has_F8"
+  "fcvt.<GPR:ifmt>u.b\t%0,%1,rtz"
+  [(set_attr "type" "fcvt")
+   (set_attr "mode" "QF")]
+)
+
 ;; (define_insn "fixuns_truncohf<GPR:mode>2_internal"
 ;;   [(set (match_operand:GPR 0 "register_operand" "=r")
 ;;         (unsigned_fix:GPR (match_operand:OHF 1 "register_operand" "xf")))]
@@ -3233,7 +3251,7 @@
   [(set (match_operand:SMALLF    0 "register_operand" "= xf")
   (float:SMALLF
       (match_operand:GPR 1 "reg_or_0_operand" " rJ")))]
-  "TARGET_HARD_FLOAT && ((<SMALLF:MODE>mode == HFmode && Has_F16) || (<SMALLF:MODE>mode == OHFmode && Has_F16ALT))"
+  "TARGET_HARD_FLOAT && ((<SMALLF:MODE>mode == QFmode && Has_F8) || (<SMALLF:MODE>mode == HFmode && Has_F16) || (<SMALLF:MODE>mode == OHFmode && Has_F16ALT))"
   "fcvt.<SMALLF:fmt>.<GPR:ifmt>\t%0,%z1"
   [(set_attr "type" "fcvt")
    (set_attr "mode" "<SMALLF:MODE>")])
@@ -3242,7 +3260,7 @@
   [(set (match_operand:SMALLF    0 "register_operand" "= xf")
   (unsigned_float:SMALLF
       (match_operand:GPR 1 "reg_or_0_operand" " rJ")))]
-  "TARGET_HARD_FLOAT && ((<SMALLF:MODE>mode == HFmode && Has_F16) || (<SMALLF:MODE>mode == OHFmode && Has_F16ALT))"
+  "TARGET_HARD_FLOAT && ((<SMALLF:MODE>mode == QFmode && Has_F8) || (<SMALLF:MODE>mode == HFmode && Has_F16) || (<SMALLF:MODE>mode == OHFmode && Has_F16ALT))"
   "fcvt.<SMALLF:fmt>.<GPR:ifmt>u\t%0,%z1"
   [(set_attr "type" "fcvt")
    (set_attr "mode" "<SMALLF:MODE>")])
