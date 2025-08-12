@@ -2777,6 +2777,7 @@ static bool riscv_vector_mode_supported_p (enum machine_mode mode)
 {
   switch (mode)
     {
+    case V2HImode:
     case V2SImode:
     case V8QImode:
     case V4HImode:
