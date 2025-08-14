@@ -4436,7 +4436,7 @@
 (define_mode_attr VINT                  [(V2SI "V2SI") (V2HI "V2HI") (V4QI "V4QI") (V4HI "V4HI") (V8QI "V8QI")])
 (define_mode_attr vec_type              [(V4QF "v4qf") (V2OHF "v2ohf") (V2HF "v2hf") (V8QF "v8qf") (V4OHF "v4ohf") (V4HF "v4hf") (V2SF "v2sf") (V2HI "v2hi") (V2SI "v2si") (V4QI "v4qi") (V4HI "v4hi") (V8QI "v8qi")])
 (define_mode_attr vec_size              [(V4QF "b")  (V2OHF "ah")  (V2HF "h") (V8QF "b") (V4OHF "ah") (V4HF "h") (V2SF "s")  (V2HI "h")  (V4QI "b") (V2SI "w") (V4HI "h")  (V8QI "b")])
-(define_mode_attr int_vec_size          [(V4QF "b")  (V2OHF "ah")  (V2HF "h") (V8QF "b") (V4OHF "ah") (V4HF "h") (V2SF "s")  (V2HI "h") (V2SI "w")    (V4QI "b")  (V4HI "h")  (V8QI "b")])
+(define_mode_attr int_vec_size          [(V4QF "b")  (V2OHF "h")  (V2HF "h") (V8QF "b") (V4OHF "h") (V4HF "h") (V2SF "s")  (V2HI "h") (V2SI "w")    (V4QI "b")  (V4HI "h")  (V8QI "b")])
 (define_mode_attr int_vec_type          [(V4QF "v4qi") (V2OHF "v2hi") (V2HF "v2hi") (V8QF "v8qi") (V4OHF "v4hi") (V4HF "v4hi") (V2SF "v2si") (V2HI "v2hi") (V2SI "v2si") (V4QI "v4qi") (V4HI "v4hi") (V8QI "v8qi")])
 (define_mode_attr int_vec_mode          [(V4QF "V4QI") (V2OHF "V2HI") (V2HF "V2HI") (V8QF "V8QI") (V4OHF "V4HI") (V4HF "V4HI") (V2SF "V2SI") (V2HI "V2HI") (V2SI "V2SI") (V4QI "V4QI") (V4HI "V4HI") (V8QI "V8QI")])
 (define_mode_attr vec_downsize          [(V4QF "V2QF") (V2OHF "OHF") (V2HF "HF") (V8QF "V4QF") (V4OHF "V2OHF") (V4HF "V2HF") (V2SF "SF") (V2HI "HI") (V2SI "SI") (V4QI "V2QI") (V4HI "V2HI") (V8QI "V4QI")])
@@ -5884,7 +5884,7 @@
    )
   ]
   "((Pulp_Cpu>=PULP_V2) && !TARGET_MASK_NOVECT)"
-  "pv.extract.<vec_size>\t%0,%1,%2\t # vect extract"
+  "pv.extract.<int_vec_size>\t%0,%1,%2\t # vect extract"
 [(set_attr "type" "move")
  (set_attr "mode" "SI")]
 )
