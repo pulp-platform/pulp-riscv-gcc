@@ -5309,7 +5309,7 @@
 				int i;
 
 				xoperands[0] = operands[0]; xoperands[1] = operands[1];
-  				for (i = 0; i < 2; ++i) Mask |= (((INTVAL (XVECEXP (operands[2], 0, i)) & 1))<<(4*i));
+  			for (i = 0; i < 2; ++i) Mask |= (((INTVAL (XVECEXP (operands[2], 0, i)) & 1)) << i);
 				Mask = Mask & 0x0FF;
 				xoperands[2] = gen_rtx_CONST_INT (SImode, Mask);
 				output_asm_insn("pv.shuffle.sci.h\t%0,%1,%2", xoperands);
@@ -5355,7 +5355,7 @@
 				int i;
 
 				xoperands[0] = operands[0]; xoperands[1] = operands[1];
-  				for (i = 0; i < 2; ++i) Mask |= (((INTVAL (XVECEXP (operands[2], 0, i)) & 1))<<(4*i));
+  			for (i = 0; i < 2; ++i) Mask |= (((INTVAL (XVECEXP (operands[2], 0, i)) & 1)) << i);
 				Mask = Mask & 0x0FF;
 				xoperands[2] = gen_rtx_CONST_INT (SImode, Mask);
 				output_asm_insn("pv.shuffle.sci.h\t%0,%1,%2", xoperands);
@@ -5523,7 +5523,7 @@
 				int i;
 
 				xoperands[0] = operands[0]; xoperands[1] = operands[1];
-  				for (i = 0; i < 3; ++i) Mask |= (((INTVAL (XVECEXP (operands[2], 0, i)) & 3))<<(2*i));
+  			for (i = 0; i < 3; ++i) Mask |= (((INTVAL (XVECEXP (operands[2], 0, i)) & 3))<<(2*i));
 				xoperands[2] = gen_rtx_CONST_INT (SImode, Mask);
 				switch (Sel) {
 					case 0: output_asm_insn("pv.shuffleI0.sci.b\t%0,%1,%2", xoperands); break;
