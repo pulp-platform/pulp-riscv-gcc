@@ -50,6 +50,7 @@ along with GCC; see the file COPYING3.  If not see
 #include "gomp-constants.h"
 #include "spellcheck-tree.h"
 #include "gcc-rich-location.h"
+#include "print-tree.h"
 
 /* Possible cases of implicit bad conversions.  Used to select
    diagnostic messages in convert_for_assignment.  */
@@ -958,6 +959,13 @@ c_common_type (tree t1, tree t2)
 
   if (mv1 == float_type_node || mv2 == float_type_node)
     return float_type_node;
+  
+  /* If both types are 16-bit floats and one of them is float16alt, 
+     convert both to float16alt */
+  if (floatOHF_type_node &&
+      (TYPE_PRECISION (t1) == 16  && TYPE_PRECISION (t2) == 16) &&
+      (mv1 == floatOHF_type_node || mv2 == floatOHF_type_node))
+    return floatOHF_type_node;
 
   for (int i = NUM_FLOATNX_TYPES - 1; i >= 0; i--)
     if (mv1 == FLOATNX_TYPE_NODE (i) || mv2 == FLOATNX_TYPE_NODE (i))

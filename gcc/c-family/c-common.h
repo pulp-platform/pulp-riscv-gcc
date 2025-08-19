@@ -1556,6 +1556,9 @@ excess_precision_mode_join (enum flt_eval_method, enum flt_eval_method);
 
 extern int c_flt_eval_method (bool ts18661_p);
 
+/* Expose the floatOHF_type_node from teh RISC-V backend */ 
+extern GTY(()) tree floatOHF_type_node;
+
 #if CHECKING_P
 namespace selftest {
   extern void c_format_c_tests (void);

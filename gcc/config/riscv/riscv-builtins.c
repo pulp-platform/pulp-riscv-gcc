@@ -122,7 +122,8 @@ static tree opaque_V4HI_type_node;
 
 static tree floatSF_type_node;
 static tree floatHF_type_node;
-static tree floatOHF_type_node;
+/* This type is exposed to the C frontend */
+tree floatOHF_type_node;
 static tree floatQF_type_node;
 static tree opaque_V2SF_type_node;
 static tree opaque_V2HF_type_node;
